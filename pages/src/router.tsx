@@ -1,4 +1,7 @@
 import { createRouter, type RouteBuilder } from "remix/router";
+import { createFileResponse } from "remix/response/file";
+import { openLazyFile } from "remix/fs";
+import { fromFileUrl, join } from "@std/path";
 import { base } from "./base.ts";
 import { routeGroup, routes } from "./routes.ts";
 import { page } from "./layout.tsx";
@@ -7,36 +10,32 @@ import { Counter } from "./islands/counter.tsx";
 import { Link } from "./link.tsx";
 
 /** Directory of static files served under `/static/*` (favicon, CSS, images, …). */
-const STATIC_DIR = new URL("../static/", import.meta.url);
+const STATIC_DIR = fromFileUrl(new URL("../static/", import.meta.url));
 
-const MIME: Record<string, string> = {
-  js: "text/javascript; charset=utf-8",
-  css: "text/css; charset=utf-8",
-  svg: "image/svg+xml",
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  webp: "image/webp",
-  ico: "image/x-icon",
-  woff2: "font/woff2",
-  txt: "text/plain; charset=utf-8",
-  json: "application/json; charset=utf-8",
-};
-
-async function serveStatic(rel: string): Promise<Response> {
+/**
+ * Serves a file from `static/`. `createFileResponse` supplies the Content-Type
+ * (inferred from the extension by `openLazyFile`), ETag, Last-Modified, and
+ * conditional/range handling — the same machinery `staticFiles()` uses, but
+ * driven by the base-stripped route param so it works under the deploy mount.
+ */
+async function serveStatic(request: Request, rel: string): Promise<Response> {
   // Guard against path traversal before touching the filesystem.
   if (rel === "" || rel.includes("..")) {
     return new Response("Forbidden", { status: 403 });
   }
-  const ext = rel.slice(rel.lastIndexOf(".") + 1).toLowerCase();
+  const path = join(STATIC_DIR, rel);
+  let info: Deno.FileInfo;
   try {
-    const bytes = await Deno.readFile(new URL(rel, STATIC_DIR));
-    return new Response(bytes, {
-      headers: { "Content-Type": MIME[ext] ?? "application/octet-stream" },
-    });
+    info = await Deno.stat(path);
   } catch {
     return new Response("Not found", { status: 404 });
   }
+  if (!info.isFile) {
+    return new Response("Not found", { status: 404 });
+  }
+  return await createFileResponse(openLazyFile(path), request, {
+    cacheControl: "public, max-age=3600",
+  });
 }
 
 export const router = createRouter();
@@ -119,7 +118,7 @@ router.mount(base || "/", (app: RouteBuilder) => {
           ),
         }),
 
-      static: ({ params }) => serveStatic(params.path ?? ""),
+      static: ({ request, params }) => serveStatic(request, params.path ?? ""),
     },
   });
 
