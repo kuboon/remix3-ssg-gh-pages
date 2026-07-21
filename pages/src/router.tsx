@@ -1,4 +1,8 @@
 import { createRouter, type RouteBuilder } from "remix/router";
+import { createFileResponse } from "remix/response/file";
+import { openLazyFile } from "remix/fs";
+import { hastToRemix, markdownToHast } from "@kuboon/md";
+import { fromFileUrl, join } from "@std/path";
 import { base } from "./base.ts";
 import { routeGroup, routes } from "./routes.ts";
 import { page } from "./layout.tsx";
@@ -7,36 +11,53 @@ import { Counter } from "./islands/counter.tsx";
 import { Link } from "./link.tsx";
 
 /** Directory of static files served under `/static/*` (favicon, CSS, images, …). */
-const STATIC_DIR = new URL("../static/", import.meta.url);
+const STATIC_DIR = fromFileUrl(new URL("../static/", import.meta.url));
 
-const MIME: Record<string, string> = {
-  js: "text/javascript; charset=utf-8",
-  css: "text/css; charset=utf-8",
-  svg: "image/svg+xml",
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  webp: "image/webp",
-  ico: "image/x-icon",
-  woff2: "font/woff2",
-  txt: "text/plain; charset=utf-8",
-  json: "application/json; charset=utf-8",
-};
-
-async function serveStatic(rel: string): Promise<Response> {
+/**
+ * Serves a file from `static/`.
+ *
+ * `.md` files are rendered to an HTML page: `@kuboon/md` converts the Markdown
+ * to a sanitized Remix UI tree (GitHub-flavored, with heading anchors and Shiki
+ * code highlighting), which is dropped into the shared `page()` layout. Because
+ * this runs inside a route action, the pre-render crawl captures each linked
+ * `.md` URL as static HTML like any other page.
+ *
+ * Everything else is served with `createFileResponse` (over `openLazyFile`) —
+ * the same machinery `staticFiles()` uses — which supplies the Content-Type,
+ * ETag, Last-Modified, and conditional/range handling. We call it from the route
+ * action (rather than the `staticFiles()` middleware) so it sees the base-
+ * stripped route param and works under the deploy mount.
+ */
+async function serveStatic(request: Request, rel: string): Promise<Response> {
   // Guard against path traversal before touching the filesystem.
   if (rel === "" || rel.includes("..")) {
     return new Response("Forbidden", { status: 403 });
   }
-  const ext = rel.slice(rel.lastIndexOf(".") + 1).toLowerCase();
+  const path = join(STATIC_DIR, rel);
+  let info: Deno.FileInfo;
   try {
-    const bytes = await Deno.readFile(new URL(rel, STATIC_DIR));
-    return new Response(bytes, {
-      headers: { "Content-Type": MIME[ext] ?? "application/octet-stream" },
-    });
+    info = await Deno.stat(path);
   } catch {
     return new Response("Not found", { status: 404 });
   }
+  if (!info.isFile) {
+    return new Response("Not found", { status: 404 });
+  }
+
+  if (rel.endsWith(".md")) {
+    const markdown = await Deno.readTextFile(path);
+    const hast = await markdownToHast(markdown);
+    const heading = markdown.match(/^#\s+(.+?)\s*$/m)?.[1];
+    const name = rel.split("/").pop()!.replace(/\.md$/, "");
+    return page({
+      title: `${heading ?? name} — remix-ssg`,
+      children: hastToRemix(hast),
+    });
+  }
+
+  return await createFileResponse(openLazyFile(path), request, {
+    cacheControl: "public, max-age=3600",
+  });
 }
 
 export const router = createRouter();
@@ -113,13 +134,19 @@ router.mount(base || "/", (app: RouteBuilder) => {
                 same code can serve a live server and generate a static site.
               </p>
               <p>
+                Content can also be authored in Markdown — see this{" "}
+                <Link href={routes.static.href({ path: "hello.md" })}>
+                  Markdown-rendered page
+                </Link>.
+              </p>
+              <p>
                 <Link href={routes.home.href()}>← Back home</Link>
               </p>
             </>
           ),
         }),
 
-      static: ({ params }) => serveStatic(params.path ?? ""),
+      static: ({ request, params }) => serveStatic(request, params.path ?? ""),
     },
   });
 

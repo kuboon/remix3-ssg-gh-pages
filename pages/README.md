@@ -47,6 +47,7 @@ pages/
     build.ts         # static build (crawl the router, write dist/)
     dev.ts           # local dev server
   static/            # files served under /static/* (favicon, CSS, images…)
+    hello.md         # a sample Markdown page (rendered to HTML on request)
 ```
 
 ## Adding a page
@@ -57,6 +58,16 @@ pages/
 
 The generator finds pages by following links, so any new page only needs to be
 linked from somewhere reachable.
+
+## Markdown pages
+
+A `.md` file under `static/` is served as a full HTML page: `serveStatic`
+(`src/router.tsx`) runs it through [`@kuboon/md`](https://jsr.io/@kuboon/md),
+which converts GitHub-flavored Markdown to a sanitized Remix UI tree (heading
+anchors, Shiki-highlighted code, tables, task lists) and drops it into the
+shared `page()` layout. Because it renders inside a route action, each linked
+`.md` URL is captured as static HTML by the pre-render crawl. See
+`static/hello.md`, linked from the About page.
 
 ## Interactive islands (client components)
 

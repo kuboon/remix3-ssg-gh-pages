@@ -15,6 +15,7 @@
     "remix": "npm:remix@3.0.0-beta.5",
     "@kuboon/remix-ssg": "jsr:@kuboon/remix-ssg@^0.2.0",
     "@kuboon/remix-ssg/node": "jsr:@kuboon/remix-ssg@^0.2.0/node",
+    "@kuboon/md": "jsr:@kuboon/md@^0.1.0",
     "@std/path": "jsr:@std/path@^1"
   },
   "fmt": {
