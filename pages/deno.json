@@ -1,0 +1,26 @@
+{
+  "tasks": {
+    "bundle": "deno bundle --minify -o static/client.js src/client.tsx",
+    "dev": "deno task bundle && deno run -A --watch scripts/dev.ts",
+    "build": "deno task bundle && deno run -A scripts/build.ts",
+    "check": "deno check scripts src && deno lint && deno fmt --check"
+  },
+  "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "lib": ["deno.ns", "dom", "dom.iterable", "esnext"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "remix/ui"
+  },
+  "imports": {
+    "remix": "npm:remix@3.0.0-beta.5",
+    "@kuboon/remix-ssg": "jsr:@kuboon/remix-ssg@^0.2.0",
+    "@kuboon/remix-ssg/node": "jsr:@kuboon/remix-ssg@^0.2.0/node",
+    "@std/path": "jsr:@std/path@^1"
+  },
+  "fmt": {
+    "exclude": ["dist", "node_modules", "static/client.js"]
+  },
+  "lint": {
+    "exclude": ["dist", "node_modules", "static/client.js"]
+  }
+}
