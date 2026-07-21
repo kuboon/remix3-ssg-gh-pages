@@ -3,8 +3,8 @@
 A static-site starter built with [Remix v3](https://remix.run) —
 `remix/fetch-router` for routing and `remix/ui` for rendering — pre-rendered to
 static HTML by [`@kuboon/remix-ssg`](https://jsr.io/@kuboon/remix-ssg). The
-output is plain HTML that deploys to GitHub Pages, with no client-side
-JavaScript required.
+output is plain HTML that deploys to GitHub Pages: zero client-side JavaScript
+by default, with opt-in interactivity through hydrated islands (see below).
 
 ## How it works
 
@@ -23,6 +23,7 @@ you see locally is what gets generated.
 ```sh
 deno task dev     # local dev server at http://localhost:8000
 deno task build   # generate the static site into dist/
+deno task bundle  # compile the client island bundle (run by dev/build)
 deno task check   # type-check, lint, and format-check
 ```
 
@@ -37,7 +38,11 @@ pages/
     routes.ts        # the route map
     router.tsx       # route actions (the pages) + static file serving
     layout.tsx       # the shared HTML document shell + page() helper
+    link.tsx         # internal <Link> (full-document navigation)
     posts.ts         # sample blog content
+    client.tsx       # browser entry: hydrates islands (bundled to static/client.js)
+    islands/
+      counter.tsx    # a sample client component (hydrated island)
   scripts/
     build.ts         # static build (crawl the router, write dist/)
     dev.ts           # local dev server
@@ -52,6 +57,28 @@ pages/
 
 The generator finds pages by following links, so any new page only needs to be
 linked from somewhere reachable.
+
+## Interactive islands (client components)
+
+Most of the site is static HTML. When you need interactivity, use an **island**:
+a component that is server-rendered like everything else, then hydrated in the
+browser. See `src/islands/counter.tsx` (used on the home page).
+
+To add one:
+
+1. Write the component with `clientEntry("/static/client.js#Name", ...)` from
+   `remix/ui` (see `counter.tsx`). Call `handle.update()` after changing state.
+2. Re-export it from `src/client.tsx` under that same `Name`.
+3. Render it on a page, and pass `hydrate: true` to `page()` so the page loads
+   the client bundle.
+
+`deno task bundle` compiles `src/client.tsx` (plus the Remix UI runtime and
+every island) into a single self-contained `static/client.js`, which the build
+then emits as a static asset. `dev` and `build` run it for you.
+
+Internal links use the `<Link>` component (`src/link.tsx`), which marks them for
+full-document navigation so pages with an active client runtime still navigate
+like a normal static site.
 
 ## Base paths and GitHub Pages
 

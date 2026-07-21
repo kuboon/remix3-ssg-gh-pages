@@ -138,3 +138,30 @@ code {
   border-radius: 0.3rem;
   font-size: 0.9em;
 }
+
+.demo {
+  margin-block: 2rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--card);
+}
+
+.demo h2 {
+  margin-top: 0;
+}
+
+.counter {
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: #fff;
+}
+
+.counter:active {
+  transform: translateY(1px);
+}

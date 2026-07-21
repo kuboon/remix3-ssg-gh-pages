@@ -11,7 +11,13 @@
  * per-PR preview sub-path with no other changes. The build strips this prefix
  * back off when writing files, so the output always lands at the site root.
  */
-const BASE_URL = Deno.env.get("BASE_URL") ?? "";
+// Read at build/server time. Guarded so this module is safe to bundle into the
+// browser client (where `Deno` is undefined); there the base resolves to "",
+// which is fine because the browser uses the base-prefixed URLs the server
+// already embedded in the page, not this value.
+const BASE_URL = typeof Deno !== "undefined"
+  ? Deno.env.get("BASE_URL") ?? ""
+  : "";
 
 /** URL path prefix the site is mounted under, without a trailing slash (e.g. `""` or `/repo`). */
 export const base: string = BASE_URL

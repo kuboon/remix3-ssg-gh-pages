@@ -1,7 +1,8 @@
 {
   "tasks": {
-    "dev": "deno run -A --watch scripts/dev.ts",
-    "build": "deno run -A scripts/build.ts",
+    "bundle": "deno bundle --minify -o static/client.js src/client.tsx",
+    "dev": "deno task bundle && deno run -A --watch scripts/dev.ts",
+    "build": "deno task bundle && deno run -A scripts/build.ts",
     "check": "deno check scripts src && deno lint && deno fmt --check"
   },
   "nodeModulesDir": "auto",
@@ -17,9 +18,9 @@
     "@std/path": "jsr:@std/path@^1"
   },
   "fmt": {
-    "exclude": ["dist", "node_modules"]
+    "exclude": ["dist", "node_modules", "static/client.js"]
   },
   "lint": {
-    "exclude": ["dist", "node_modules"]
+    "exclude": ["dist", "node_modules", "static/client.js"]
   }
 }

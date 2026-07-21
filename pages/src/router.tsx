@@ -2,11 +2,14 @@ import { createRouter } from "remix/router";
 import { routes } from "./routes.ts";
 import { page } from "./layout.tsx";
 import { getPost, posts } from "./posts.ts";
+import { Counter } from "./islands/counter.tsx";
+import { Link } from "./link.tsx";
 
 /** Directory of static files served under `/static/*` (favicon, CSS, images, …). */
 const STATIC_DIR = new URL("../static/", import.meta.url);
 
 const MIME: Record<string, string> = {
+  js: "text/javascript; charset=utf-8",
   css: "text/css; charset=utf-8",
   svg: "image/svg+xml",
   png: "image/png",
@@ -26,6 +29,7 @@ router.get(routes.home, () =>
   page({
     title: "remix-ssg — a static site starter",
     description: "A Remix v3 static-site-generation starter for GitHub Pages.",
+    hydrate: true,
     children: (
       <>
         <h1>A static site, rendered by your router</h1>
@@ -36,14 +40,26 @@ router.get(routes.home, () =>
           deploys the result to GitHub Pages.
         </p>
         <ul class="features">
-          <li>Server-rendered pages — no client JavaScript needed.</li>
+          <li>Server-rendered pages — zero client JavaScript by default.</li>
           <li>Link-crawling build: seed one path, get the whole site.</li>
           <li>
             Works at the domain root, a repo sub-path, or a PR preview URL.
           </li>
+          <li>Opt into interactivity per component with hydrated islands.</li>
         </ul>
+        <section class="demo">
+          <h2>An interactive island</h2>
+          <p>
+            The button below is server-rendered like every other page, then
+            hydrated in the browser so it responds to clicks — view source and
+            you'll find it already in the initial HTML.
+          </p>
+          <Counter label="Clicks" start={0} />
+        </section>
         <p>
-          <a class="button" href={routes.blog.index.href()}>Read the blog →</a>
+          <Link class="button" href={routes.blog.index.href()}>
+            Read the blog →
+          </Link>
         </p>
       </>
     ),
@@ -67,7 +83,7 @@ router.get(routes.about, () =>
           can serve a live server and generate a static site.
         </p>
         <p>
-          <a href={routes.home.href()}>← Back home</a>
+          <Link href={routes.home.href()}>← Back home</Link>
         </p>
       </>
     ),
@@ -84,9 +100,9 @@ router.get(routes.blog.index, () =>
         <ul class="post-list">
           {posts.map((post) => (
             <li key={post.slug}>
-              <a href={routes.blog.show.href({ slug: post.slug })}>
+              <Link href={routes.blog.show.href({ slug: post.slug })}>
                 {post.title}
-              </a>
+              </Link>
               <time datetime={post.date}>{post.date}</time>
               <p>{post.summary}</p>
             </li>
@@ -111,7 +127,7 @@ router.get(routes.blog.show, ({ params }) => {
         <time datetime={post.date}>{post.date}</time>
         {post.body.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
         <p>
-          <a href={routes.blog.index.href()}>← All posts</a>
+          <Link href={routes.blog.index.href()}>← All posts</Link>
         </p>
       </article>
     ),

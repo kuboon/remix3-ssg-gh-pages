@@ -3,17 +3,20 @@ import { createHtmlResponse } from "remix/response/html";
 import type { Handle, RemixNode } from "remix/ui";
 import { routes } from "./routes.ts";
 import { withBase } from "./base.ts";
+import { Link } from "./link.tsx";
 
 interface DocumentProps {
   title: string;
   description?: string;
+  /** Load the client bundle to hydrate islands on this page. */
+  hydrate?: boolean;
   children: RemixNode;
 }
 
 /** The full HTML document shell shared by every page. */
 function Document(handle: Handle<DocumentProps>) {
   return () => {
-    const { title, description, children } = handle.props;
+    const { title, description, hydrate, children } = handle.props;
     return (
       <html lang="en">
         <head>
@@ -28,11 +31,11 @@ function Document(handle: Handle<DocumentProps>) {
         </head>
         <body>
           <header class="site-header">
-            <a class="brand" href={routes.home.href()}>remix-ssg</a>
+            <Link class="brand" href={routes.home.href()}>remix-ssg</Link>
             <nav class="site-nav">
-              <a href={routes.home.href()}>Home</a>
-              <a href={routes.about.href()}>About</a>
-              <a href={routes.blog.index.href()}>Blog</a>
+              <Link href={routes.home.href()}>Home</Link>
+              <Link href={routes.about.href()}>About</Link>
+              <Link href={routes.blog.index.href()}>Blog</Link>
             </nav>
           </header>
           <main class="site-main">{children}</main>
@@ -44,6 +47,12 @@ function Document(handle: Handle<DocumentProps>) {
               and <a href="https://remix.run">Remix v3</a>.
             </p>
           </footer>
+          {hydrate
+            ? (
+              <script type="module" src={withBase("/static/client.js")}>
+              </script>
+            )
+            : null}
         </body>
       </html>
     );
