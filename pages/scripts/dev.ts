@@ -10,10 +10,10 @@
  *   BASE_URL=http://localhost:8000/remix3-ssg-gh-pages deno task dev
  */
 import { router } from "../src/router.tsx";
-import { base } from "../src/base.ts";
+import { routes } from "../src/routes.ts";
 
 const port = Number(Deno.env.get("PORT") ?? 8000);
 
 Deno.serve({ port }, (request) => router.fetch(request));
 
-console.log(`Dev server: http://localhost:${port}${base}/`);
+console.log(`Dev server: http://localhost:${port}${routes.home.href()}`);

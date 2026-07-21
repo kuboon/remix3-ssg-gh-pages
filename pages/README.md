@@ -87,8 +87,9 @@ A GitHub Pages _project_ site is served under a sub-path
 To keep links correct everywhere, the build reads a `BASE_URL` environment
 variable (set automatically by the deploy workflow):
 
-- every route pattern and link is prefixed with `BASE_URL`'s path
-  (`src/base.ts`);
+- the router mounts every route under `BASE_URL`'s path with
+  `router.mount(base, …)`, and `route(base, …)` builds matching prefixed links
+  and asset URLs (`src/base.ts`, `src/routes.ts`);
 - the build strips that prefix back off when writing files, so the output always
   lands at `dist/`'s root.
 

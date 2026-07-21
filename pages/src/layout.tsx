@@ -2,7 +2,6 @@ import { renderToString } from "remix/ui/server";
 import { createHtmlResponse } from "remix/response/html";
 import type { Handle, RemixNode } from "remix/ui";
 import { routes } from "./routes.ts";
-import { withBase } from "./base.ts";
 import { Link } from "./link.tsx";
 
 interface DocumentProps {
@@ -26,8 +25,11 @@ function Document(handle: Handle<DocumentProps>) {
           {description
             ? <meta name="description" content={description} />
             : null}
-          <link rel="icon" href={withBase("/static/favicon.svg")} />
-          <link rel="stylesheet" href={withBase("/static/styles.css")} />
+          <link rel="icon" href={routes.static.href({ path: "favicon.svg" })} />
+          <link
+            rel="stylesheet"
+            href={routes.static.href({ path: "styles.css" })}
+          />
         </head>
         <body>
           <header class="site-header">
@@ -49,7 +51,10 @@ function Document(handle: Handle<DocumentProps>) {
           </footer>
           {hydrate
             ? (
-              <script type="module" src={withBase("/static/client.js")}>
+              <script
+                type="module"
+                src={routes.static.href({ path: "client.js" })}
+              >
               </script>
             )
             : null}
