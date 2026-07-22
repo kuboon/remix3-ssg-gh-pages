@@ -1,12 +1,12 @@
 import { createRouter, type RouteBuilder } from "remix/router";
 import { createFileResponse } from "remix/response/file";
 import { openLazyFile } from "remix/fs";
-import { hastToRemix, markdownToHast } from "@kuboon/md";
 import { fromFileUrl, join } from "@std/path";
 import { base } from "./base.ts";
 import { routeGroup, routes } from "./routes.ts";
 import { page } from "./layout.tsx";
-import { getPost, posts } from "./posts.ts";
+import { getArticle, listArticles } from "./content.ts";
+import { renderMarkdown } from "./markdown.ts";
 import { Counter } from "./islands/counter.tsx";
 import { Link } from "./link.tsx";
 
@@ -14,15 +14,7 @@ import { Link } from "./link.tsx";
 const STATIC_DIR = fromFileUrl(new URL("../static/", import.meta.url));
 
 /**
- * Serves a file from `static/`.
- *
- * `.md` files are rendered to an HTML page: `@kuboon/md` converts the Markdown
- * to a sanitized Remix UI tree (GitHub-flavored, with heading anchors and Shiki
- * code highlighting), which is dropped into the shared `page()` layout. Because
- * this runs inside a route action, the pre-render crawl captures each linked
- * `.md` URL as static HTML like any other page.
- *
- * Everything else is served with `createFileResponse` (over `openLazyFile`) —
+ * Serves a file from `static/` with `createFileResponse` (over `openLazyFile`) —
  * the same machinery `staticFiles()` uses — which supplies the Content-Type,
  * ETag, Last-Modified, and conditional/range handling. We call it from the route
  * action (rather than the `staticFiles()` middleware) so it sees the base-
@@ -43,18 +35,6 @@ async function serveStatic(request: Request, rel: string): Promise<Response> {
   if (!info.isFile) {
     return new Response("Not found", { status: 404 });
   }
-
-  if (rel.endsWith(".md")) {
-    const markdown = await Deno.readTextFile(path);
-    const hast = await markdownToHast(markdown);
-    const heading = markdown.match(/^#\s+(.+?)\s*$/m)?.[1];
-    const name = rel.split("/").pop()!.replace(/\.md$/, "");
-    return page({
-      title: `${heading ?? name} — remix-ssg`,
-      children: hastToRemix(hast),
-    });
-  }
-
   return await createFileResponse(openLazyFile(path), request, {
     cacheControl: "public, max-age=3600",
   });
@@ -90,7 +70,10 @@ router.mount(base || "/", (app: RouteBuilder) => {
                 <li>
                   Server-rendered pages — zero client JavaScript by default.
                 </li>
-                <li>Link-crawling build: seed one path, get the whole site.</li>
+                <li>
+                  Content authored in Markdown, rendered with{" "}
+                  <a href="https://jsr.io/@kuboon/md">@kuboon/md</a>.
+                </li>
                 <li>
                   Works at the domain root, a repo sub-path, or a PR preview
                   URL.
@@ -134,10 +117,9 @@ router.mount(base || "/", (app: RouteBuilder) => {
                 same code can serve a live server and generate a static site.
               </p>
               <p>
-                Content can also be authored in Markdown — see this{" "}
-                <Link href={routes.static.href({ path: "hello.md" })}>
-                  Markdown-rendered page
-                </Link>.
+                Articles are authored in Markdown under{" "}
+                <code>content/</code>; see the{" "}
+                <Link href={routes.blog.index.href()}>blog</Link>.
               </p>
               <p>
                 <Link href={routes.home.href()}>← Back home</Link>
@@ -150,44 +132,52 @@ router.mount(base || "/", (app: RouteBuilder) => {
     },
   });
 
-  // Blog.
+  // Blog — driven by Markdown files in content/.
   app.map(routeGroup.blog, {
     actions: {
-      index: () =>
-        page({
+      index: async () => {
+        const articles = await listArticles();
+        return page({
           title: "Blog — remix-ssg",
-          description: "Posts rendered to static HTML at build time.",
+          description:
+            "Articles authored in Markdown, rendered to static HTML.",
           children: (
             <>
               <h1>Blog</h1>
               <ul class="post-list">
-                {posts.map((post) => (
-                  <li key={post.slug}>
-                    <Link href={routes.blog.show.href({ slug: post.slug })}>
-                      {post.title}
+                {articles.map((article) => (
+                  <li key={article.slug}>
+                    <Link href={routes.blog.show.href({ slug: article.slug })}>
+                      {article.title}
                     </Link>
-                    <time datetime={post.date}>{post.date}</time>
-                    <p>{post.summary}</p>
+                    {article.date
+                      ? <time datetime={article.date}>{article.date}</time>
+                      : null}
+                    <p>{article.summary}</p>
                   </li>
                 ))}
               </ul>
             </>
           ),
-        }),
+        });
+      },
 
-      show: ({ params }) => {
-        const post = getPost(params.slug ?? "");
-        if (!post) {
+      show: async ({ params }) => {
+        const article = await getArticle(params.slug ?? "");
+        if (!article) {
           return new Response("Not found", { status: 404 });
         }
+        const body = await renderMarkdown(article.body);
         return page({
-          title: `${post.title} — remix-ssg`,
-          description: post.summary,
+          title: `${article.title} — remix-ssg`,
+          description: article.summary,
           children: (
             <article class="post">
-              <h1>{post.title}</h1>
-              <time datetime={post.date}>{post.date}</time>
-              {post.body.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
+              <h1>{article.title}</h1>
+              {article.date
+                ? <time datetime={article.date}>{article.date}</time>
+                : null}
+              {body}
               <p>
                 <Link href={routes.blog.index.href()}>← All posts</Link>
               </p>

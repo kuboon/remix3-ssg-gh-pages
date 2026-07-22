@@ -33,13 +33,15 @@ deno task check   # type-check, lint, and format-check
 pages/
   deno.json          # tasks, imports, compiler + JSX options
   deno.lock          # pinned dependency versions (committed)
+  content/           # Markdown articles (the blog), one .md file each
   src/
     base.ts          # base-path helper (see below)
     routes.ts        # the route map
     router.tsx       # route actions (the pages) + static file serving
     layout.tsx       # the shared HTML document shell + page() helper
     link.tsx         # internal <Link> (full-document navigation)
-    posts.ts         # sample blog content
+    content.ts       # loads content/*.md (frontmatter + body)
+    markdown.ts      # renders Markdown to a Remix UI tree (@kuboon/md)
     client.tsx       # browser entry: hydrates islands (bundled to static/client.js)
     islands/
       counter.tsx    # a sample client component (hydrated island)
@@ -47,7 +49,6 @@ pages/
     build.ts         # static build (crawl the router, write dist/)
     dev.ts           # local dev server
   static/            # files served under /static/* (favicon, CSS, images…)
-    hello.md         # a sample Markdown page (rendered to HTML on request)
 ```
 
 ## Adding a page
@@ -59,15 +60,27 @@ pages/
 The generator finds pages by following links, so any new page only needs to be
 linked from somewhere reachable.
 
-## Markdown pages
+## Markdown content
 
-A `.md` file under `static/` is served as a full HTML page: `serveStatic`
-(`src/router.tsx`) runs it through [`@kuboon/md`](https://jsr.io/@kuboon/md),
-which converts GitHub-flavored Markdown to a sanitized Remix UI tree (heading
-anchors, Shiki-highlighted code, tables, task lists) and drops it into the
-shared `page()` layout. Because it renders inside a route action, each linked
-`.md` URL is captured as static HTML by the pre-render crawl. See
-`static/hello.md`, linked from the About page.
+The blog is authored in Markdown. Each article is a `.md` file in `content/`
+with `title`, `date`, and `summary` frontmatter:
+
+```markdown
+---
+title: Hello, remix-ssg
+date: "2026-07-21"
+summary: How this site is rendered to static HTML at build time.
+---
+
+Body starts here…
+```
+
+`src/content.ts` reads `content/*.md` (frontmatter via `@std/front-matter`); the
+blog index lists them by date, and `/blog/<filename>` renders one. The body is
+turned into HTML by [`@kuboon/md`](https://jsr.io/@kuboon/md) — GitHub-flavored,
+sanitized, with heading anchors and Shiki-highlighted code — via the
+`renderMarkdown` helper (`src/markdown.ts`), then dropped into the shared
+`page()` layout. Drop a new `.md` file in `content/` and it appears on the blog.
 
 ## Interactive islands (client components)
 
