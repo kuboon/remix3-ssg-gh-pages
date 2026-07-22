@@ -3,8 +3,10 @@
   "specifiers": {
     "jsr:@kuboon/md@0.1": "0.1.0",
     "jsr:@kuboon/remix-ssg@0.2": "0.2.0",
+    "jsr:@std/front-matter@1": "1.0.9",
     "jsr:@std/internal@^1.0.14": "1.0.14",
     "jsr:@std/path@1": "1.1.6",
+    "jsr:@std/yaml@^1.0.5": "1.1.2",
     "npm:@remix-run/ui@0.4": "0.4.0",
     "npm:@types/hast@^3.0.4": "3.0.5",
     "npm:@types/mdast@^4.0.4": "4.0.4",
@@ -54,6 +56,12 @@
     "@kuboon/remix-ssg@0.2.0": {
       "integrity": "1315288acddefb3bea148f0234c7e0a139ec3f4baf6895a39ab2ef155db97263"
     },
+    "@std/front-matter@1.0.9": {
+      "integrity": "ee6201d06674cbef137dda2252f62477450b48249e7d8d9ab57a30f85ff6f051",
+      "dependencies": [
+        "jsr:@std/yaml"
+      ]
+    },
     "@std/internal@1.0.14": {
       "integrity": "291516b3d4c35024d6ffbc0a9df5bf4c64116e05b50012cf846710152d2ffdf7"
     },
@@ -62,6 +70,9 @@
       "dependencies": [
         "jsr:@std/internal"
       ]
+    },
+    "@std/yaml@1.1.2": {
+      "integrity": "de612653c036749ba2044165e316f52412b0f0698afffb7ee80b5331d6d2abae"
     }
   },
   "npm": {
@@ -2267,6 +2278,7 @@
     "dependencies": [
       "jsr:@kuboon/md@0.1",
       "jsr:@kuboon/remix-ssg@0.2",
+      "jsr:@std/front-matter@1",
       "jsr:@std/path@1",
       "npm:remix@3.0.0-beta.5"
     ]
