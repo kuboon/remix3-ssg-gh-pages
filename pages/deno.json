@@ -5,6 +5,10 @@
     "check": "deno check scripts src && deno lint && deno fmt --check"
   },
   "nodeModulesDir": "auto",
+  "minimumDependencyAge": {
+    "age": "P1D",
+    "exclude": ["jsr:@kuboon/*"]
+  },
   "compilerOptions": {
     "lib": ["deno.ns", "dom", "dom.iterable", "esnext"],
     "jsx": "react-jsx",
