@@ -3,11 +3,13 @@ import { createHtmlResponse } from "remix/response/html";
 import type { Handle, RemixNode } from "remix/ui";
 import { routes } from "./routes.ts";
 import { Link } from "./link.tsx";
+import { base, BASE_PATH_GLOBAL } from "./base.ts";
+import { chunkUrl, clientEntrypoints } from "./assets.ts";
 
 interface DocumentProps {
   title: string;
   description?: string;
-  /** Load the client bundle to hydrate islands on this page. */
+  /** Load the client runtime so islands on this page hydrate. */
   hydrate?: boolean;
   children: RemixNode;
 }
@@ -51,11 +53,23 @@ function Document(handle: Handle<DocumentProps>) {
           </footer>
           {hydrate
             ? (
-              <script
-                type="module"
-                src={routes.static.href({ path: "client.js" })}
-              >
-              </script>
+              <>
+                {
+                  /*
+                  The deploy prefix, handed to the browser. Islands compute
+                  their own `clientEntry()` ids from it, and in the browser
+                  there is no `BASE_URL` env var to read. See `base.ts`.
+                */
+                }
+                <script>
+                  {`globalThis.${BASE_PATH_GLOBAL}=${JSON.stringify(base)}`}
+                </script>
+                <script
+                  type="module"
+                  src={chunkUrl(clientEntrypoints.runtime.chunk)}
+                >
+                </script>
+              </>
             )
             : null}
         </body>

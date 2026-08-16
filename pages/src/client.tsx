@@ -1,20 +1,16 @@
 /**
- * Client entry — the single browser bundle for the whole site.
+ * Client runtime entry — starts the Remix UI runtime for the document.
  *
- * `deno task bundle` compiles this file (and the Remix UI runtime + every island
- * it re-exports) into one self-contained `static/client.js`. Pages that use an
- * island load it with `<script type="module" src="/static/client.js">`.
+ * This is one of three browser entrypoints (`src/assets.ts` lists them all).
+ * It no longer re-exports the islands: each island is its own entrypoint, and
+ * `loadModule` below dynamically imports whichever one a hydrated component
+ * names in its `clientEntry()` id.
  *
- * On load, `run()` reads the hydration data the server embedded in the page and
- * hydrates each island by dynamically importing its module and picking the named
- * export — which resolves back to this same (already-loaded) bundle.
- *
- * Every island must be re-exported here under the export name used in its
- * `clientEntry()` id (e.g. `#Counter`).
+ * All three entrypoints import the Remix UI runtime, and all three are compiled
+ * in a single `Deno.bundle({ codeSplitting: true })` call, so that runtime is
+ * emitted once into a chunk they share rather than once per entry.
  */
 import { run } from "remix/ui";
-
-export { Counter } from "./islands/counter.tsx";
 
 run({
   loadModule: (url: string, name: string) =>

@@ -15,6 +15,8 @@ const defs = {
   },
   // Static assets (images, stylesheets, robots.txt, …) live in `static/`.
   static: get("/static/*path"),
+  // Compiled client chunks, served from memory by @kuboon/remix-assets-deno.
+  assets: get("/assets/*path"),
 };
 
 /**

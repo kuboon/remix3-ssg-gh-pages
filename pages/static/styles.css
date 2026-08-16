@@ -165,3 +165,17 @@ code {
 .counter:active {
   transform: translateY(1px);
 }
+
+.demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.total {
+  font: inherit;
+  padding: 0.55rem 1rem;
+  border: 1px dashed var(--accent);
+  border-radius: 0.5rem;
+}
