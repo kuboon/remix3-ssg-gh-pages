@@ -23,7 +23,6 @@ you see locally is what gets generated.
 ```sh
 deno task dev     # local dev server at http://localhost:8000
 deno task build   # generate the static site into dist/
-deno task bundle  # compile the client island bundle (run by dev/build)
 deno task check   # type-check, lint, and format-check
 ```
 
@@ -43,9 +42,12 @@ pages/
     link.tsx         # internal <Link> (full-document navigation)
     content.ts       # loads content/*.md (frontmatter + body)
     markdown.ts      # renders Markdown to a Remix UI tree (@kuboon/md)
-    client.tsx       # browser entry: hydrates islands (bundled to static/client.js)
+    assets.ts        # where each client entrypoint is published (see below)
+    client.tsx       # browser entrypoint: starts the client runtime
     islands/
-      counter.tsx    # a sample client component (hydrated island)
+      counter.tsx    # a hydrated island, and its own browser entrypoint
+      total.tsx      # a second island/entrypoint, sharing state with it
+      store.ts       # the module both islands import — the shared singleton
   scripts/
     build.ts         # static build (crawl the router, write dist/)
   static/            # files served under /static/* (favicon, CSS, images…)
@@ -90,15 +92,45 @@ browser. See `src/islands/counter.tsx` (used on the home page).
 
 To add one:
 
-1. Write the component with `clientEntry("/static/client.js#Name", ...)` from
+1. Add it to `clientEntrypoints` in `src/assets.ts`. The `chunk` is the source
+   path relative to `src/`, with a `.js` extension.
+2. Write the component with `clientEntry(entryId("name", "Export"), ...)` from
    `remix/ui` (see `counter.tsx`). Call `handle.update()` after changing state.
-2. Re-export it from `src/client.tsx` under that same `Name`.
 3. Render it on a page, and pass `hydrate: true` to `page()` so the page loads
-   the client bundle.
+   the client runtime.
 
-`deno task bundle` compiles `src/client.tsx` (plus the Remix UI runtime and
-every island) into a single self-contained `static/client.js`, which the build
-then emits as a static asset. `dev` and `build` run it for you.
+### How the client code is compiled
+
+Each island is its own **browser entrypoint**, and they are compiled by
+[`@kuboon/remix-assets-deno`](https://jsr.io/@kuboon/remix-assets-deno) in
+bundled mode: every entrypoint goes into a _single_
+`Deno.bundle({ codeSplitting: true })` call, which is why `deno task dev` and
+`deno task build` pass Deno's `--unstable-bundle` flag. There is no separate
+bundle step and no `static/client.js` in the tree — the chunks are compiled in
+memory when the router starts, served from `/assets/*`, and written to `dist/`
+by the build.
+
+Compiling all the entrypoints as one graph is what makes a module more than one
+of them imports come out **once**, in a chunk they share:
+
+```
+client.js ─────────────┐
+islands/counter.js ─┬──┼─→ chunk-…  the Remix UI runtime (all three import it)
+islands/total.js ───┘  │
+                    └──── chunk-…  base.ts + assets.ts + store.ts (the islands only)
+```
+
+The home page demonstrates why that matters. `counter.tsx` and `total.tsx` are
+separate entrypoints that never reference each other; both import
+`islands/store.ts`, and the running total tracks the buttons only because that
+store was emitted once. Compile the entries independently — one bundler call
+each — and each gets a private copy, so the total would sit at zero.
+
+`src/assets.ts` declares where each entrypoint is published rather than asking
+the asset server, because a `clientEntry()` id is evaluated in the browser too.
+`assertEntryUrls()` in `src/router.tsx` checks those declarations against the
+bundler's actual output at startup, so a mismatch is a loud error rather than a
+404 mid-hydration.
 
 Internal links use the `<Link>` component (`src/link.tsx`), which marks them for
 full-document navigation so pages with an active client runtime still navigate

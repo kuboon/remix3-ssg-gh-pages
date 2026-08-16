@@ -2,7 +2,10 @@
 
 A [Remix v3](https://remix.run) static-site starter pre-rendered by
 [`@kuboon/remix-ssg`](https://jsr.io/@kuboon/remix-ssg) and deployed to GitHub
-Pages with per-PR previews.
+Pages with per-PR previews. Client-side islands are compiled by
+[`@kuboon/remix-assets-deno`](https://jsr.io/@kuboon/remix-assets-deno), which
+code-splits every entrypoint out of one graph so a module two islands share is
+emitted once.
 
 The site lives in [`pages/`](./pages) — see [`pages/README.md`](./pages/README.md)
 for how it works and how to develop it.

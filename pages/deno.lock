@@ -2289,6 +2289,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@kuboon/md@0.1",
+      "jsr:@kuboon/remix-assets-deno@0.4",
       "jsr:@kuboon/remix-ssg@0.3",
       "jsr:@std/front-matter@1",
       "jsr:@std/path@1",

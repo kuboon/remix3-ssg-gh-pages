@@ -1,13 +1,16 @@
 import { createRouter, type RouteBuilder } from "remix/router";
 import { createFileResponse } from "remix/response/file";
 import { openLazyFile } from "remix/fs";
+import { createAssetServer } from "@kuboon/remix-assets-deno";
 import { fromFileUrl, join } from "@std/path";
 import { base } from "./base.ts";
+import { assetsBasePath, chunkUrl, clientEntrypoints } from "./assets.ts";
 import { routeGroup, routes } from "./routes.ts";
 import { page } from "./layout.tsx";
 import { getArticle, listArticles } from "./content.ts";
 import { renderMarkdown } from "./markdown.ts";
 import { Counter } from "./islands/counter.tsx";
+import { Total } from "./islands/total.tsx";
 import { Link } from "./link.tsx";
 
 /** Directory of static files served under `/static/*` (favicon, CSS, images, …). */
@@ -38,6 +41,52 @@ async function serveStatic(request: Request, rel: string): Promise<Response> {
   return await createFileResponse(openLazyFile(path), request, {
     cacheControl: "public, max-age=3600",
   });
+}
+
+/**
+ * The client chunks, compiled in memory.
+ *
+ * Every entrypoint goes into one `Deno.bundle({ codeSplitting: true })` call,
+ * so a module more than one of them imports — the Remix UI runtime, the click
+ * store — is emitted once into a chunk they share. Compiling each entry on its
+ * own would give each a private copy, and `src/islands/store.ts` would stop
+ * being a singleton. Needs Deno's `--unstable-bundle` flag.
+ */
+export const assets = await createAssetServer({
+  rootDir: fromFileUrl(new URL("../", import.meta.url)),
+  entrypoints: Object.values(clientEntrypoints).map((entry) => entry.source),
+  basePath: assetsBasePath,
+  mode: "bundle",
+  // Source maps would double the file count of a static deploy for no gain;
+  // the sources are on GitHub.
+  bundle: { sourcemap: "none" },
+});
+
+assertEntryUrls();
+
+/**
+ * Checks the chunk URLs `src/assets.ts` declares against the ones the bundler
+ * actually produced.
+ *
+ * Islands cannot ask the asset server for their own URL — a `clientEntry()` id
+ * is evaluated in the browser too, where there is no bundler — so they compute
+ * it from a declared chunk path instead. This turns that declaration into a
+ * checked invariant: a change in how the bundler names outputs fails here at
+ * startup rather than as a 404 mid-hydration.
+ */
+function assertEntryUrls(): void {
+  for (const [name, entry] of Object.entries(clientEntrypoints)) {
+    const actual = assets.entryUrl(entry.source);
+    const declared = chunkUrl(entry.chunk);
+    if (actual !== declared) {
+      throw new Error(
+        `Client entrypoint "${name}" is published at ${actual}, but src/assets.ts ` +
+          `declares ${declared}. Update its "chunk" to "${
+            actual.slice(assetsBasePath.length + 1)
+          }".`,
+      );
+    }
+  }
 }
 
 export const router = createRouter();
@@ -83,13 +132,25 @@ router.mount(base || "/", (app: RouteBuilder) => {
                 </li>
               </ul>
               <section class="demo">
-                <h2>An interactive island</h2>
+                <h2>Two islands, one shared module</h2>
                 <p>
-                  The button below is server-rendered like every other page,
-                  then hydrated in the browser so it responds to clicks — view
-                  source and you'll find it already in the initial HTML.
+                  Both controls below are server-rendered like every other page,
+                  then hydrated in the browser — view source and you'll find
+                  them already in the initial HTML.
                 </p>
-                <Counter label="Clicks" start={0} />
+                <p>
+                  They are <em>separate browser entrypoints</em>{" "}
+                  that never talk to each other. Each one imports the same click
+                  store, and the running total keeps up because the bundler
+                  emitted that store once, into a chunk they share. Compile the
+                  two entries independently and each gets a private copy — the
+                  total would sit at zero forever.
+                </p>
+                <div class="demo-row">
+                  <Counter label="Left" start={0} />
+                  <Counter label="Right" start={0} />
+                  <Total label="Shared total" />
+                </div>
               </section>
               <p>
                 <Link class="button" href={routes.blog.index.href()}>
@@ -129,6 +190,10 @@ router.mount(base || "/", (app: RouteBuilder) => {
         }),
 
       static: ({ request, params }) => serveStatic(request, params.path ?? ""),
+
+      // Compiled client chunks. The asset server keys off the full pathname, so
+      // it is handed the request untouched.
+      assets: ({ request }) => assets.fetch(request),
     },
   });
 
