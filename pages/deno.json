@@ -1,7 +1,7 @@
 {
   "tasks": {
     "bundle": "deno bundle --minify -o static/client.js src/client.tsx",
-    "dev": "deno task bundle && deno run -A --watch scripts/dev.ts",
+    "dev": "deno task bundle && deno serve -A --watch --port 8000 src/router.tsx",
     "build": "deno task bundle && deno run -A scripts/build.ts",
     "check": "deno check scripts src && deno lint && deno fmt --check"
   },
