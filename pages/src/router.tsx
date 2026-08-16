@@ -188,3 +188,10 @@ router.mount(base || "/", (app: RouteBuilder) => {
     },
   });
 });
+
+/**
+ * `deno serve src/router.tsx` starts the dev server directly from this module —
+ * it looks for a default export with a `fetch` method, which the router already
+ * is. See the `dev` task in deno.json.
+ */
+export default router;

@@ -37,7 +37,8 @@ pages/
   src/
     base.ts          # base-path helper (see below)
     routes.ts        # the route map
-    router.tsx       # route actions (the pages) + static file serving
+    router.tsx       # route actions (the pages) + static file serving;
+                     #   also the `deno serve` entry for `deno task dev`
     layout.tsx       # the shared HTML document shell + page() helper
     link.tsx         # internal <Link> (full-document navigation)
     content.ts       # loads content/*.md (frontmatter + body)
@@ -47,7 +48,6 @@ pages/
       counter.tsx    # a sample client component (hydrated island)
   scripts/
     build.ts         # static build (crawl the router, write dist/)
-    dev.ts           # local dev server
   static/            # files served under /static/* (favicon, CSS, images…)
 ```
 
@@ -123,5 +123,8 @@ sub-path deployment locally:
 ```sh
 BASE_URL=http://localhost:8000/remix3-ssg-gh-pages deno task dev
 ```
+
+`deno serve` prints the root URL, but with `BASE_URL` set the site lives under
+the prefix — open <http://localhost:8000/remix3-ssg-gh-pages>.
 
 Deployment is wired up in `.github/workflows/pages.yml` at the repository root.
