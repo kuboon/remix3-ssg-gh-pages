@@ -25,10 +25,9 @@ export function markdown(context: { base: string }): FileTransform {
       return `/${withoutExtension}`.replace(/\/$/, "") || "/";
     },
 
-    async render(absolutePath, relativePath) {
-      const slug = relativePath.replace(/\.md$/, "").split("/").pop() ??
-        relativePath;
-      const article = parseArticle(slug, await Deno.readTextFile(absolutePath));
+    async render(file) {
+      const slug = file.path.replace(/\.md$/, "").split("/").pop() ?? file.path;
+      const article = parseArticle(slug, await Deno.readTextFile(file.url));
       const body = await renderMarkdown(article.body);
 
       return {

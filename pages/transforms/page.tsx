@@ -34,16 +34,16 @@ export function page(
       return `/${withoutExtension}`.replace(/\/$/, "") || "/";
     },
 
-    async render(absolutePath, relativePath) {
+    async render(file) {
       // Cached for the life of the process; `deno serve --watch` restarts when a page changes.
-      const module = await import(`file://${absolutePath}`) as PageModule;
+      const module = await import(file.url.href) as PageModule;
 
       const islandUrls: Record<string, string> = {};
       for (const name of module.islands ?? []) {
         const chunk = context.islandUrls[name];
         if (chunk === undefined) {
           throw new Error(
-            `"${relativePath}" names an island "${name}" that does not exist.`,
+            `"${file.path}" names an island "${name}" that does not exist.`,
           );
         }
         islandUrls[name] = chunk;
@@ -51,7 +51,7 @@ export function page(
 
       return {
         body: await renderPage({
-          title: module.title ?? relativePath,
+          title: module.title ?? file.path,
           description: module.description,
           base: context.base,
           islandUrls,

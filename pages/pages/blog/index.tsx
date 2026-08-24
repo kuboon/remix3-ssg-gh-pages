@@ -24,7 +24,9 @@ export default async function Blog(): Promise<RemixNode> {
       <ul class="post-list">
         {articles.map((article) => (
           <li key={article.slug}>
-            <Link href={`${base}/blog/${article.slug}`}>{article.title}</Link>
+            <Link href={`${base}/blog/${encodeURIComponent(article.slug)}`}>
+              {article.title}
+            </Link>
             {article.date
               ? <time datetime={article.date}>{article.date}</time>
               : null}
