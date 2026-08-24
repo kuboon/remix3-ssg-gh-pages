@@ -4,8 +4,8 @@
     "jsr:@deno/loader@0.5": "0.5.0",
     "jsr:@kuboon/md@0.1": "0.1.0",
     "jsr:@kuboon/remix-assets-deno@~0.4.2": "0.4.2",
-    "jsr:@kuboon/remix-ssg@*": "0.5.0",
-    "jsr:@kuboon/remix-ssg@0.5": "0.5.0",
+    "jsr:@kuboon/remix-ssg@*": "0.5.2",
+    "jsr:@kuboon/remix-ssg@~0.5.2": "0.5.2",
     "jsr:@std/cli@1": "1.0.32",
     "jsr:@std/collections@^1.1.3": "1.3.0",
     "jsr:@std/front-matter@^1.0.9": "1.0.9",
@@ -73,8 +73,8 @@
         "npm:es-module-lexer@^2.3.2"
       ]
     },
-    "@kuboon/remix-ssg@0.5.0": {
-      "integrity": "ff1ecbae42630a7ca4c54cf6a6cb057b717b71d5083cd0bcdf09c149eb30498f",
+    "@kuboon/remix-ssg@0.5.2": {
+      "integrity": "1f19bb3a89ed0117e7908ed8ea84a685dc32f87fdf1d2ad1357a69976211ab9f",
       "dependencies": [
         "jsr:@kuboon/remix-assets-deno",
         "jsr:@std/cli",
@@ -2328,7 +2328,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@kuboon/md@0.1",
-      "jsr:@kuboon/remix-ssg@0.5",
+      "jsr:@kuboon/remix-ssg@~0.5.2",
       "jsr:@std/front-matter@^1.0.9",
       "jsr:@std/path@^1.1.6",
       "npm:remix@3.0.0-beta.5"
