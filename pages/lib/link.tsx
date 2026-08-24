@@ -3,10 +3,10 @@ import type { Handle, RemixNode } from "remix/ui";
 /**
  * Internal site link.
  *
- * Renders a normal `<a>`, but marks it `rmx-document` so that on pages where the
- * client runtime is active (i.e. pages with hydrated islands), clicks still
- * perform a full document navigation instead of client-side SPA navigation.
- * That keeps this statically generated multi-page site predictable on any host.
+ * Renders a normal `<a>`, but marks it `rmx-document` so that on pages where the client runtime is
+ * active (i.e. pages with hydrated islands), clicks still perform a full document navigation
+ * instead of client-side SPA navigation. That keeps this statically generated multi-page site
+ * predictable on any host.
  *
  * Use it for links within the site; use a plain `<a>` for external links.
  */

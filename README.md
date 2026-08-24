@@ -1,11 +1,14 @@
 # remix3-ssg-gh-pages
 
-A [Remix v3](https://remix.run) static-site starter pre-rendered by
+A [Remix v3](https://remix.run) static-site starter built on
 [`@kuboon/remix-ssg`](https://jsr.io/@kuboon/remix-ssg) and deployed to GitHub
-Pages with per-PR previews. Client-side islands are compiled by
-[`@kuboon/remix-assets-deno`](https://jsr.io/@kuboon/remix-assets-deno), which
-code-splits every entrypoint out of one graph so a module two islands share is
-emitted once.
+Pages with per-PR previews.
+
+The site is content and one `router.ts` that wires three directories into a
+handler. `deno serve router.ts` is the dev server; the build crawls the same
+handler straight from JSR, so there is no build script in this repository.
+Islands are code-split out of one graph, so a module two of them share is
+emitted once — and the home page shows what that buys.
 
 The site lives in [`pages/`](./pages) — see [`pages/README.md`](./pages/README.md)
 for how it works and how to develop it.

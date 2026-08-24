@@ -1,16 +1,14 @@
 /**
- * A cross-island singleton: module-level state two separate client entrypoints
- * both import.
+ * A cross-island singleton: module-level state two separate client entrypoints both import.
  *
- * This is the module that makes the bundling strategy observable. `counter.tsx`
- * writes to it and `total.tsx` reads from it, and they are *different* browser
- * entrypoints. If each entrypoint were compiled on its own, each would get a
- * private copy of this module — the counter would bump its copy, the total would
- * read its own, and the page would show a total that never moves.
+ * This is the module that makes the bundling strategy observable. `counter.tsx` writes to it and
+ * `total.tsx` reads from it, and they are *different* browser entrypoints. If each were compiled on
+ * its own, each would get a private copy — the counter would bump its copy, the total would read
+ * its own, and the page would show a total that never moves.
  *
- * It works because both entries are compiled as one graph, so this module is
- * emitted once into a chunk they share. Nothing here is anchored on
- * `globalThis`; it is a plain module-level instance, which is the whole point.
+ * It works because every island is compiled as one graph, so this module is emitted once into a
+ * chunk they share. Nothing here is anchored on `globalThis`; it is a plain module-level instance,
+ * which is the whole point.
  */
 
 type Listener = () => void;
