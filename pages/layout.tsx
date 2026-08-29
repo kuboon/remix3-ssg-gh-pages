@@ -6,8 +6,8 @@
  * island gets neither, and so ships no JavaScript at all.
  */
 
-import { renderToString } from "remix/ui/server";
-import type { RemixNode } from "remix/ui";
+import { renderToString } from "@remix-run/ui/server";
+import type { RemixNode } from "@remix-run/ui";
 import { ISLAND_MAP_ELEMENT_ID } from "@kuboon/remix-ssg/client";
 
 import { Link } from "./lib/link.tsx";

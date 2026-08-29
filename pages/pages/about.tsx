@@ -1,4 +1,4 @@
-import type { RemixNode } from "remix/ui";
+import type { RemixNode } from "@remix-run/ui";
 
 import { base } from "../lib/base.ts";
 import { Link } from "../lib/link.tsx";

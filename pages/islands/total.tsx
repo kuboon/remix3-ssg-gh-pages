@@ -1,4 +1,4 @@
-import type { Handle } from "remix/ui";
+import type { Handle } from "@remix-run/ui";
 import { island } from "@kuboon/remix-ssg/client";
 
 import { clicks } from "./store.ts";
