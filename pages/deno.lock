@@ -14,6 +14,7 @@
     "jsr:@std/toml@^1.0.3": "1.0.11",
     "jsr:@std/yaml@^1.0.5": "1.2.0",
     "npm:@remix-run/ui@0.4": "0.4.0",
+    "npm:@remix-run/ui@0.7": "0.7.0",
     "npm:@types/hast@^3.0.4": "3.0.5",
     "npm:@types/mdast@^4.0.4": "4.0.4",
     "npm:beautiful-mermaid@~0.1.3": "0.1.3",
@@ -44,7 +45,7 @@
     "@kuboon/md@0.1.0": {
       "integrity": "8f32d60c497065d98421b86a6289dc980a307e91311c33f57bb07e49f6e99285",
       "dependencies": [
-        "npm:@remix-run/ui",
+        "npm:@remix-run/ui@0.4",
         "npm:@types/hast",
         "npm:@types/mdast",
         "npm:beautiful-mermaid",
@@ -993,6 +994,12 @@
     },
     "@remix-run/ui@0.4.0": {
       "integrity": "sha512-0whpy2s0V5ZHsErcEPESUZ7McmKQ3Nn1Ut5j4CkQVeos5VT3e1z/+osERMywUNTo2nyeUMpEMte5bFmaoleI3g==",
+      "dependencies": [
+        "@types/dom-navigation"
+      ]
+    },
+    "@remix-run/ui@0.7.0": {
+      "integrity": "sha512-SPgbmHOnHAGxZiyJhW7wxGBnk7lYdY5GlYj1Chj5hpHH+3IAChpCcwUwniqbN8Wddwf6G4oitN/YhGFarqPIUg==",
       "dependencies": [
         "@types/dom-navigation"
       ]
@@ -2173,7 +2180,7 @@
         "@remix-run/tar-parser",
         "@remix-run/terminal",
         "@remix-run/test",
-        "@remix-run/ui"
+        "@remix-run/ui@0.4.0"
       ],
       "bin": true
     },
@@ -2331,7 +2338,7 @@
       "jsr:@kuboon/remix-ssg@~0.5.2",
       "jsr:@std/front-matter@^1.0.9",
       "jsr:@std/path@^1.1.6",
-      "npm:remix@3.0.0-beta.5"
+      "npm:@remix-run/ui@0.7"
     ]
   }
 }

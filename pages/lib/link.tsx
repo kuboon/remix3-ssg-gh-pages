@@ -1,4 +1,4 @@
-import type { Handle, RemixNode } from "remix/ui";
+import type { Handle, RemixNode } from "@remix-run/ui";
 
 /**
  * Internal site link.

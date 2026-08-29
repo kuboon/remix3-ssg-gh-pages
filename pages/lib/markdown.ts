@@ -1,5 +1,5 @@
 import { hastToRemix, markdownToHast } from "@kuboon/md";
-import type { RemixNode } from "remix/ui";
+import type { RemixNode } from "@remix-run/ui";
 
 /**
  * Renders a Markdown string to a Remix UI node tree, ready to place inside a page.

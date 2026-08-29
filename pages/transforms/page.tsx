@@ -5,7 +5,7 @@
  * the shell loads only those chunks.
  */
 
-import type { RemixNode } from "remix/ui";
+import type { RemixNode } from "@remix-run/ui";
 import type { FileTransform } from "@kuboon/remix-ssg/site";
 
 import { renderPage } from "../layout.tsx";
