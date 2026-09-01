@@ -19,6 +19,31 @@ deno task dev     # local dev server
 deno task build   # generate the static site into pages/dist
 ```
 
+## Using this as a template
+
+This repository is a GitHub template. The demo content in it exists to show the
+framework working, not because your site needs it — **delete it in a new
+repository**:
+
+| Delete | What it is |
+| --- | --- |
+| `pages/pages/showcase.tsx` | The `@remix-run/ui` component showcase page |
+| `pages/islands/showcase/` | Its 18 demo islands and their shared helpers |
+| the `UI showcase` link in `pages/layout.tsx` | The nav entry pointing at it |
+| the `@remix-run/ui/*` subpath entries in `pages/deno.json` | Only the showcase imports those components |
+| `pages/pages/blog/*.md`, `pages/pages/about.tsx` | Placeholder content |
+
+`pages/pages/index.tsx` and `pages/islands/{counter,total,store}` are the
+two-islands-one-store demo. Delete those too once you have read the home page;
+the point they make is in this README's opening paragraph.
+
+What you keep is `pages/router.ts`, `pages/layout.tsx`, `pages/transforms/`,
+`pages/lib/`, `pages/static/`, and the workflows.
+
+After deleting, `deno task check && deno task build` should still pass — if it
+does not, something you kept was linking to something you removed, which is the
+build telling you the same thing it tells you about any dead link.
+
 ## Deployment
 
 `.github/workflows/pages.yml` calls the reusable

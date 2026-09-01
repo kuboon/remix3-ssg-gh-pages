@@ -70,6 +70,23 @@ pages/
   static/            # files served under /static/* (favicon, CSS, images…)
 ```
 
+## The UI showcase (delete me)
+
+`pages/showcase.tsx` and `islands/showcase/` are a port of
+[remix3-ui-showcase](https://github.com/kuboon/remix3-ui-showcase): every
+first-party `@remix-run/ui` component and the animation primitives, each an
+island whose parameters you can change live. It is here to demonstrate the
+framework, and the root README lists it first among the things to delete in a
+repository made from this template.
+
+It is also the largest thing the island pipeline is asked to do here — 18
+entrypoints compiled as one graph, sharing `@remix-run/ui` and the demo chrome
+through code-split chunks rather than 18 copies.
+
+Helpers the demos share live in `islands/showcase/_lib/`. The leading underscore
+matters: it is how the island scanner is told a `.tsx` file under `islands/` is
+a helper rather than an entrypoint.
+
 ## Adding a page
 
 Drop a file in `pages/` and link to it.
