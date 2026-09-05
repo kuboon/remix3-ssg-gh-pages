@@ -56,7 +56,7 @@
     "@remix-run/ui/select/primitives": "npm:@remix-run/ui@^0.8.0/select/primitives",
     "@remix-run/ui/tabs": "npm:@remix-run/ui@^0.8.0/tabs",
     "@remix-run/ui/toggle": "npm:@remix-run/ui@^0.8.0/toggle",
-    "@kuboon/remix-ssg": "jsr:@kuboon/remix-ssg@^0.7.0",
+    "@kuboon/remix-ssg": "jsr:@kuboon/remix-ssg@^0.8.0",
     "@kuboon/md": "jsr:@kuboon/md@^0.3.0",
     "@kuboon/md/hast_to_remix.ts": "jsr:@kuboon/md@^0.3.0/hast_to_remix.ts",
     "@std/front-matter": "jsr:@std/front-matter@^1.0.9"
