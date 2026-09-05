@@ -12,6 +12,7 @@ import { parseArticle } from "../lib/articles.ts";
 import { renderMarkdown } from "../lib/markdown.ts";
 import { Link } from "../lib/link.tsx";
 import { renderPage } from "../layout.tsx";
+import { metaStyle, proseStyle } from "../lib/theme.ts";
 
 export function markdown(context: { base: string }): FileTransform {
   return {
@@ -37,10 +38,14 @@ export function markdown(context: { base: string }): FileTransform {
           base: context.base,
           islandUrls: {},
           children: (
-            <article class="post">
+            <article mix={proseStyle}>
               <h1>{article.title}</h1>
               {article.date
-                ? <time datetime={article.date}>{article.date}</time>
+                ? (
+                  <time mix={metaStyle} datetime={article.date}>
+                    {article.date}
+                  </time>
+                )
                 : null}
               {body}
               <p>

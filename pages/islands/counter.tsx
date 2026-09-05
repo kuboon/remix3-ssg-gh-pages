@@ -1,7 +1,8 @@
-import { on } from "@remix-run/ui";
+import { css, on } from "@remix-run/ui";
 import type { Handle } from "@remix-run/ui";
 import { island } from "@kuboon/remix-ssg/client";
 
+import { color, radius } from "../lib/tokens.ts";
 import { clicks } from "./store.ts";
 
 /**
@@ -24,15 +25,35 @@ export const Counter = island(
     return () => (
       <button
         type="button"
-        class="counter"
-        mix={[on("click", () => {
-          count++;
-          clicks.bump();
-          handle.update();
-        })]}
+        mix={[
+          counterStyle,
+          on("click", () => {
+            count++;
+            clicks.bump();
+            handle.update();
+          }),
+        ]}
       >
         {handle.props.label}: {count}
       </button>
     );
   },
 );
+
+/**
+ * The island's own CSS, in the island's own file.
+ *
+ * It rides along with the component: server-rendered into the page's `<style>` tags, and re-applied
+ * by the same mixin when this entrypoint hydrates in the browser.
+ */
+const counterStyle = css({
+  font: "inherit",
+  fontWeight: 600,
+  cursor: "pointer",
+  padding: "0.55rem 1rem",
+  border: `1px solid ${color.accent}`,
+  borderRadius: radius.md,
+  background: color.accent,
+  color: color.onAccent,
+  "&:active": { transform: "translateY(1px)" },
+});

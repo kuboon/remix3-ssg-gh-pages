@@ -57,6 +57,8 @@ pages/
     articles.ts      # front-matter for the blog
     markdown.ts      # Markdown → a Remix UI tree (@kuboon/md)
     link.tsx         # internal <Link> (full-document navigation)
+    tokens.ts        # design tokens — colors, fonts, radii, the measure
+    theme.ts         # the css() mixins more than one module uses
   pages/
     index.tsx        # home — places both islands
     about.tsx
@@ -67,7 +69,9 @@ pages/
     counter.tsx      # a hydrated island, and its own browser entrypoint
     total.tsx        # a second island/entrypoint, sharing state with it
     store.ts         # the module both islands import — the shared singleton
-  static/            # files served under /static/* (favicon, CSS, images…)
+  static/
+    app.css          # tokens, document defaults, the cascade layer order
+    favicon.svg
 ```
 
 ## The UI showcase (delete me)
@@ -86,6 +90,74 @@ through code-split chunks rather than 18 copies.
 Helpers the demos share live in `islands/showcase/_lib/`. The leading underscore
 matters: it is how the island scanner is told a `.tsx` file under `islands/` is
 a helper rather than an entrypoint.
+
+## Styling
+
+Almost every rule is a `css(...)` mixin from `@remix-run/ui`, attached to an
+element with `mix`:
+
+```tsx
+const cardStyle = css({
+  padding: "1.25rem",
+  border: `1px solid ${color.border}`,
+  borderRadius: radius.lg,
+  "&:hover": { borderColor: color.accent },
+  "@media (min-width: 40rem)": { padding: "2rem" },
+});
+
+<section mix={cardStyle}>…</section>;
+```
+
+`renderToString` collects the mixins a page actually rendered and writes them
+into that page's `<head>` as `<style>` tags. So a page carries its own CSS and
+nothing else: no rules for parts of the site the reader never opened, and no
+class name that has to agree with a file somewhere else. The one stylesheet the
+site does link is `static/app.css`, and the next section is what it is for.
+
+### The cascade
+
+Generated `css(...)` rules — this site's, and the ones first-party `remix/ui`
+components carry — all land in the native `rmx` cascade layer, and a mixin
+cannot choose its layer. So `static/app.css` declares the full order, and
+`layout.tsx` links it at the top of `<head>`:
+
+```css
+@layer base, rmx, app;
+```
+
+Layers rank by where they are first named, which is why that link has to come
+out ahead of Remix's own rules — Remix appends its collected styles just before
+`</head>`.
+
+| Layer  | What is in it                                                                                                                                                                                                                                      |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base` | `app.css`. Tokens, the box model, and defaults for elements nobody styles by hand (`body`, `a`, `h1`, `code`). Being _before_ `rmx`, every one is a default a component may override — which is why nothing here needs `:where()` or `!important`. |
+| `rmx`  | Remix's. Every mixin on this site, and the styling `remix/ui` components bring with them.                                                                                                                                                          |
+| `app`  | Empty, and named anyway: where a rule would go that has to beat a component's own styling on purpose. Unlayered CSS would also win, but it would win by accident.                                                                                  |
+
+### Where a style goes
+
+- **Token values live in `static/app.css`; `lib/tokens.ts` names them.** Remix
+  supplies behaviour and a little component styling, not a theme, so the
+  palette, typography and radii are the app's. They are custom properties
+  because light and dark swap between two sets of them, and `tokens.ts` exports
+  the `var(--…)` references rather than a second copy of the values. Islands
+  import from `tokens.ts` and only from there — a `css(...)` call at module
+  scope is not something the bundler will drop, so importing `theme.ts` would
+  pull the whole shell into an island's chunk.
+- **Mixins used by more than one module live in `lib/theme.ts`.** A style used
+  in one place belongs in that file, under a `// --- styles ---` heading at the
+  bottom — see `layout.tsx` or `pages/index.tsx`.
+- **`mix` takes an array**, so mixins compose: `mix={[bandStyle, headerStyle]}`
+  is what a stylesheet would have said with a grouped selector. When an element
+  also has behaviour, the `on(...)` handlers go last.
+- **Nesting reaches markup this site does not write.** `theme.ts`'s `proseStyle`
+  dresses the Markdown articles with `& h2`, `& pre`, `& table` and friends,
+  scoped to the one class on the article wrapper instead of leaking out as bare
+  element selectors.
+
+`static/` holds `app.css` and anything else served verbatim (the favicon,
+images).
 
 ## Adding a page
 

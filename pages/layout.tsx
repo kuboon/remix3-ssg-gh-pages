@@ -4,13 +4,23 @@
  * It also carries the one thing the browser cannot work out for itself: the map from an island's
  * name to the chunk the bundler emitted, plus the scripts that load them. A page that places no
  * island gets neither, and so ships no JavaScript at all.
+ *
+ * The shell's own CSS is right here too, as `css(...)` mixins. `renderToString` collects the
+ * mixins the page rendered and writes them into `<head>`, so nothing below has a class name that
+ * has to agree with a file somewhere else.
+ *
+ * The one stylesheet it does link is `static/app.css`: the site's tokens, its document-level defaults,
+ * and the `@layer base, rmx, app` statement the whole cascade hangs off. Its position in the head
+ * matters — layers rank by where they are first named, and Remix appends its collected styles just
+ * before `</head>`, so the link has to come first.
  */
 
 import { renderToString } from "@remix-run/ui/server";
-import type { RemixNode } from "@remix-run/ui";
+import { css, type RemixNode } from "@remix-run/ui";
 import { ISLAND_MAP_ELEMENT_ID } from "@kuboon/remix-ssg/client";
 
 import { Link } from "./lib/link.tsx";
+import { color, contentWidth } from "./lib/tokens.ts";
 
 /** What every page hands the shell. */
 export interface LayoutProps {
@@ -43,13 +53,13 @@ export async function renderPage(props: LayoutProps): Promise<string> {
         {props.description
           ? <meta name="description" content={props.description} />
           : null}
+        <link rel="stylesheet" href={`${base}/static/app.css`} />
         <link rel="icon" href={`${base}/static/favicon.svg`} />
-        <link rel="stylesheet" href={`${base}/static/styles.css`} />
       </head>
       <body>
-        <header class="site-header">
-          <Link class="brand" href={home}>remix-ssg</Link>
-          <nav class="site-nav">
+        <header mix={[bandStyle, headerStyle]}>
+          <Link mix={brandStyle} href={home}>remix-ssg</Link>
+          <nav mix={navStyle}>
             <Link href={home}>Home</Link>
             <Link href={`${base}/about`}>About</Link>
             <Link href={`${base}/blog`}>Blog</Link>
@@ -57,8 +67,8 @@ export async function renderPage(props: LayoutProps): Promise<string> {
             <Link href={`${base}/showcase`}>UI showcase</Link>
           </nav>
         </header>
-        <main class="site-main">{props.children}</main>
-        <footer class="site-footer">
+        <main mix={[bandStyle, mainStyle]}>{props.children}</main>
+        <footer mix={[bandStyle, footerStyle]}>
           <p>
             Built with{" "}
             <a href="https://jsr.io/@kuboon/remix-ssg">@kuboon/remix-ssg</a> and
@@ -84,3 +94,50 @@ export async function renderPage(props: LayoutProps): Promise<string> {
 
   return `<!DOCTYPE html>${html}`;
 }
+
+// --- styles -----------------------------------------------------------------
+
+/**
+ * The measure the header, the main column and the footer all share.
+ *
+ * A stylesheet would say this with a grouped selector; here each band composes it, because `mix`
+ * takes an array and the classes stack in the order they are listed.
+ */
+const bandStyle = css({
+  width: "100%",
+  maxWidth: contentWidth,
+  marginInline: "auto",
+  paddingInline: "1.25rem",
+});
+
+const headerStyle = css({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "1rem",
+  flexWrap: "wrap",
+  paddingBlock: "1.25rem",
+  borderBottom: `1px solid ${color.border}`,
+});
+
+const brandStyle = css({
+  fontWeight: 700,
+  fontSize: "1.1rem",
+  textDecoration: "none",
+  color: color.fg,
+});
+
+const navStyle = css({
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "1rem",
+});
+
+const mainStyle = css({ paddingBlock: "2.5rem" });
+
+const footerStyle = css({
+  paddingBlock: "2rem",
+  borderTop: `1px solid ${color.border}`,
+  color: color.muted,
+  fontSize: "0.9rem",
+});

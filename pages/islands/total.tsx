@@ -1,6 +1,8 @@
+import { css } from "@remix-run/ui";
 import type { Handle } from "@remix-run/ui";
 import { island } from "@kuboon/remix-ssg/client";
 
+import { color, radius } from "../lib/tokens.ts";
 import { clicks } from "./store.ts";
 
 /**
@@ -23,9 +25,16 @@ export const Total = island(
     });
 
     return () => (
-      <output class="total">
+      <output mix={totalStyle}>
         {handle.props.label}: <strong>{total}</strong>
       </output>
     );
   },
 );
+
+const totalStyle = css({
+  font: "inherit",
+  padding: "0.55rem 1rem",
+  border: `1px dashed ${color.accent}`,
+  borderRadius: radius.md,
+});
