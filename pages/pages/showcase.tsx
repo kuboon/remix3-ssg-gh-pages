@@ -293,7 +293,12 @@ function Footer() {
 const pageStyle = css({
   "& *, & *::before, & *::after": { boxSizing: "border-box" },
   minHeight: "100vh",
-  margin: 0,
+  // This page brings its own layout, so it steps out of the shell's measure instead of asking the
+  // shell for an exemption. The negative inline margin widens it from `<main>`'s column to the
+  // full viewport — `containerStyle` below then puts the content back in the middle at its own
+  // width — and it is what lets the background below actually reach both edges.
+  marginBlock: 0,
+  marginInline: "calc(50% - 50vw)",
   padding: "40px 18px 90px",
   fontFamily: fontSans,
   color: theme.colors.text.primary,

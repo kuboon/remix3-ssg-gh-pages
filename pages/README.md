@@ -151,6 +151,13 @@ out ahead of Remix's own rules — Remix appends its collected styles just befor
 - **`mix` takes an array**, so mixins compose: `mix={[bandStyle, headerStyle]}`
   is what a stylesheet would have said with a grouped selector. When an element
   also has behaviour, the `on(...)` handlers go last.
+- **A page that needs more room than the measure takes it itself.**
+  `pages/showcase.tsx` brings its own layout, so its wrapper sets
+  `margin-inline: calc(50% - 50vw)` and widens from the main column to the full
+  viewport — no flag reaches the shell for it, and its background finally spans
+  both edges. `app.css` pairs that with `overflow-x: clip` on `body`, so `50vw`
+  (which counts the scrollbar) cannot drag a horizontal scrollbar behind the
+  vertical one.
 - **Nesting reaches markup this site does not write.** `theme.ts`'s `proseStyle`
   dresses the Markdown articles with `& h2`, `& pre`, `& table` and friends,
   scoped to the one class on the article wrapper instead of leaking out as bare

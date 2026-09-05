@@ -71,6 +71,13 @@
 
   body {
     margin: 0;
+    /*
+     * `clip`, not `hidden`: it stops a full-bleed child from dragging a horizontal scrollbar
+     * behind the vertical one — `50vw` counts the scrollbar's width, the viewport does not —
+     * without making this a scroll container, so `position: sticky` inside still works and
+     * vertical scrolling is untouched.
+     */
+    overflow-x: clip;
     font-family: var(--font-sans);
     line-height: 1.6;
     color: var(--fg);
