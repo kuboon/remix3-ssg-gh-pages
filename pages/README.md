@@ -262,9 +262,11 @@ case: the base alone is the home path. Nothing enforces that a route points at a
 page that exists, but nothing needs to: the build crawls the links it finds, so
 a route with no page behind it fails the build.
 
-The blog is not in the map. Its articles are Markdown files discovered at build
-time, so their paths come from what is on disk; `pages/blog/index.tsx` builds
-those hrefs from the slugs it read.
+The blog is in the map too, as `blog: { index: "/blog", show: "/blog/:slug" }`.
+No list of articles belongs there — they are Markdown files discovered at build
+time — but the shape of their URL does, so the listing links with
+`routes.blog.show.href({ slug })`. That call percent-encodes the slug itself,
+which is why nothing around it encodes anything.
 
 Internal links are plain `<a href>`. On a page with an island the client runtime
 is active, and it turns every internal `<a>` click into a frame navigation: it

@@ -10,8 +10,9 @@
  * `route('', …)` gives `/about` and `route('/repo/preview', …)` gives `/repo/preview/about`. It is
  * also why `home` needs no special case: the base alone is the home path, trailing slash and all.
  *
- * The blog is deliberately absent. Its articles are Markdown files discovered at build time, so
- * their paths are derived from what is on disk and there is nothing to write down here.
+ * The blog's articles are Markdown files discovered at build time, so no list of them belongs here
+ * — but the shape of their URL does, and `show` is that shape. `href({ slug })` percent-encodes the
+ * slug itself, which is why nothing calling it encodes anything.
  */
 
 import { route } from "@remix-run/fetch-router/routes";
@@ -24,4 +25,9 @@ export const routes = route(base, {
   about: "/about",
   // Showcase: delete this route when you delete the showcase — see README.
   showcase: "/showcase",
+  blog: {
+    index: "/blog",
+    /** One article. The slugs come from the files; this is only the shape of their URL. */
+    show: "/blog/:slug",
+  },
 });

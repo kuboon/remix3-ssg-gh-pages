@@ -68,7 +68,7 @@ export function renderPage(props: LayoutProps): Response {
           <nav mix={navStyle}>
             <a href={routes.home.href()}>Home</a>
             <a href={routes.about.href()}>About</a>
-            <a href={`${base}/blog`}>Blog</a>
+            <a href={routes.blog.index.href()}>Blog</a>
             {/* Showcase: delete this link when you delete the showcase — see README. */}
             <a href={routes.showcase.href()}>UI showcase</a>
           </nav>
