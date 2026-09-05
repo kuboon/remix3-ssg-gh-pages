@@ -1,13 +1,39 @@
 import { css, type RemixNode } from "@remix-run/ui";
 
 import { base } from "../../lib/base.ts";
-import { listArticles } from "../../lib/articles.ts";
+import { type Article, parseArticle } from "../../lib/articles.ts";
 import { metaStyle } from "../../lib/theme.ts";
 import { color } from "../../lib/tokens.ts";
 
 export const title = "Blog — remix-ssg";
 export const description =
   "Articles authored in Markdown, rendered to static HTML.";
+
+/**
+ * Reads every article, newest first.
+ *
+ * The articles are this file's siblings, so it asks for its own directory rather than being told
+ * where `pages/blog/` is — a path spelled out in another module is a copy of the layout that can
+ * fall out of step with it. `Deno.readDir` and `Deno.readTextFile` both take a `URL`, so the
+ * directory never has to become a string on the way (`.pathname` would percent-encode a space in
+ * the checkout path, and this way nothing can).
+ */
+async function listArticles(): Promise<Article[]> {
+  const dir = new URL("./", import.meta.url);
+  const articles: Article[] = [];
+
+  for await (const entry of Deno.readDir(dir)) {
+    if (!entry.isFile || !entry.name.endsWith(".md")) continue;
+    articles.push(
+      parseArticle(
+        entry.name.replace(/\.md$/, ""),
+        await Deno.readTextFile(new URL(entry.name, dir)),
+      ),
+    );
+  }
+
+  return articles.sort((a, b) => b.date.localeCompare(a.date));
+}
 
 /**
  * A page that builds itself from content.
