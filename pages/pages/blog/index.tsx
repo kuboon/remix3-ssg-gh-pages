@@ -1,8 +1,10 @@
-import type { RemixNode } from "@remix-run/ui";
+import { css, type RemixNode } from "@remix-run/ui";
 
 import { base } from "../../lib/base.ts";
 import { listArticles } from "../../lib/articles.ts";
 import { Link } from "../../lib/link.tsx";
+import { metaStyle } from "../../lib/theme.ts";
+import { color } from "../../lib/tokens.ts";
 
 export const title = "Blog — remix-ssg";
 export const description =
@@ -21,19 +23,44 @@ export default async function Blog(): Promise<RemixNode> {
   return (
     <>
       <h1>Blog</h1>
-      <ul class="post-list">
+      <ul mix={postListStyle}>
         {articles.map((article) => (
           <li key={article.slug}>
-            <Link href={`${base}/blog/${encodeURIComponent(article.slug)}`}>
+            <Link
+              mix={postTitleStyle}
+              href={`${base}/blog/${encodeURIComponent(article.slug)}`}
+            >
               {article.title}
             </Link>
             {article.date
-              ? <time datetime={article.date}>{article.date}</time>
+              ? (
+                <time mix={metaStyle} datetime={article.date}>
+                  {article.date}
+                </time>
+              )
               : null}
-            <p>{article.summary}</p>
+            <p mix={summaryStyle}>{article.summary}</p>
           </li>
         ))}
       </ul>
     </>
   );
 }
+
+// --- styles -----------------------------------------------------------------
+
+const postListStyle = css({
+  listStyle: "none",
+  padding: 0,
+  "& li": {
+    paddingBlock: "1rem",
+    borderBottom: `1px solid ${color.border}`,
+  },
+});
+
+const postTitleStyle = css({
+  fontSize: "1.2rem",
+  fontWeight: 600,
+});
+
+const summaryStyle = css({ marginBlock: "0.3rem 0" });
