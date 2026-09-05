@@ -39,8 +39,9 @@ the point they make is in this README's opening paragraph.
 
 What you keep is `pages/router.ts`, `pages/layout.tsx`, `pages/transforms/`,
 `pages/lib/`, `pages/static/`, and the workflows. `pages/lib/tokens.ts` and
-`pages/lib/theme.ts` are where the site's look lives — change the palette there
-and the whole site follows.
+`pages/lib/theme.ts` are where the site's look lives — Remix supplies behaviour
+and a little component styling, not a theme, so the palette, spacing and
+typography are the app's. Change them there and the whole site follows.
 
 After deleting, `deno task check && deno task build` should still pass — if it
 does not, something you kept was linking to something you removed, which is the

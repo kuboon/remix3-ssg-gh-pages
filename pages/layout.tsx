@@ -8,6 +8,11 @@
  * The shell's own CSS is right here too, as `css(...)` mixins. `renderToString` collects the
  * mixins the page rendered and writes them into `<head>`, so there is no stylesheet to link and
  * nothing to keep in sync with the markup below.
+ *
+ * The one `<style>` below is `lib/theme.ts`'s base layer, and its position matters: cascade layers
+ * rank by where they are first named, so the site's layer order has to be stated before Remix
+ * emits a rule of its own. Writing it here, at the top of the head, is what does that — Remix
+ * appends its collected styles just before `</head>`.
  */
 
 import { renderToString } from "@remix-run/ui/server";
@@ -15,7 +20,7 @@ import { css, type RemixNode } from "@remix-run/ui";
 import { ISLAND_MAP_ELEMENT_ID } from "@kuboon/remix-ssg/client";
 
 import { Link } from "./lib/link.tsx";
-import { bodyStyle, documentStyle } from "./lib/theme.ts";
+import { baseLayerCss } from "./lib/theme.ts";
 import { color, contentWidth } from "./lib/tokens.ts";
 
 /** What every page hands the shell. */
@@ -41,17 +46,18 @@ export async function renderPage(props: LayoutProps): Promise<string> {
   const home = base === "" ? "/" : base;
 
   const html = await renderToString(
-    <html lang="en" mix={documentStyle}>
+    <html lang="en">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style innerHTML={baseLayerCss}></style>
         <title>{props.title}</title>
         {props.description
           ? <meta name="description" content={props.description} />
           : null}
         <link rel="icon" href={`${base}/static/favicon.svg`} />
       </head>
-      <body mix={bodyStyle}>
+      <body>
         <header mix={[bandStyle, headerStyle]}>
           <Link mix={brandStyle} href={home}>remix-ssg</Link>
           <nav mix={navStyle}>

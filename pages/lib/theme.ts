@@ -1,71 +1,105 @@
 /**
- * The site's stylesheet — except that it is not a stylesheet.
+ * The site's styles: one base layer, and the `css(...)` mixins more than one module uses.
  *
- * Every rule here is a `css(...)` mixin from `@remix-run/ui`. The server collects the mixins a
- * page actually rendered and emits them as `<style>` tags in that page's `<head>`, so each page
- * ships its own CSS and nothing else: no extra request, and no rules for parts of the site the
- * reader never opened.
+ * Nearly everything here is a mixin from `@remix-run/ui`. The server collects the mixins a page
+ * actually rendered and emits them as `<style>` tags in that page's `<head>`, so each page ships
+ * its own CSS and nothing else: no extra request, and no rules for parts of the site the reader
+ * never opened.
  *
- * Two things are worth knowing before editing:
+ * The exception is {@link baseLayerCss}, and the reason is the cascade. Generated `css(...)` rules
+ * — this site's and the ones first-party `remix/ui` components carry — all land in the native
+ * `rmx` layer. Anything the app wants a component to be free to override has to sit in a layer
+ * *before* `rmx`, and a mixin cannot choose its layer. So the document-level defaults are real CSS
+ * in `@layer base`, built from the same tokens as everything else.
  *
- * - Each generated class lands in its own `@layer rmx.<class>`, and those layers are ordered by
- *   the order in which the styles were rendered. A mixin applied further down the tree therefore
- *   wins over one applied above it, whatever the specificity — which is why the document-wide
- *   defaults below can sit on `<html>` and `<body>` and still be overridable everywhere, with no
- *   `!important` anywhere on this site.
+ * Two more things are worth knowing before editing:
+ *
  * - `mix` takes an array, so mixins compose: `mix={[bandStyle, headerStyle]}` is how this site
- *   says what a CSS file would have said with a grouped selector.
- *
- * What belongs here is what more than one module uses. A style used in one place belongs in that
- * file, next to the markup it dresses.
+ *   says what a stylesheet would have said with a grouped selector.
+ * - What belongs in this file is what more than one module uses. A style used in one place belongs
+ *   in that file, next to the markup it dresses.
  */
 
 import { css } from "@remix-run/ui";
 
 import { color, font, palette, radius } from "./tokens.ts";
 
-// --- the document ------------------------------------------------------------
+// --- the base layer ----------------------------------------------------------
+
+/** `--name: value;` lines for a palette, indented to sit inside a rule. */
+function customProperties(
+  properties: Record<string, string>,
+  indent: string,
+): string {
+  return Object.entries(properties)
+    .map(([name, value]) => `${indent}${name}: ${value};`)
+    .join("\n");
+}
 
 /**
- * Goes on `<html>`: the palettes, the color scheme, and the box model.
+ * The document-level defaults, and the layer order the whole site cascades by.
  *
- * The dark palette is a nested `@media` block, which the mixin scopes to this same class — so the
- * custom properties are redefined on the element that declared them, and everything reading
- * `var(--…)` follows without knowing a second palette exists.
- */
-export const documentStyle = css({
-  colorScheme: "light dark",
-  boxSizing: "border-box",
-  ...palette.light,
-  "@media (prefers-color-scheme: dark)": { ...palette.dark },
-  "& *, & *::before, & *::after": { boxSizing: "inherit" },
-});
-
-/**
- * Goes on `<body>`: the typography, and defaults for elements this site does not write by hand.
+ * `layout.tsx` writes this into `<head>` ahead of everything else, which is what fixes the order:
+ * layers rank by where they are first named, so naming all three in one statement — before Remix
+ * has emitted a rule of its own — settles it once.
  *
- * The nested selectors are wrapped in `:where()` so they carry no specificity of their own. The
- * Markdown articles and the UI showcase both style elements themselves, and neither should have to
- * out-specify the shell to do it.
+ * - `base` — here. Tokens, the box model, and the defaults for elements nobody styles by hand.
+ *   Being before `rmx`, every one of them is a default a component may override without a fight,
+ *   which is why nothing below needs `:where()` or `!important`.
+ * - `rmx` — Remix's. Every `css(...)` mixin on this site, and the styles `remix/ui` components
+ *   bring with them.
+ * - `app` — empty, and named anyway: it is where a rule would go that has to beat a component's
+ *   own styling on purpose. Unlayered CSS would also do it, and would do it by accident.
  */
-export const bodyStyle = css({
-  margin: 0,
-  fontFamily: font.sans,
-  lineHeight: 1.6,
-  color: color.fg,
-  background: color.bg,
-  "& :where(a)": { color: color.accent },
-  "& :where(h1)": { fontSize: "2rem", lineHeight: 1.2, marginTop: 0 },
-  "& :where(code)": {
-    fontFamily: font.mono,
-    fontSize: "0.9em",
-    background: color.card,
-    padding: "0.1rem 0.35rem",
-    borderRadius: radius.sm,
-  },
-});
+export const baseLayerCss: string = `@layer base, rmx, app;
 
-// --- shared pieces -----------------------------------------------------------
+@layer base {
+  :root {
+    color-scheme: light dark;
+${customProperties(palette.light, "    ")}
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+${customProperties(palette.dark, "      ")}
+    }
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: ${font.sans};
+    line-height: 1.6;
+    color: ${color.fg};
+    background: ${color.bg};
+  }
+
+  a {
+    color: ${color.accent};
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-top: 0;
+  }
+
+  code {
+    font-family: ${font.mono};
+    font-size: 0.9em;
+    background: ${color.card};
+    padding: 0.1rem 0.35rem;
+    border-radius: ${radius.sm};
+  }
+}
+`;
+
+// --- shared mixins -----------------------------------------------------------
 
 /** A date, a byline, a caption: small, quiet, on a line of its own. */
 export const metaStyle = css({
@@ -115,7 +149,7 @@ export const proseStyle = css({
   "& p, & ul, & ol": { marginBlock: "1rem" },
   "& li": { marginBlock: "0.3rem" },
   "& a": { textDecorationThickness: "1px", textUnderlineOffset: "2px" },
-  // @kuboon/md wraps every heading in its own anchor link. Left to the document-wide default it
+  // @kuboon/md wraps every heading in its own anchor link. Left to the base layer's default it
   // would paint each heading accent-blue and underline it.
   "& :is(h1, h2, h3, h4, h5, h6) a": {
     color: "inherit",
@@ -145,8 +179,8 @@ export const proseStyle = css({
     textAlign: "left",
   },
   // Shiki paints the block itself, inline, so all this owes a code block is room to breathe and
-  // somewhere to scroll. The inner <code> has to give back what the document-wide `code` default
-  // gave it, or a light chip sits on top of a dark block.
+  // somewhere to scroll. The inner <code> has to give back what the base layer's `code` gave it,
+  // or a light chip sits on top of a dark block.
   "& pre": {
     marginBlock: "1.5rem",
     padding: "0.9rem 1rem",
