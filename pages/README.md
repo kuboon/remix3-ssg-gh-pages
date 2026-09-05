@@ -8,7 +8,7 @@ hydrated islands.
 
 ## How it works
 
-`routes.ts` states every URL the site answers, `controllers/` renders them, and
+`routes.ts` states every URL the site answers, `pages/` renders them, and
 `router.ts` maps one to the other — the shape a Remix app has:
 
 ```ts
@@ -17,12 +17,11 @@ router.get(routes.about, aboutAction);
 
 Around that, `router.ts` composes what a static site needs on top:
 
-|            |                                                          |
-| ---------- | -------------------------------------------------------- |
-| the router | the pages named in `routes.ts`                           |
-| `pages/`   | the Markdown articles, through this site's own transform |
-| `islands/` | compiled as a single code-split bundle                   |
-| `static/`  | served verbatim                                          |
+|               |                                                          |
+| ------------- | -------------------------------------------------------- |
+| the router    | the pages named in `routes.ts`, and the browser modules  |
+| `pages/blog/` | the Markdown articles, through this site's own transform |
+| `static/`     | served verbatim                                          |
 
 They stack with `compose`, which reads a `404` as "not mine" and moves on —
 which is exactly what the router returns for a path it has no route for.
@@ -63,12 +62,11 @@ pages/
   deno.json          # tasks, imports, permission sets, compiler + JSX options
   deno.lock          # pinned dependency versions (committed)
   routes.ts          # every URL the site answers
-  router.ts          # the wiring — routes to controllers, plus the rest of the site
+  router.ts          # the wiring — routes to pages, plus the rest of the site
+  assets.ts          # the browser modules, compiled as one graph
   layout.tsx         # the HTML document shell
-  controllers/
-    home.tsx         # home — places both islands
-    about.tsx
-    blog.tsx         # lists the articles
+  client/
+    hydration.ts     # run() — the client runtime, loaded by a page that hydrates
   transforms/
     markdown.tsx     # .md → an article page
   lib/
@@ -78,6 +76,10 @@ pages/
     tokens.ts        # design tokens — colors, fonts, radii, the measure
     theme.ts         # the css() mixins more than one module uses
   pages/
+    index.tsx        # home — places two client entries
+    about.tsx
+    blog.tsx         # lists the articles
+    showcase.tsx
     blog/
       *.md           # the articles
   islands/
@@ -102,9 +104,9 @@ It is also the largest thing the island pipeline is asked to do here — 18
 entrypoints compiled as one graph, sharing `@remix-run/ui` and the demo chrome
 through code-split chunks rather than 18 copies.
 
-Helpers the demos share live in `islands/showcase/_lib/`. The leading underscore
-matters: it is how the island scanner is told a `.tsx` file under `islands/` is
-a helper rather than an entrypoint.
+Helpers the demos share live in `islands/showcase/_lib/`. Nothing enforces the
+underscore any more — `assets.ts` lists its entrypoints, so a file is one
+because it is named there, not because of where it sits.
 
 ## Styling
 
@@ -186,9 +188,9 @@ images).
 Three edits, in the order you would guess:
 
 1. Name its URL in `routes.ts` — `contact: get("/contact")`.
-2. Write `controllers/contact.tsx`, exporting an action that returns
-   `renderPage({ title, islandUrls, children })`.
-3. Map them in `router.ts` — `router.get(routes.contact, contactAction)`.
+2. Write `pages/contact.tsx`, exporting a component as `default` plus a `title`
+   — and `hydrate = true` if it places a client entry.
+3. Map them in `router.ts` — `router.get(routes.contact, pageAction(Contact))`.
 
 An **article** needs none of that: drop a `.md` file under `pages/blog/` and the
 transform serves it at its path.
@@ -229,15 +231,17 @@ browser. See `islands/counter.tsx`.
 
 To add one:
 
-1. Write it in `islands/` with `island('name', 'Export', …)` from
-   `@kuboon/remix-ssg/client`, where the name is the file's path under
-   `islands/` without the extension. Call `handle.update()` after changing
-   state.
-2. Import it into a `.tsx` page and place it.
-3. Name it in that page's `islands` export, so the shell loads its chunk.
+1. Write it in `islands/` with `clientEntry('islands/<name>.tsx#Export', …)`
+   from `@remix-run/ui`. The id names the module and the export, not a URL: the
+   same expression is evaluated in the browser, where nothing can know the
+   deploy prefix or predict the bundler's output naming. Call `handle.update()`
+   after changing state.
+2. Add it to `entrypoints` in `assets.ts`.
+3. Import it into a page and place it, and set `export const hydrate = true` on
+   that page.
 
-A page that names no island ships no `<script>` at all — the article pages have
-none.
+A page that does not set `hydrate` ships no `<script>` at all — the article
+pages have none.
 
 ### How the client code is compiled
 
@@ -246,8 +250,9 @@ Every island is a browser entrypoint, and all of them go into a _single_
 imports comes out **once**, in a chunk they share:
 
 ```
-islands/counter.js ─┬─→ chunk-…   the Remix UI runtime, the ssg client runtime, store.ts
-islands/total.js  ──┘
+client/hydration.js ─┬─→ chunk-…   the Remix UI runtime
+islands/counter.js  ─┤
+islands/total.js    ─┴─→ chunk-…   store.ts
 ```
 
 The home page demonstrates why that matters. `counter.tsx` and `total.tsx` are
@@ -256,12 +261,18 @@ separate entrypoints that never reference each other; both import
 store was emitted once. Compile the entries independently — one bundler call
 each — and each gets a private copy, so the total would sit at zero.
 
-There is no client runtime entrypoint to declare: the runtime rides in the chunk
-the islands share and starts itself. An island's id is a logical name
-(`island:counter#Counter`) rather than a URL, because that expression is
-evaluated in the browser too, where predicting the bundler's output naming —
-which shifts with the set of entrypoints — would be guesswork. The shell embeds
-the name→chunk map the bundler produced and the runtime resolves against it.
+`client/hydration.ts` is an entrypoint like the islands, and the only script the
+shell writes: it calls `run()`, which walks the document for the hydration
+markers the server emitted and imports each island by the URL named there.
+
+That URL is resolved on the server, by `resolveClientEntry` in `assets.ts` —
+`clientEntry`'s id is a source path, and turning it into a chunk URL needs both
+the deploy prefix and the bundler's output naming, neither of which the browser
+has. The same hook asks for the chunk to be preloaded, which earns its keep
+twice: the browser fetches it while the runtime is still starting, and the
+build's crawl gets a `<link>` to follow. Without that link the chunks are named
+only inside the hydration JSON, where nothing looking for links can see them —
+and the build writes four assets instead of thirty-eight.
 
 ### Links, and why the shell streams
 

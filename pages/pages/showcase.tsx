@@ -2,10 +2,10 @@
  * The `@remix-run/ui` component showcase — a port of
  * https://github.com/kuboon/remix3-ui-showcase onto this framework.
  *
- * DELETE ME in a repository made from this template: this controller, its route
- * and its line in `router.ts`, the `islands/showcase/` directory it imports, the
- * nav link in `layout.tsx`, and the `@remix-run/ui/*` subpath entries in
- * `deno.json`. See the root README.
+ * DELETE ME in a repository made from this template: this page, its route and
+ * its line in `router.ts`, the `islands/showcase/` directory it imports and its
+ * entrypoints in `assets.ts`, the nav link in `layout.tsx`, and the
+ * `@remix-run/ui/*` subpath entries in `deno.json`. See the root README.
  *
  * It stays here because it is the honest stress test of the island pipeline:
  * 18 entrypoints compiled as one graph, sharing the component library through
@@ -13,8 +13,6 @@
  */
 
 import { css, type RemixNode } from "@remix-run/ui";
-
-import { renderPage } from "../layout.tsx";
 
 import { AccordionDemo } from "../islands/showcase/accordion.tsx";
 import { EntranceExitDemo } from "../islands/showcase/anim-entrance.tsx";
@@ -36,27 +34,13 @@ import { TabsDemo } from "../islands/showcase/tabs.tsx";
 import { ToggleDemo } from "../islands/showcase/toggle.tsx";
 import { brandTint, fontSans, theme } from "../islands/showcase/_lib/tokens.ts";
 
-/** Every demo on this page. The shell loads exactly these chunks. */
-const islandNames: readonly string[] = [
-  "showcase/accordion",
-  "showcase/anchor",
-  "showcase/anim-entrance",
-  "showcase/anim-layout",
-  "showcase/anim-spring",
-  "showcase/anim-tween",
-  "showcase/breadcrumbs",
-  "showcase/buttons",
-  "showcase/checkbox",
-  "showcase/combobox",
-  "showcase/input",
-  "showcase/listbox",
-  "showcase/menu",
-  "showcase/popover",
-  "showcase/radio",
-  "showcase/select",
-  "showcase/tabs",
-  "showcase/toggle",
-];
+export const title = "UI showcase — remix-ssg";
+export const description =
+  "Every first-party @remix-run/ui component and the animation primitives, " +
+  "each one a hydrated island whose parameters you can change live.";
+
+/** This page places client entries, so the shell boots the runtime for it. */
+export const hydrate = true;
 
 const componentLinks = [
   { id: "button", label: "Button" },
@@ -105,35 +89,7 @@ const versions: ReadonlyArray<{ label: string; value: string }> = [
   { label: "Deno", value: Deno.version.deno },
 ];
 
-/**
- * Renders the showcase.
- *
- * @param islandUrls Name -> chunk URL for every island on the site
- * @returns The action `router.ts` maps to {@link routes.showcase}
- */
-export function showcaseAction(
-  islandUrls: Record<string, string>,
-): () => Response {
-  return () =>
-    renderPage({
-      title: "UI showcase — remix-ssg",
-      description:
-        "Every first-party @remix-run/ui component and the animation primitives, " +
-        "each one a hydrated island whose parameters you can change live.",
-      islandUrls: Object.fromEntries(
-        islandNames.map((name) => {
-          const chunk = islandUrls[name];
-          if (chunk === undefined) {
-            throw new Error(`No island named "${name}".`);
-          }
-          return [name, chunk];
-        }),
-      ),
-      children: ShowcasePage(),
-    });
-}
-
-function ShowcasePage(): RemixNode {
+export default function ShowcasePage(): RemixNode {
   return (
     <div mix={pageStyle}>
       <div mix={containerStyle}>

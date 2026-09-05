@@ -1,5 +1,4 @@
-import { css, type Handle } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle } from "@remix-run/ui";
 import toggle from "@remix-run/ui/toggle";
 
 import { theme } from "./_lib/tokens.ts";
@@ -18,9 +17,8 @@ const rowStyle = css({
   color: theme.colors.text.primary,
 });
 
-export const ToggleDemo = island(
-  "showcase/toggle",
-  "ToggleDemo",
+export const ToggleDemo = clientEntry(
+  "islands/showcase/toggle.tsx#ToggleDemo",
   function ToggleDemo(handle: Handle) {
     let size = "md";
 

@@ -1,5 +1,4 @@
-import { css, type Handle, on, ref } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle, on, ref } from "@remix-run/ui";
 import button from "@remix-run/ui/button";
 import { easings, tween } from "@remix-run/ui/animation";
 
@@ -21,9 +20,8 @@ const curveOptions = [
   { value: "easeInOut", label: "easeInOut" },
 ];
 
-export const TweenDemo = island(
-  "showcase/anim-tween",
-  "TweenDemo",
+export const TweenDemo = clientEntry(
+  "islands/showcase/anim-tween.tsx#TweenDemo",
   function TweenDemo(handle: Handle) {
     let curve = "easeOut";
     let duration = 700;

@@ -34,7 +34,6 @@ export function markdown(): FileTransform {
       return renderPage({
         title: `${article.title} — remix-ssg`,
         description: article.summary,
-        islandUrls: {},
         children: (
           <article mix={proseStyle}>
             <h1>{article.title}</h1>

@@ -1,6 +1,5 @@
-import { css } from "@remix-run/ui";
+import { clientEntry, css } from "@remix-run/ui";
 import type { Handle } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
 
 import { color, radius } from "../lib/tokens.ts";
 import { clicks } from "./store.ts";
@@ -12,9 +11,8 @@ import { clicks } from "./store.ts";
  * import. The number below only moves because the two entrypoints resolved that import to the
  * *same* module instance, which is what compiling them as one code-split graph buys.
  */
-export const Total = island(
-  "total",
-  "Total",
+export const Total = clientEntry(
+  "islands/total.tsx#Total",
   function Total(handle: Handle<{ label: string }>) {
     // Server-rendered as 0; the subscription only exists in the browser.
     let total = clicks.total;

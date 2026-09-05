@@ -23,9 +23,9 @@
  */
 
 import { css, type RemixNode } from "@remix-run/ui";
-import { ISLAND_MAP_ELEMENT_ID } from "@kuboon/remix-ssg/client";
 import { htmlDocument } from "@kuboon/remix-ssg/site";
 
+import { assets, resolveClientEntry } from "./assets.ts";
 import { base } from "./lib/base.ts";
 import { routes } from "./routes.ts";
 import { color, contentWidth } from "./lib/tokens.ts";
@@ -34,21 +34,24 @@ import { color, contentWidth } from "./lib/tokens.ts";
 export interface LayoutProps {
   title: string;
   description?: string;
-  /** Name -> chunk URL for the islands this page places. Empty on a page with none. */
-  islandUrls: Record<string, string>;
+  /**
+   * Whether this page places a client entry.
+   *
+   * The shell has to be told, because it cannot find out: the entries are resolved while the tree
+   * renders, and by then the `<script>` that boots them has already been written. A page that says
+   * nothing gets no script at all, which is what keeps an article free of JavaScript.
+   */
+  hydrate?: boolean;
   children: RemixNode;
 }
 
 /**
  * Renders a page inside the document shell.
  *
- * @param props The page's title, islands and body
+ * @param props The page's title, body, and whether it hydrates
  * @returns The response to serve for this page
  */
 export function renderPage(props: LayoutProps): Response {
-  const { islandUrls } = props;
-  const chunks = [...new Set(Object.values(islandUrls))];
-
   return htmlDocument(
     <html lang="en">
       <head>
@@ -81,20 +84,18 @@ export function renderPage(props: LayoutProps): Response {
             <a href="https://remix.run">Remix v3</a>.
           </p>
         </footer>
-        {chunks.length > 0
+        {props.hydrate
           ? (
-            <>
-              <script type="application/json" id={ISLAND_MAP_ELEMENT_ID}>
-                {JSON.stringify(islandUrls)}
-              </script>
-              {chunks.map((src) => (
-                <script key={src} type="module" src={src}></script>
-              ))}
-            </>
+            <script
+              type="module"
+              src={assets.entryUrl("client/hydration.ts")}
+            >
+            </script>
           )
           : null}
       </body>
     </html>,
+    { resolveClientEntry },
   );
 }
 

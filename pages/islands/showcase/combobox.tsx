@@ -1,5 +1,4 @@
-import { css, type Handle } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle } from "@remix-run/ui";
 import { Combobox, ComboboxOption } from "@remix-run/ui/combobox";
 import { onComboboxChange } from "@remix-run/ui/combobox/primitives";
 
@@ -38,9 +37,8 @@ const airports = [
   },
 ];
 
-export const ComboboxDemo = island(
-  "showcase/combobox",
-  "ComboboxDemo",
+export const ComboboxDemo = clientEntry(
+  "islands/showcase/combobox.tsx#ComboboxDemo",
   function ComboboxDemo(handle: Handle) {
     let value = "(none)";
     let label = "(none)";

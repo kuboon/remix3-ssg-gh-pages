@@ -1,5 +1,4 @@
-import { css, type Handle } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle } from "@remix-run/ui";
 import input from "@remix-run/ui/input";
 
 import { SearchIcon } from "./_lib/icons.tsx";
@@ -25,9 +24,8 @@ const labelStyle = css({
   color: theme.colors.text.secondary,
 });
 
-export const InputDemo = island(
-  "showcase/input",
-  "InputDemo",
+export const InputDemo = clientEntry(
+  "islands/showcase/input.tsx#InputDemo",
   function InputDemo(handle: Handle) {
     let size = "md";
     let withIcon = true;

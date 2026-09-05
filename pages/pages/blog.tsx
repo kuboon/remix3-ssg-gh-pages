@@ -1,7 +1,6 @@
 import { css, type RemixNode } from "@remix-run/ui";
 
 import { type Article, parseArticle } from "../lib/articles.ts";
-import { renderPage } from "../layout.tsx";
 import { routes } from "../routes.ts";
 import { metaStyle } from "../lib/theme.ts";
 import { color } from "../lib/tokens.ts";
@@ -28,27 +27,21 @@ async function listArticles(dir: string): Promise<Article[]> {
   return articles.sort((a, b) => b.date.localeCompare(a.date));
 }
 
+export const title = "Blog — remix-ssg";
+export const description =
+  "Articles authored in Markdown, rendered to static HTML.";
+
 /**
- * Renders the article listing.
+ * The article listing.
  *
  * It builds itself from the files rather than from a list someone maintains, which is what keeps
  * the framework free of a content model — and it is also what makes every article reachable, since
  * the crawl only writes what something links to.
  *
- * @param articlesDir Directory holding the `.md` articles
- * @returns The action `router.ts` maps to {@link routes.blog.index}
+ * @param articlesDir Directory holding the `.md` articles, from `router.ts`
+ * @returns The listing
  */
-export function blogAction(articlesDir: string): () => Promise<Response> {
-  return async () =>
-    renderPage({
-      title: "Blog — remix-ssg",
-      description: "Articles authored in Markdown, rendered to static HTML.",
-      islandUrls: {},
-      children: await articleList(articlesDir),
-    });
-}
-
-async function articleList(articlesDir: string): Promise<RemixNode> {
+export default async function Blog(articlesDir: string): Promise<RemixNode> {
   const articles = await listArticles(articlesDir);
 
   return (

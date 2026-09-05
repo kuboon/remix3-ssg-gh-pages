@@ -1,5 +1,4 @@
-import { css, type Handle } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle } from "@remix-run/ui";
 import button, { type ButtonTone } from "@remix-run/ui/button";
 
 import { AddIcon, ChevronRightIcon } from "./_lib/icons.tsx";
@@ -29,9 +28,8 @@ const slotStyle = css({
   gap: "8px",
 });
 
-export const ButtonsDemo = island(
-  "showcase/buttons",
-  "ButtonsDemo",
+export const ButtonsDemo = clientEntry(
+  "islands/showcase/buttons.tsx#ButtonsDemo",
   function ButtonsDemo(handle: Handle) {
     let tone = "primary";
     let size = "md";
