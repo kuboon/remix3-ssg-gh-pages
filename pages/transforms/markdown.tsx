@@ -11,6 +11,7 @@ import type { FileTransform } from "@kuboon/remix-ssg/site";
 import { parseArticle } from "../lib/articles.ts";
 import { renderMarkdown } from "../lib/markdown.ts";
 import { renderPage } from "../layout.tsx";
+import { routes } from "../lib/routes.ts";
 import { metaStyle, proseStyle } from "../lib/theme.ts";
 
 export function markdown(context: { base: string }): FileTransform {
@@ -47,7 +48,7 @@ export function markdown(context: { base: string }): FileTransform {
               : null}
             {body}
             <p>
-              <a href={`${context.base}/blog`}>← All posts</a>
+              <a href={routes.blog.index.href()}>← All posts</a>
             </p>
           </article>
         ),

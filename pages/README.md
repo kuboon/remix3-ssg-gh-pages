@@ -54,6 +54,7 @@ pages/
     page.tsx         # .tsx → a page module
   lib/
     base.ts          # the deploy prefix, computed once
+    routes.ts        # the fixed pages, as a fetch-router route map
     articles.ts      # what an article is, and its front-matter parser
     markdown.ts      # Markdown → a Remix UI tree (@kuboon/md)
     tokens.ts        # design tokens — colors, fonts, radii, the measure
@@ -245,6 +246,27 @@ which shifts with the set of entrypoints — would be guesswork. The shell embed
 the name→chunk map the bundler produced and the runtime resolves against it.
 
 ### Links, and why the shell streams
+
+The fixed pages live in `lib/routes.ts` as a `@remix-run/fetch-router` route
+map, and links go through it:
+
+```tsx
+<a href={routes.about.href()}>About</a>;
+```
+
+The map is built with the deploy prefix as its base, so an href is already
+correct under a repo sub-path or a PR preview URL — `route('', …)` gives
+`/about`, `route('/repo/preview', …)` gives `/repo/preview/about` — and nothing
+has to remember to prepend `base`. That is also why `home` needs no special
+case: the base alone is the home path. Nothing enforces that a route points at a
+page that exists, but nothing needs to: the build crawls the links it finds, so
+a route with no page behind it fails the build.
+
+The blog is in the map too, as `blog: { index: "/blog", show: "/blog/:slug" }`.
+No list of articles belongs there — they are Markdown files discovered at build
+time — but the shape of their URL does, so the listing links with
+`routes.blog.show.href({ slug })`. That call percent-encodes the slug itself,
+which is why nothing around it encodes anything.
 
 Internal links are plain `<a href>`. On a page with an island the client runtime
 is active, and it turns every internal `<a>` click into a frame navigation: it

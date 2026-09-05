@@ -1,7 +1,7 @@
 import { css, type RemixNode } from "@remix-run/ui";
 
-import { base } from "../../lib/base.ts";
 import { type Article, parseArticle } from "../../lib/articles.ts";
+import { routes } from "../../lib/routes.ts";
 import { metaStyle } from "../../lib/theme.ts";
 import { color } from "../../lib/tokens.ts";
 
@@ -17,6 +17,10 @@ export const description =
  * fall out of step with it. `Deno.readDir` and `Deno.readTextFile` both take a `URL`, so the
  * directory never has to become a string on the way (`.pathname` would percent-encode a space in
  * the checkout path, and this way nothing can).
+ *
+ * A file name has to be encoded before it joins that URL, though. It is a literal name, not a URL
+ * fragment, and `new URL('release notes #2.md', dir)` reads the `#` as the start of a fragment and
+ * asks for `release notes ` instead.
  */
 async function listArticles(): Promise<Article[]> {
   const dir = new URL("./", import.meta.url);
@@ -27,7 +31,7 @@ async function listArticles(): Promise<Article[]> {
     articles.push(
       parseArticle(
         entry.name.replace(/\.md$/, ""),
-        await Deno.readTextFile(new URL(entry.name, dir)),
+        await Deno.readTextFile(new URL(encodeURIComponent(entry.name), dir)),
       ),
     );
   }
@@ -53,7 +57,7 @@ export default async function Blog(): Promise<RemixNode> {
           <li key={article.slug}>
             <a
               mix={postTitleStyle}
-              href={`${base}/blog/${encodeURIComponent(article.slug)}`}
+              href={routes.blog.show.href({ slug: article.slug })}
             >
               {article.title}
             </a>
