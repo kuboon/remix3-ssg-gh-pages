@@ -56,7 +56,6 @@ pages/
     base.ts          # the deploy prefix, computed once
     articles.ts      # front-matter for the blog
     markdown.ts      # Markdown → a Remix UI tree (@kuboon/md)
-    link.tsx         # internal <Link> (full-document navigation)
     tokens.ts        # design tokens — colors, fonts, radii, the measure
     theme.ts         # the css() mixins more than one module uses
   pages/
@@ -245,9 +244,24 @@ evaluated in the browser too, where predicting the bundler's output naming —
 which shifts with the set of entrypoints — would be guesswork. The shell embeds
 the name→chunk map the bundler produced and the runtime resolves against it.
 
-Internal links use the `<Link>` component (`lib/link.tsx`), which marks them for
-full-document navigation so pages with an active client runtime still navigate
-like a normal static site.
+### Links, and why the shell streams
+
+Internal links are plain `<a href>`. On a page with an island the client runtime
+is active, and it turns every internal `<a>` click into a frame navigation: it
+fetches the destination and swaps the document in place. That works — the new
+page's islands hydrate, the back button behaves, styles come with it — but only
+because the shell renders through `renderToStream`.
+
+`renderToString` is `renderToStream` with `stripFlushMarkers()` over the result,
+and the marker it strips, `<!-- rmx:flush document -->`, is exactly how the
+runtime recognises a whole document rather than a fragment. Serve pages without
+it and an internal link changes the URL while leaving the page alone, silently:
+no error, no console warning, and the fetch even returns 200. So `layout.tsx`
+uses `renderToStream` and reads the stream to a string itself, which is the only
+reason a bare `<a>` is enough here.
+
+If you ever do want a link to force a real document load — leaving the runtime
+and all its state behind — mark that one `<a data-rmx-document>`.
 
 ## Base paths and GitHub Pages
 

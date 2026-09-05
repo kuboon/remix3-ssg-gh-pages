@@ -1,7 +1,6 @@
 import { css, type RemixNode } from "@remix-run/ui";
 
 import { base } from "../lib/base.ts";
-import { Link } from "../lib/link.tsx";
 import { buttonStyle, cardStyle } from "../lib/theme.ts";
 import { color } from "../lib/tokens.ts";
 import { Counter } from "../islands/counter.tsx";
@@ -55,7 +54,7 @@ export default function Home(): RemixNode {
         </div>
       </section>
       <p>
-        <Link mix={buttonStyle} href={`${base}/blog`}>Read the blog →</Link>
+        <a mix={buttonStyle} href={`${base}/blog`}>Read the blog →</a>
       </p>
     </>
   );
