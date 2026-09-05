@@ -8,13 +8,28 @@ hydrated islands.
 
 ## How it works
 
-`router.ts` composes three directories into one handler:
+`routes.ts` states every URL the site answers, `controllers/` renders them, and
+`router.ts` maps one to the other — the shape a Remix app has:
 
-|            |                                           |
-| ---------- | ----------------------------------------- |
-| `islands/` | compiled as a single code-split bundle    |
-| `pages/`   | served through this site's own transforms |
-| `static/`  | served verbatim                           |
+```ts
+router.get(routes.about, aboutAction);
+```
+
+Around that, `router.ts` composes what a static site needs on top:
+
+|            |                                                          |
+| ---------- | -------------------------------------------------------- |
+| the router | the pages named in `routes.ts`                           |
+| `pages/`   | the Markdown articles, through this site's own transform |
+| `islands/` | compiled as a single code-split bundle                   |
+| `static/`  | served verbatim                                          |
+
+They stack with `compose`, which reads a `404` as "not mine" and moves on —
+which is exactly what the router returns for a path it has no route for.
+
+The articles are the one thing not in `routes.ts`: their URLs come from the
+files on disk, so `routes.blog.show` states only the _shape_ of an article URL,
+for the listing to link with.
 
 `deno serve router.ts` runs that handler as the dev server. The build drives the
 very same object with `fetch()`, writes each response to disk, and follows the
@@ -47,23 +62,23 @@ remote main module reads a project's config only when it is told to.
 pages/
   deno.json          # tasks, imports, permission sets, compiler + JSX options
   deno.lock          # pinned dependency versions (committed)
-  router.ts          # the wiring — three directories into one handler
+  routes.ts          # every URL the site answers
+  router.ts          # the wiring — routes to controllers, plus the rest of the site
   layout.tsx         # the HTML document shell
+  controllers/
+    home.tsx         # home — places both islands
+    about.tsx
+    blog.tsx         # lists the articles
   transforms/
-    markdown.tsx     # .md  → an article page
-    page.tsx         # .tsx → a page module
+    markdown.tsx     # .md → an article page
   lib/
     base.ts          # the deploy prefix, computed once
-    routes.ts        # the fixed pages, as a fetch-router route map
     articles.ts      # what an article is, and its front-matter parser
     markdown.ts      # Markdown → a Remix UI tree (@kuboon/md)
     tokens.ts        # design tokens — colors, fonts, radii, the measure
     theme.ts         # the css() mixins more than one module uses
   pages/
-    index.tsx        # home — places both islands
-    about.tsx
     blog/
-      index.tsx      # lists the articles beside it
       *.md           # the articles
   islands/
     counter.tsx      # a hydrated island, and its own browser entrypoint
@@ -168,19 +183,22 @@ images).
 
 ## Adding a page
 
-Drop a file in `pages/` and link to it.
+Three edits, in the order you would guess:
 
-- A `.md` file becomes an article at its path, rendered by
-  `transforms/markdown.tsx`.
-- A `.tsx` file exports a component (and optionally `title`, `description`, and
-  the `islands` it places), rendered by `transforms/page.tsx`.
+1. Name its URL in `routes.ts` — `contact: get("/contact")`.
+2. Write `controllers/contact.tsx`, exporting an action that returns
+   `renderPage({ title, islandUrls, children })`.
+3. Map them in `router.ts` — `router.get(routes.contact, contactAction)`.
+
+An **article** needs none of that: drop a `.md` file under `pages/blog/` and the
+transform serves it at its path.
 
 The crawl starts at `entryPoints` in `router.ts` and follows links, so **what is
 reachable is what gets generated**. A page nothing links to belongs in
 `entryPoints`, or it is not part of the site.
 
-That is also why `pages/blog/index.tsx` reads the `.md` files beside it: listing
-them is what makes them reachable.
+That is also why the blog controller reads the article files: listing them is
+what makes them reachable.
 
 ## Markdown content
 

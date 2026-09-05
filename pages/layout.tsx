@@ -26,15 +26,14 @@ import { css, type RemixNode } from "@remix-run/ui";
 import { ISLAND_MAP_ELEMENT_ID } from "@kuboon/remix-ssg/client";
 import { htmlDocument } from "@kuboon/remix-ssg/site";
 
-import { routes } from "./lib/routes.ts";
+import { base } from "./lib/base.ts";
+import { routes } from "./routes.ts";
 import { color, contentWidth } from "./lib/tokens.ts";
 
 /** What every page hands the shell. */
 export interface LayoutProps {
   title: string;
   description?: string;
-  /** Deploy path prefix, so every URL in the shell carries it. */
-  base: string;
   /** Name -> chunk URL for the islands this page places. Empty on a page with none. */
   islandUrls: Record<string, string>;
   children: RemixNode;
@@ -43,11 +42,11 @@ export interface LayoutProps {
 /**
  * Renders a page inside the document shell.
  *
- * @param props The page's title, prefix, islands and body
+ * @param props The page's title, islands and body
  * @returns The response to serve for this page
  */
 export function renderPage(props: LayoutProps): Response {
-  const { base, islandUrls } = props;
+  const { islandUrls } = props;
   const chunks = [...new Set(Object.values(islandUrls))];
 
   return htmlDocument(

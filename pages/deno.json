@@ -2,7 +2,7 @@
   "tasks": {
     "dev": "deno serve -P=dev --watch --port 8000 router.ts",
     "build": "deno run -c deno.json -P=build jsr:@kuboon/remix-ssg/build.ts",
-    "check": "deno check router.ts layout.tsx islands lib pages transforms && deno lint && deno fmt --check"
+    "check": "deno check router.ts routes.ts layout.tsx controllers islands lib transforms && deno lint && deno fmt --check"
   },
   "nodeModulesDir": "auto",
   "unstable": ["bundle"],
@@ -36,6 +36,7 @@
     "jsxImportSource": "@remix-run/ui"
   },
   "imports": {
+    "@remix-run/fetch-router": "npm:@remix-run/fetch-router@^0.21.0",
     "@remix-run/fetch-router/routes": "npm:@remix-run/fetch-router@^0.21.0/routes",
     "@remix-run/ui": "npm:@remix-run/ui@^0.8.0",
     "@remix-run/ui/server": "npm:@remix-run/ui@^0.8.0/server",
