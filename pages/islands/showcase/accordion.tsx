@@ -1,5 +1,4 @@
-import { css, type Handle } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle } from "@remix-run/ui";
 import {
   Accordion,
   AccordionContent,
@@ -28,9 +27,8 @@ const contentStyle = css({
   fontSize: theme.fontSize.sm,
 });
 
-export const AccordionDemo = island(
-  "showcase/accordion",
-  "AccordionDemo",
+export const AccordionDemo = clientEntry(
+  "islands/showcase/accordion.tsx#AccordionDemo",
   function AccordionDemo(handle: Handle) {
     let type = "single";
     let collapsible = true;

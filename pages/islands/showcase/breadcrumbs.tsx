@@ -1,5 +1,4 @@
-import { type Handle } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, type Handle } from "@remix-run/ui";
 import { Breadcrumbs } from "@remix-run/ui/breadcrumbs";
 
 import {
@@ -30,9 +29,8 @@ const separators = [
   { value: "dot", label: "•" },
 ];
 
-export const BreadcrumbsDemo = island(
-  "showcase/breadcrumbs",
-  "BreadcrumbsDemo",
+export const BreadcrumbsDemo = clientEntry(
+  "islands/showcase/breadcrumbs.tsx#BreadcrumbsDemo",
   function BreadcrumbsDemo(handle: Handle) {
     let depth = 4;
     let separator = "chevron";

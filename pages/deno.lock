@@ -1124,6 +1124,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@kuboon/md@0.3",
+      "jsr:@kuboon/remix-assets-deno@~0.4.2",
       "jsr:@kuboon/remix-ssg@0.8",
       "jsr:@std/front-matter@^1.0.9",
       "npm:@remix-run/fetch-router@0.21",

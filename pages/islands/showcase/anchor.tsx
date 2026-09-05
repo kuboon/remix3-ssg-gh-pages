@@ -1,5 +1,4 @@
-import { css, type Handle, ref } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle, ref } from "@remix-run/ui";
 import { anchor, type AnchorPlacement } from "@remix-run/ui/anchor";
 import { theme } from "./_lib/tokens.ts";
 
@@ -22,9 +21,8 @@ const placements = [
   { value: "bottom-end", label: "bottom-end" },
 ];
 
-export const AnchorDemo = island(
-  "showcase/anchor",
-  "AnchorDemo",
+export const AnchorDemo = clientEntry(
+  "islands/showcase/anchor.tsx#AnchorDemo",
   function AnchorDemo(handle: Handle) {
     let anchorEl: HTMLElement | null = null;
     let floatEl: HTMLElement | null = null;

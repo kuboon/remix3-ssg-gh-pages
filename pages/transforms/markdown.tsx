@@ -11,10 +11,10 @@ import type { FileTransform } from "@kuboon/remix-ssg/site";
 import { parseArticle } from "../lib/articles.ts";
 import { renderMarkdown } from "../lib/markdown.ts";
 import { renderPage } from "../layout.tsx";
-import { routes } from "../lib/routes.ts";
+import { routes } from "../routes.ts";
 import { metaStyle, proseStyle } from "../lib/theme.ts";
 
-export function markdown(context: { base: string }): FileTransform {
+export function markdown(): FileTransform {
   return {
     match: (relativePath) => relativePath.endsWith(".md"),
 
@@ -34,8 +34,6 @@ export function markdown(context: { base: string }): FileTransform {
       return renderPage({
         title: `${article.title} — remix-ssg`,
         description: article.summary,
-        base: context.base,
-        islandUrls: {},
         children: (
           <article mix={proseStyle}>
             <h1>{article.title}</h1>

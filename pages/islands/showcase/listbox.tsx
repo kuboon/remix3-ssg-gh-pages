@@ -1,5 +1,4 @@
-import { css, type Handle } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle } from "@remix-run/ui";
 import * as listbox from "@remix-run/ui/listbox";
 import type { ListboxValue } from "@remix-run/ui/listbox";
 
@@ -50,9 +49,8 @@ const optionStyle = css({
   '&[aria-disabled="true"]': { opacity: 0.45, cursor: "not-allowed" },
 });
 
-export const ListboxDemo = island(
-  "showcase/listbox",
-  "ListboxDemo",
+export const ListboxDemo = clientEntry(
+  "islands/showcase/listbox.tsx#ListboxDemo",
   function ListboxDemo(handle: Handle) {
     let value: ListboxValue = "remix";
     let activeValue: ListboxValue = "remix";

@@ -1,9 +1,9 @@
 /**
- * The site's fixed pages, as a `@remix-run/fetch-router` route map.
+ * Every URL this site answers, in one place.
  *
- * Every page here has a path that is written down rather than derived, so this is the one place
- * that writes it: `layout.tsx` and the pages link with `routes.about.href()` instead of rebuilding
- * `${base}/about` at each call site, and a rename is one edit.
+ * `router.ts` maps these to the controllers that render them, and everything that links reads
+ * `routes.about.href()` rather than rebuilding `${base}/about` at each call site — so a path is
+ * written once and a rename is one edit.
  *
  * The map is built with the deploy prefix as its base, which is what makes the hrefs correct under
  * a repo sub-path or a PR preview URL without anyone remembering to prepend anything —
@@ -15,19 +15,21 @@
  * slug itself, which is why nothing calling it encodes anything.
  */
 
-import { route } from "@remix-run/fetch-router/routes";
+import { get, route } from "@remix-run/fetch-router/routes";
 
-import { base } from "./base.ts";
+import { base } from "./lib/base.ts";
 
-/** The fixed pages. Add a page here when you add one under `pages/`. */
 export const routes = route(base, {
-  home: "/",
-  about: "/about",
+  home: get("/"),
+  about: get("/about"),
   // Showcase: delete this route when you delete the showcase — see README.
-  showcase: "/showcase",
-  blog: {
-    index: "/blog",
-    /** One article. The slugs come from the files; this is only the shape of their URL. */
-    show: "/blog/:slug",
-  },
+  showcase: get("/showcase"),
+  blog: route("blog", {
+    index: get("/"),
+    /**
+     * One article — the only route `router.ts` does not map. Articles are Markdown files, so the
+     * file tree serves them; this states the shape of their URL so the listing can link to one.
+     */
+    show: "/:slug",
+  }),
 });

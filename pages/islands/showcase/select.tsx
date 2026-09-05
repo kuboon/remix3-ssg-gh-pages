@@ -1,5 +1,4 @@
-import { type Handle } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, type Handle } from "@remix-run/ui";
 import { Option, Select } from "@remix-run/ui/select";
 import { onSelectChange } from "@remix-run/ui/select/primitives";
 
@@ -13,9 +12,8 @@ const frameworks = [
   { value: "solid", label: "Solid" },
 ];
 
-export const SelectDemo = island(
-  "showcase/select",
-  "SelectDemo",
+export const SelectDemo = clientEntry(
+  "islands/showcase/select.tsx#SelectDemo",
   function SelectDemo(handle: Handle) {
     let value = "(none)";
     let label = "(none)";

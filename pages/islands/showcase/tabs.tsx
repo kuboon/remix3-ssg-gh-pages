@@ -1,5 +1,4 @@
-import { css, type Handle } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle } from "@remix-run/ui";
 import { Tab, TabList, TabPanel, Tabs } from "@remix-run/ui/tabs";
 
 import { theme } from "./_lib/tokens.ts";
@@ -16,9 +15,8 @@ const panelStyle = css({
   fontSize: theme.fontSize.sm,
 });
 
-export const TabsDemo = island(
-  "showcase/tabs",
-  "TabsDemo",
+export const TabsDemo = clientEntry(
+  "islands/showcase/tabs.tsx#TabsDemo",
   function TabsDemo(handle: Handle) {
     let active = "overview";
     let size = "md";

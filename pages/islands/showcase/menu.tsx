@@ -1,5 +1,4 @@
-import { css, type Handle } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle } from "@remix-run/ui";
 import { Menu, MenuItem, Submenu } from "@remix-run/ui/menu";
 import { onMenuSelect } from "@remix-run/ui/menu/primitives";
 
@@ -12,9 +11,8 @@ const separatorStyle = css({
   marginBlock: "4px",
 });
 
-export const MenuDemo = island(
-  "showcase/menu",
-  "MenuDemo",
+export const MenuDemo = clientEntry(
+  "islands/showcase/menu.tsx#MenuDemo",
   function MenuDemo(handle: Handle) {
     let wordWrap = true;
     let density = "comfortable";

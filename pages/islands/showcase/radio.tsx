@@ -1,5 +1,4 @@
-import { css, type Handle } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle } from "@remix-run/ui";
 import radio from "@remix-run/ui/radio";
 
 import { theme } from "./_lib/tokens.ts";
@@ -24,9 +23,8 @@ const optionStyle = css({
   color: theme.colors.text.primary,
 });
 
-export const RadioDemo = island(
-  "showcase/radio",
-  "RadioDemo",
+export const RadioDemo = clientEntry(
+  "islands/showcase/radio.tsx#RadioDemo",
   function RadioDemo(handle: Handle) {
     let size = "md";
 

@@ -1,5 +1,4 @@
-import { css, type Handle, on } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle, on } from "@remix-run/ui";
 import button from "@remix-run/ui/button";
 import {
   animateEntrance,
@@ -31,9 +30,8 @@ const variantTransform: Record<string, string | undefined> = {
   opacity: undefined,
 };
 
-export const EntranceExitDemo = island(
-  "showcase/anim-entrance",
-  "EntranceExitDemo",
+export const EntranceExitDemo = clientEntry(
+  "islands/showcase/anim-entrance.tsx#EntranceExitDemo",
   function EntranceExitDemo(handle: Handle) {
     let items: Array<{ id: number; label: string }> = [
       { id: 1, label: "Design review" },

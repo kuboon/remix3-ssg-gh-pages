@@ -1,5 +1,4 @@
-import { css, type Handle, on } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle, on } from "@remix-run/ui";
 import button from "@remix-run/ui/button";
 import * as popover from "@remix-run/ui/popover";
 
@@ -55,9 +54,8 @@ const rowStyle = css({
   color: theme.colors.text.secondary,
 });
 
-export const PopoverDemo = island(
-  "showcase/popover",
-  "PopoverDemo",
+export const PopoverDemo = clientEntry(
+  "islands/showcase/popover.tsx#PopoverDemo",
   function PopoverDemo(handle: Handle) {
     let open = false;
     let placement = "bottom-start";

@@ -1,6 +1,6 @@
 import type { RemixNode } from "@remix-run/ui";
 
-import { routes } from "../lib/routes.ts";
+import { routes } from "../routes.ts";
 
 export const title = "About — remix-ssg";
 export const description = "What this starter is and how it works.";

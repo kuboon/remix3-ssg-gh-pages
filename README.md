@@ -10,8 +10,8 @@ handler straight from JSR, so there is no build script in this repository.
 Islands are code-split out of one graph, so a module two of them share is
 emitted once — and the home page shows what that buys.
 
-The site lives in [`pages/`](./pages) — see [`pages/README.md`](./pages/README.md)
-for how it works and how to develop it.
+The site lives in [`pages/`](./pages) — see
+[`pages/README.md`](./pages/README.md) for how it works and how to develop it.
 
 ```sh
 cd pages
@@ -25,20 +25,23 @@ This repository is a GitHub template. The demo content in it exists to show the
 framework working, not because your site needs it — **delete it in a new
 repository**:
 
-| Delete | What it is |
-| --- | --- |
-| `pages/pages/showcase.tsx` | The `@remix-run/ui` component showcase page |
-| `pages/islands/showcase/` | Its 18 demo islands and their shared helpers |
-| the `UI showcase` link in `pages/layout.tsx` | The nav entry pointing at it |
-| the `@remix-run/ui/*` subpath entries in `pages/deno.json` | Only the showcase imports those components |
-| `pages/pages/blog/*.md`, `pages/pages/about.tsx` | Placeholder content |
+| Delete                                                                                 | What it is                                   |
+| -------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `pages/pages/showcase.tsx`                                                             | The `@remix-run/ui` component showcase page  |
+| `pages/islands/showcase/`                                                              | Its 18 demo islands and their shared helpers |
+| their entrypoints in `pages/assets.ts`                                                 | What compiles them                           |
+| the `showcase` route in `pages/routes.ts` and the line mapping it in `pages/router.ts` | What serves it                               |
+| the `UI showcase` link in `pages/layout.tsx`                                           | The nav entry pointing at it                 |
+| the `@remix-run/ui/*` subpath entries in `pages/deno.json`                             | Only the showcase imports those components   |
+| `pages/pages/blog/*.md`, `pages/pages/about.tsx`                                       | Placeholder content                          |
 
 `pages/pages/index.tsx` and `pages/islands/{counter,total,store}` are the
 two-islands-one-store demo. Delete those too once you have read the home page;
 the point they make is in this README's opening paragraph.
 
-What you keep is `pages/router.ts`, `pages/layout.tsx`, `pages/transforms/`,
-`pages/lib/`, `pages/static/`, and the workflows. `pages/lib/tokens.ts` and
+What you keep is `pages/routes.ts`, `pages/router.ts`, `pages/assets.ts`,
+`pages/layout.tsx`, `pages/client/`, `pages/transforms/`, `pages/lib/`,
+`pages/static/`, and the workflows. `pages/lib/tokens.ts` and
 `pages/lib/theme.ts` are where the site's look lives — Remix supplies behaviour
 and a little component styling, not a theme, so the palette, spacing and
 typography are the app's. Change them there and the whole site follows.
@@ -56,4 +59,5 @@ deploys both to GitHub Pages, and comments the preview URL on the PR. The build
 runs via [`mise`](https://mise.jdx.dev) (`mise.toml`), which installs Deno and
 runs `deno task build` with the correct `BASE_URL`.
 
-To enable it: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+To enable it: **Settings → Pages → Build and deployment → Source: GitHub
+Actions**.

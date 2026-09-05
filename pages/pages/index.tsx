@@ -1,6 +1,6 @@
 import { css, type RemixNode } from "@remix-run/ui";
 
-import { routes } from "../lib/routes.ts";
+import { routes } from "../routes.ts";
 import { buttonStyle, cardStyle } from "../lib/theme.ts";
 import { color } from "../lib/tokens.ts";
 import { Counter } from "../islands/counter.tsx";
@@ -10,8 +10,8 @@ export const title = "remix-ssg — a static site starter";
 export const description =
   "A Remix v3 static-site-generation starter for GitHub Pages.";
 
-/** This page places two islands, so the shell loads their chunks and nothing else. */
-export const islands: readonly string[] = ["counter", "total"];
+/** This page places two client entries, so the shell boots the runtime for it. */
+export const hydrate = true;
 
 export default function Home(): RemixNode {
   return (
@@ -30,7 +30,9 @@ export default function Home(): RemixNode {
           <a href="https://jsr.io/@kuboon/md">@kuboon/md</a>{" "}
           by a transform this site owns.
         </li>
-        <li>Works at the domain root, a repo sub-path, or a PR preview URL.</li>
+        <li>
+          Works at the domain root, a repo sub-path, or a PR preview URL.
+        </li>
         <li>Opt into interactivity per page with hydrated islands.</li>
       </ul>
       <section mix={cardStyle}>
@@ -54,7 +56,9 @@ export default function Home(): RemixNode {
         </div>
       </section>
       <p>
-        <a mix={buttonStyle} href={routes.blog.index.href()}>Read the blog →</a>
+        <a mix={buttonStyle} href={routes.blog.index.href()}>
+          Read the blog →
+        </a>
       </p>
     </>
   );

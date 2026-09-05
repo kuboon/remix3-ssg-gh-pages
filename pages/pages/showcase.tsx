@@ -2,9 +2,10 @@
  * The `@remix-run/ui` component showcase — a port of
  * https://github.com/kuboon/remix3-ui-showcase onto this framework.
  *
- * DELETE ME in a repository made from this template: this page, the
- * `islands/showcase/` directory it imports, the nav link in `layout.tsx`, and
- * the `@remix-run/ui/*` subpath entries in `deno.json`. See the root README.
+ * DELETE ME in a repository made from this template: this page, its route and
+ * its line in `router.ts`, the `islands/showcase/` directory it imports and its
+ * entrypoints in `assets.ts`, the nav link in `layout.tsx`, and the
+ * `@remix-run/ui/*` subpath entries in `deno.json`. See the root README.
  *
  * It stays here because it is the honest stress test of the island pipeline:
  * 18 entrypoints compiled as one graph, sharing the component library through
@@ -38,27 +39,8 @@ export const description =
   "Every first-party @remix-run/ui component and the animation primitives, " +
   "each one a hydrated island whose parameters you can change live.";
 
-/** Every demo on this page. The layout loads exactly these chunks. */
-export const islands: readonly string[] = [
-  "showcase/accordion",
-  "showcase/anchor",
-  "showcase/anim-entrance",
-  "showcase/anim-layout",
-  "showcase/anim-spring",
-  "showcase/anim-tween",
-  "showcase/breadcrumbs",
-  "showcase/buttons",
-  "showcase/checkbox",
-  "showcase/combobox",
-  "showcase/input",
-  "showcase/listbox",
-  "showcase/menu",
-  "showcase/popover",
-  "showcase/radio",
-  "showcase/select",
-  "showcase/tabs",
-  "showcase/toggle",
-];
+/** This page places client entries, so the shell boots the runtime for it. */
+export const hydrate = true;
 
 const componentLinks = [
   { id: "button", label: "Button" },

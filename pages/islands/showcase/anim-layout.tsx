@@ -1,5 +1,4 @@
-import { css, type Handle, on } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle, on } from "@remix-run/ui";
 import button from "@remix-run/ui/button";
 import {
   animateLayout,
@@ -19,9 +18,8 @@ import {
   Toggle,
 } from "./_lib/controls.tsx";
 
-export const LayoutDemo = island(
-  "showcase/anim-layout",
-  "LayoutDemo",
+export const LayoutDemo = clientEntry(
+  "islands/showcase/anim-layout.tsx#LayoutDemo",
   function LayoutDemo(handle: Handle) {
     let expanded = false;
     let preset = "smooth";

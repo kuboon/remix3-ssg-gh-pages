@@ -1,5 +1,4 @@
-import { css, type Handle, on } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle, on } from "@remix-run/ui";
 import checkbox from "@remix-run/ui/checkbox";
 
 import { theme } from "./_lib/tokens.ts";
@@ -20,9 +19,8 @@ const rowStyle = css({
   color: theme.colors.text.primary,
 });
 
-export const CheckboxDemo = island(
-  "showcase/checkbox",
-  "CheckboxDemo",
+export const CheckboxDemo = clientEntry(
+  "islands/showcase/checkbox.tsx#CheckboxDemo",
   function CheckboxDemo(handle: Handle) {
     let size = "md";
     let checkedChildren = [true, false, false];

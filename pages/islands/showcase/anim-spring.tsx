@@ -1,5 +1,4 @@
-import { css, type Handle, on } from "@remix-run/ui";
-import { island } from "@kuboon/remix-ssg/client";
+import { clientEntry, css, type Handle, on } from "@remix-run/ui";
 import button from "@remix-run/ui/button";
 import { spring, type SpringPreset } from "@remix-run/ui/animation";
 
@@ -16,9 +15,8 @@ import {
   Slider,
 } from "./_lib/controls.tsx";
 
-export const SpringDemo = island(
-  "showcase/anim-spring",
-  "SpringDemo",
+export const SpringDemo = clientEntry(
+  "islands/showcase/anim-spring.tsx#SpringDemo",
   function SpringDemo(handle: Handle) {
     let mode = "bouncy";
     let duration = 400;
