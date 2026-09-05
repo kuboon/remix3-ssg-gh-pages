@@ -11,6 +11,7 @@
     "jsr:@std/front-matter@^1.0.9": "1.0.9",
     "jsr:@std/toml@^1.0.3": "1.0.11",
     "jsr:@std/yaml@^1.0.5": "1.2.0",
+    "npm:@remix-run/fetch-router@0.21": "0.21.0",
     "npm:@remix-run/response@~0.3.8": "0.3.8",
     "npm:@remix-run/ui@0.8": "0.8.0",
     "npm:@types/hast@^3.0.5": "3.0.5",
@@ -105,6 +106,12 @@
     }
   },
   "npm": {
+    "@remix-run/fetch-router@0.21.0": {
+      "integrity": "sha512-dN3Lsd4dHAV0USTF3Dm04effXcdr7GMgXiqeozTFDfvVIx2DbRAl94bwF6UdAWurgTOK2Oyz4cs9uadW/ylWXA==",
+      "dependencies": [
+        "@remix-run/route-pattern"
+      ]
+    },
     "@remix-run/headers@0.21.1": {
       "integrity": "sha512-DRhRveigepAQDUIi0MrOFhpcl3/KTv/fkpIhulv7Asv1pUwM8RpY2ENjdI8lfii6Z3MEsWtYhGt6If8bi6bYpQ=="
     },
@@ -121,6 +128,9 @@
         "@remix-run/html-template",
         "@remix-run/mime"
       ]
+    },
+    "@remix-run/route-pattern@0.24.0": {
+      "integrity": "sha512-w0/lhgY40l2GrBQjJIOeYWIuKm1rxlOsc9Hvt+nyydnka0v4aI9Vv0VK4XzLD3aP08JzGtTlxFxwf1PZ8SGdLg=="
     },
     "@remix-run/ui@0.8.0": {
       "integrity": "sha512-4OdZ3oj0zbyVVaCFT/x2vjK5YxpD63KpLONkLZ2QVKIEBcLjJUGSenp2f08BOzC8oythLHCJgzHLKKulYJpIQA==",
@@ -1116,6 +1126,7 @@
       "jsr:@kuboon/md@0.3",
       "jsr:@kuboon/remix-ssg@0.8",
       "jsr:@std/front-matter@^1.0.9",
+      "npm:@remix-run/fetch-router@0.21",
       "npm:@remix-run/ui@0.8"
     ]
   }

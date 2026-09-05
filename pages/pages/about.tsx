@@ -1,6 +1,7 @@
 import type { RemixNode } from "@remix-run/ui";
 
 import { base } from "../lib/base.ts";
+import { routes } from "../lib/routes.ts";
 
 export const title = "About — remix-ssg";
 export const description = "What this starter is and how it works.";
@@ -32,7 +33,7 @@ export default function About(): RemixNode {
         <a href={`${base}/blog`}>blog</a>.
       </p>
       <p>
-        <a href={base === "" ? "/" : base}>← Back home</a>
+        <a href={routes.home.href()}>← Back home</a>
       </p>
     </>
   );

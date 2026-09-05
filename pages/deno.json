@@ -36,6 +36,7 @@
     "jsxImportSource": "@remix-run/ui"
   },
   "imports": {
+    "@remix-run/fetch-router/routes": "npm:@remix-run/fetch-router@^0.21.0/routes",
     "@remix-run/ui": "npm:@remix-run/ui@^0.8.0",
     "@remix-run/ui/server": "npm:@remix-run/ui@^0.8.0/server",
     "@remix-run/ui/accordion": "npm:@remix-run/ui@^0.8.0/accordion",

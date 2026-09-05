@@ -26,6 +26,7 @@ import { css, type RemixNode } from "@remix-run/ui";
 import { ISLAND_MAP_ELEMENT_ID } from "@kuboon/remix-ssg/client";
 import { htmlDocument } from "@kuboon/remix-ssg/site";
 
+import { routes } from "./lib/routes.ts";
 import { color, contentWidth } from "./lib/tokens.ts";
 
 /** What every page hands the shell. */
@@ -48,7 +49,6 @@ export interface LayoutProps {
 export function renderPage(props: LayoutProps): Response {
   const { base, islandUrls } = props;
   const chunks = [...new Set(Object.values(islandUrls))];
-  const home = base === "" ? "/" : base;
 
   return htmlDocument(
     <html lang="en">
@@ -64,13 +64,13 @@ export function renderPage(props: LayoutProps): Response {
       </head>
       <body>
         <header mix={[bandStyle, headerStyle]}>
-          <a mix={brandStyle} href={home}>remix-ssg</a>
+          <a mix={brandStyle} href={routes.home.href()}>remix-ssg</a>
           <nav mix={navStyle}>
-            <a href={home}>Home</a>
-            <a href={`${base}/about`}>About</a>
+            <a href={routes.home.href()}>Home</a>
+            <a href={routes.about.href()}>About</a>
             <a href={`${base}/blog`}>Blog</a>
             {/* Showcase: delete this link when you delete the showcase — see README. */}
-            <a href={`${base}/showcase`}>UI showcase</a>
+            <a href={routes.showcase.href()}>UI showcase</a>
           </nav>
         </header>
         <main mix={[bandStyle, mainStyle]}>{props.children}</main>
