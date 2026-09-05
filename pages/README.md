@@ -54,7 +54,7 @@ pages/
     page.tsx         # .tsx → a page module
   lib/
     base.ts          # the deploy prefix, computed once
-    articles.ts      # front-matter for the blog
+    articles.ts      # what an article is, and its front-matter parser
     markdown.ts      # Markdown → a Remix UI tree (@kuboon/md)
     tokens.ts        # design tokens — colors, fonts, radii, the measure
     theme.ts         # the css() mixins more than one module uses

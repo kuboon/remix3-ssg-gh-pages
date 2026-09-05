@@ -59,8 +59,7 @@
     "@kuboon/remix-ssg": "jsr:@kuboon/remix-ssg@^0.7.0",
     "@kuboon/md": "jsr:@kuboon/md@^0.3.0",
     "@kuboon/md/hast_to_remix.ts": "jsr:@kuboon/md@^0.3.0/hast_to_remix.ts",
-    "@std/front-matter": "jsr:@std/front-matter@^1.0.9",
-    "@std/path": "jsr:@std/path@^1.1.6"
+    "@std/front-matter": "jsr:@std/front-matter@^1.0.9"
   },
   "fmt": {
     "exclude": ["dist", "node_modules"]

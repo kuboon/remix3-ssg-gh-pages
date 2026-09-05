@@ -1,16 +1,16 @@
 /**
- * Blog articles: the Markdown files under `pages/blog/`.
+ * What a blog article *is*.
  *
  * The framework has no content model — it serves files through the transforms this site provides —
- * so what an article *is* lives here. The transform renders one; the blog index lists them all.
+ * so the shape of an article and the reading of its front-matter live here, shared by the transform
+ * that renders one and the index page that lists them.
+ *
+ * Where the articles are is deliberately not here. `pages/blog/index.tsx` is already in that
+ * directory and finds its siblings through `import.meta.url`, which is one fewer path to keep in
+ * agreement with the layout.
  */
 
 import { extract } from "@std/front-matter/yaml";
-import { join } from "@std/path";
-
-/** Directory holding the articles. */
-export const ARTICLES_DIR: string =
-  new URL("../pages/blog/", import.meta.url).pathname;
 
 /** A Markdown article: front-matter metadata plus the Markdown body. */
 export interface Article {
@@ -41,25 +41,4 @@ export function parseArticle(slug: string, text: string): Article {
     summary: typeof a.summary === "string" ? a.summary : "",
     body,
   };
-}
-
-/**
- * Reads every article, newest first.
- *
- * @returns The articles
- */
-export async function listArticles(): Promise<Article[]> {
-  const articles: Article[] = [];
-
-  for await (const entry of Deno.readDir(ARTICLES_DIR)) {
-    if (!entry.isFile || !entry.name.endsWith(".md")) continue;
-    articles.push(
-      parseArticle(
-        entry.name.replace(/\.md$/, ""),
-        await Deno.readTextFile(join(ARTICLES_DIR, entry.name)),
-      ),
-    );
-  }
-
-  return articles.sort((a, b) => b.date.localeCompare(a.date));
 }
