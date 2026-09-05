@@ -1,16 +1,14 @@
 /**
- * The site's styles: one base layer, and the `css(...)` mixins more than one module uses.
+ * The `css(...)` mixins more than one module uses.
  *
- * Nearly everything here is a mixin from `@remix-run/ui`. The server collects the mixins a page
- * actually rendered and emits them as `<style>` tags in that page's `<head>`, so each page ships
- * its own CSS and nothing else: no extra request, and no rules for parts of the site the reader
- * never opened.
+ * Every rule here is a mixin from `@remix-run/ui`. The server collects the mixins a page actually
+ * rendered and emits them as `<style>` tags in that page's `<head>`, so each page ships its own
+ * CSS and nothing else: no extra request, and no rules for parts of the site the reader never
+ * opened.
  *
- * The exception is {@link baseLayerCss}, and the reason is the cascade. Generated `css(...)` rules
- * — this site's and the ones first-party `remix/ui` components carry — all land in the native
- * `rmx` layer. Anything the app wants a component to be free to override has to sit in a layer
- * *before* `rmx`, and a mixin cannot choose its layer. So the document-level defaults are real CSS
- * in `@layer base`, built from the same tokens as everything else.
+ * What a mixin cannot do is choose its cascade layer — every one of them lands in Remix's `rmx` —
+ * so the site's layer order and its document-level defaults live in `static/app.css` instead, in a
+ * `base` layer ahead of `rmx`. That is also where the token values are; `./tokens.ts` names them.
  *
  * Two more things are worth knowing before editing:
  *
@@ -22,82 +20,7 @@
 
 import { css } from "@remix-run/ui";
 
-import { color, font, palette, radius } from "./tokens.ts";
-
-// --- the base layer ----------------------------------------------------------
-
-/** `--name: value;` lines for a palette, indented to sit inside a rule. */
-function customProperties(
-  properties: Record<string, string>,
-  indent: string,
-): string {
-  return Object.entries(properties)
-    .map(([name, value]) => `${indent}${name}: ${value};`)
-    .join("\n");
-}
-
-/**
- * The document-level defaults, and the layer order the whole site cascades by.
- *
- * `layout.tsx` writes this into `<head>` ahead of everything else, which is what fixes the order:
- * layers rank by where they are first named, so naming all three in one statement — before Remix
- * has emitted a rule of its own — settles it once.
- *
- * - `base` — here. Tokens, the box model, and the defaults for elements nobody styles by hand.
- *   Being before `rmx`, every one of them is a default a component may override without a fight,
- *   which is why nothing below needs `:where()` or `!important`.
- * - `rmx` — Remix's. Every `css(...)` mixin on this site, and the styles `remix/ui` components
- *   bring with them.
- * - `app` — empty, and named anyway: it is where a rule would go that has to beat a component's
- *   own styling on purpose. Unlayered CSS would also do it, and would do it by accident.
- */
-export const baseLayerCss: string = `@layer base, rmx, app;
-
-@layer base {
-  :root {
-    color-scheme: light dark;
-${customProperties(palette.light, "    ")}
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-${customProperties(palette.dark, "      ")}
-    }
-  }
-
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
-  body {
-    margin: 0;
-    font-family: ${font.sans};
-    line-height: 1.6;
-    color: ${color.fg};
-    background: ${color.bg};
-  }
-
-  a {
-    color: ${color.accent};
-  }
-
-  h1 {
-    font-size: 2rem;
-    line-height: 1.2;
-    margin-top: 0;
-  }
-
-  code {
-    font-family: ${font.mono};
-    font-size: 0.9em;
-    background: ${color.card};
-    padding: 0.1rem 0.35rem;
-    border-radius: ${radius.sm};
-  }
-}
-`;
+import { color, radius } from "./tokens.ts";
 
 // --- shared mixins -----------------------------------------------------------
 

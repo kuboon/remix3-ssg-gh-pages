@@ -69,7 +69,9 @@ pages/
     counter.tsx      # a hydrated island, and its own browser entrypoint
     total.tsx        # a second island/entrypoint, sharing state with it
     store.ts         # the module both islands import — the shared singleton
-  static/            # files served under /static/* (favicon, images…)
+  static/
+    app.css          # tokens, document defaults, the cascade layer order
+    favicon.svg
 ```
 
 ## The UI showcase (delete me)
@@ -108,44 +110,41 @@ const cardStyle = css({
 
 `renderToString` collects the mixins a page actually rendered and writes them
 into that page's `<head>` as `<style>` tags. So a page carries its own CSS and
-nothing else: no extra request, no rules for parts of the site the reader never
-opened, and no class name that has to agree with a file somewhere else.
+nothing else: no rules for parts of the site the reader never opened, and no
+class name that has to agree with a file somewhere else. The one stylesheet the
+site does link is `static/app.css`, and the next section is what it is for.
 
 ### The cascade
 
 Generated `css(...)` rules — this site's, and the ones first-party `remix/ui`
-components carry — all land in the native `rmx` cascade layer. So the site
-declares the full order once, in `lib/theme.ts`'s `baseLayerCss`, which
-`layout.tsx` writes into `<head>` before anything else:
+components carry — all land in the native `rmx` cascade layer, and a mixin
+cannot choose its layer. So `static/app.css` declares the full order, and
+`layout.tsx` links it at the top of `<head>`:
 
 ```css
 @layer base, rmx, app;
 ```
 
-Layers rank by where they are first named, which is why that statement has to
-come out ahead of Remix's own rules — Remix appends its collected styles just
-before `</head>`.
+Layers rank by where they are first named, which is why that link has to come
+out ahead of Remix's own rules — Remix appends its collected styles just before
+`</head>`.
 
-| Layer  | What is in it                                                                                                                                                                                                                           |
-| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `base` | Tokens, the box model, and defaults for elements nobody styles by hand (`body`, `a`, `h1`, `code`). Being _before_ `rmx`, every one is a default a component may override — which is why nothing here needs `:where()` or `!important`. |
-| `rmx`  | Remix's. Every mixin on this site, and the styling `remix/ui` components bring with them.                                                                                                                                               |
-| `app`  | Empty, and named anyway: where a rule would go that has to beat a component's own styling on purpose. Unlayered CSS would also win, but it would win by accident.                                                                       |
-
-`base` is real CSS rather than a mixin because a mixin cannot choose its layer,
-and a document-level default has to sit under `rmx` to be overridable. It is
-built from the same tokens as everything else, so there is still one source of
-truth.
+| Layer  | What is in it                                                                                                                                                                                                                                      |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base` | `app.css`. Tokens, the box model, and defaults for elements nobody styles by hand (`body`, `a`, `h1`, `code`). Being _before_ `rmx`, every one is a default a component may override — which is why nothing here needs `:where()` or `!important`. |
+| `rmx`  | Remix's. Every mixin on this site, and the styling `remix/ui` components bring with them.                                                                                                                                                          |
+| `app`  | Empty, and named anyway: where a rule would go that has to beat a component's own styling on purpose. Unlayered CSS would also win, but it would win by accident.                                                                                  |
 
 ### Where a style goes
 
-- **Tokens live in `lib/tokens.ts`** — values only, no mixins. Remix supplies
-  behaviour and a little component styling, not a theme, so the brand colors,
-  spacing, typography and radii are the app's: TypeScript values, and CSS custom
-  properties for the ones light and dark swap between. Islands import from here
-  and only from here — a `css(...)` call at module scope is not something the
-  bundler will drop, so importing `theme.ts` would pull the whole shell into an
-  island's chunk.
+- **Token values live in `static/app.css`; `lib/tokens.ts` names them.** Remix
+  supplies behaviour and a little component styling, not a theme, so the
+  palette, typography and radii are the app's. They are custom properties
+  because light and dark swap between two sets of them, and `tokens.ts` exports
+  the `var(--…)` references rather than a second copy of the values. Islands
+  import from `tokens.ts` and only from there — a `css(...)` call at module
+  scope is not something the bundler will drop, so importing `theme.ts` would
+  pull the whole shell into an island's chunk.
 - **Mixins used by more than one module live in `lib/theme.ts`.** A style used
   in one place belongs in that file, under a `// --- styles ---` heading at the
   bottom — see `layout.tsx` or `pages/index.tsx`.
@@ -157,8 +156,8 @@ truth.
   scoped to the one class on the article wrapper instead of leaking out as bare
   element selectors.
 
-`static/` is still there for files served verbatim (the favicon, images); it no
-longer holds CSS.
+`static/` holds `app.css` and anything else served verbatim (the favicon,
+images).
 
 ## Adding a page
 

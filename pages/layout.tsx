@@ -6,13 +6,13 @@
  * island gets neither, and so ships no JavaScript at all.
  *
  * The shell's own CSS is right here too, as `css(...)` mixins. `renderToString` collects the
- * mixins the page rendered and writes them into `<head>`, so there is no stylesheet to link and
- * nothing to keep in sync with the markup below.
+ * mixins the page rendered and writes them into `<head>`, so nothing below has a class name that
+ * has to agree with a file somewhere else.
  *
- * The one `<style>` below is `lib/theme.ts`'s base layer, and its position matters: cascade layers
- * rank by where they are first named, so the site's layer order has to be stated before Remix
- * emits a rule of its own. Writing it here, at the top of the head, is what does that — Remix
- * appends its collected styles just before `</head>`.
+ * The one stylesheet it does link is `static/app.css`: the site's tokens, its document-level defaults,
+ * and the `@layer base, rmx, app` statement the whole cascade hangs off. Its position in the head
+ * matters — layers rank by where they are first named, and Remix appends its collected styles just
+ * before `</head>`, so the link has to come first.
  */
 
 import { renderToString } from "@remix-run/ui/server";
@@ -20,7 +20,6 @@ import { css, type RemixNode } from "@remix-run/ui";
 import { ISLAND_MAP_ELEMENT_ID } from "@kuboon/remix-ssg/client";
 
 import { Link } from "./lib/link.tsx";
-import { baseLayerCss } from "./lib/theme.ts";
 import { color, contentWidth } from "./lib/tokens.ts";
 
 /** What every page hands the shell. */
@@ -50,11 +49,11 @@ export async function renderPage(props: LayoutProps): Promise<string> {
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style innerHTML={baseLayerCss}></style>
         <title>{props.title}</title>
         {props.description
           ? <meta name="description" content={props.description} />
           : null}
+        <link rel="stylesheet" href={`${base}/static/app.css`} />
         <link rel="icon" href={`${base}/static/favicon.svg`} />
       </head>
       <body>
