@@ -2,7 +2,6 @@ import { css, type RemixNode } from "@remix-run/ui";
 
 import { base } from "../../lib/base.ts";
 import { listArticles } from "../../lib/articles.ts";
-import { Link } from "../../lib/link.tsx";
 import { metaStyle } from "../../lib/theme.ts";
 import { color } from "../../lib/tokens.ts";
 
@@ -26,12 +25,12 @@ export default async function Blog(): Promise<RemixNode> {
       <ul mix={postListStyle}>
         {articles.map((article) => (
           <li key={article.slug}>
-            <Link
+            <a
               mix={postTitleStyle}
               href={`${base}/blog/${encodeURIComponent(article.slug)}`}
             >
               {article.title}
-            </Link>
+            </a>
             {article.date
               ? (
                 <time mix={metaStyle} datetime={article.date}>
