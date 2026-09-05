@@ -30,31 +30,28 @@ export function markdown(context: { base: string }): FileTransform {
       const article = parseArticle(slug, await Deno.readTextFile(file.url));
       const body = await renderMarkdown(article.body);
 
-      return {
-        body: await renderPage({
-          title: `${article.title} — remix-ssg`,
-          description: article.summary,
-          base: context.base,
-          islandUrls: {},
-          children: (
-            <article mix={proseStyle}>
-              <h1>{article.title}</h1>
-              {article.date
-                ? (
-                  <time mix={metaStyle} datetime={article.date}>
-                    {article.date}
-                  </time>
-                )
-                : null}
-              {body}
-              <p>
-                <a href={`${context.base}/blog`}>← All posts</a>
-              </p>
-            </article>
-          ),
-        }),
-        contentType: "text/html; charset=utf-8",
-      };
+      return renderPage({
+        title: `${article.title} — remix-ssg`,
+        description: article.summary,
+        base: context.base,
+        islandUrls: {},
+        children: (
+          <article mix={proseStyle}>
+            <h1>{article.title}</h1>
+            {article.date
+              ? (
+                <time mix={metaStyle} datetime={article.date}>
+                  {article.date}
+                </time>
+              )
+              : null}
+            {body}
+            <p>
+              <a href={`${context.base}/blog`}>← All posts</a>
+            </p>
+          </article>
+        ),
+      });
     },
   };
 }

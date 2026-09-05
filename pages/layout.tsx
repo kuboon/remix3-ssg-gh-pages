@@ -9,13 +9,12 @@
  * the page rendered and writes them into `<head>`, so nothing below has a class name that has to
  * agree with a file somewhere else.
  *
- * It renders through `renderToStream` rather than `renderToString`, and the difference is not
- * buffering — `renderToString` is `renderToStream` with `stripFlushMarkers()` over the result. That
- * marker is how the client runtime recognises a whole document. The runtime turns every internal
- * `<a>` click into a frame navigation, fetches the destination, and swaps the document only when it
- * finds `<!-- rmx:flush document -->` at the end; strip it and the URL changes while the page does
- * not, with no error anywhere. So the pages this site generates keep it, and a plain `<a href>`
- * navigates correctly on a page with islands as well as on one without.
+ * `htmlDocument` is what turns the tree below into a response: the doctype, the content type, and
+ * — the part that matters here — `renderToStream` rather than `renderToString`. The runtime turns
+ * every internal `<a>` click into a frame navigation and swaps the document only when it finds
+ * `<!-- rmx:flush document -->` at the end, which `renderToString` strips; without it the URL
+ * changes while the page does not, with no error anywhere. Going through the helper is what keeps
+ * a plain `<a href>` working on a page with islands as well as on one without.
  *
  * The one stylesheet it does link is `static/app.css`: the site's tokens, its document-level defaults,
  * and the `@layer base, rmx, app` statement the whole cascade hangs off. Its position in the head
@@ -23,9 +22,9 @@
  * before `</head>`, so the link has to come first.
  */
 
-import { renderToStream } from "@remix-run/ui/server";
 import { css, type RemixNode } from "@remix-run/ui";
 import { ISLAND_MAP_ELEMENT_ID } from "@kuboon/remix-ssg/client";
+import { htmlDocument } from "@kuboon/remix-ssg/site";
 
 import { color, contentWidth } from "./lib/tokens.ts";
 
@@ -44,14 +43,14 @@ export interface LayoutProps {
  * Renders a page inside the document shell.
  *
  * @param props The page's title, prefix, islands and body
- * @returns The complete HTML document
+ * @returns The response to serve for this page
  */
-export async function renderPage(props: LayoutProps): Promise<string> {
+export function renderPage(props: LayoutProps): Response {
   const { base, islandUrls } = props;
   const chunks = [...new Set(Object.values(islandUrls))];
   const home = base === "" ? "/" : base;
 
-  const stream = renderToStream(
+  return htmlDocument(
     <html lang="en">
       <head>
         <meta charset="utf-8" />
@@ -97,15 +96,7 @@ export async function renderPage(props: LayoutProps): Promise<string> {
           : null}
       </body>
     </html>,
-    {
-      onError(error) {
-        throw error;
-      },
-    },
   );
-  const html = await new Response(stream).text();
-
-  return `<!DOCTYPE html>${html}`;
 }
 
 // --- styles -----------------------------------------------------------------
