@@ -10,9 +10,9 @@ export default function About(): RemixNode {
     <>
       <h1>About</h1>
       <p>
-        <code>router.ts</code> composes three directories into one handler:{" "}
-        <code>islands/</code> compiled as a single code-split bundle,{" "}
-        <code>pages/</code> served through this site's own transforms, and{" "}
+        <code>router.ts</code> composes the whole site into one handler:{" "}
+        <code>routes.ts</code> mapped to the pages that render them,{" "}
+        <code>islands/</code> compiled as a single code-split bundle, and{" "}
         <code>static/</code> served verbatim.
       </p>
       <p>

@@ -28,7 +28,7 @@ export default function Home(): RemixNode {
         <li>
           Content authored in Markdown, rendered with{" "}
           <a href="https://jsr.io/@kuboon/md">@kuboon/md</a>{" "}
-          by a transform this site owns.
+          by a controller this site owns.
         </li>
         <li>
           Works at the domain root, a repo sub-path, or a PR preview URL.

@@ -2,7 +2,7 @@
   "tasks": {
     "dev": "deno serve -P=dev --watch --port 8000 router.ts",
     "build": "deno run -c deno.json -P=build jsr:@kuboon/remix-ssg/build.ts",
-    "check": "deno check router.ts routes.ts assets.ts layout.tsx client islands lib pages transforms && deno lint && deno fmt --check"
+    "check": "deno check router.ts routes.ts assets.ts layout.tsx client islands lib pages && deno lint && deno fmt --check"
   },
   "nodeModulesDir": "auto",
   "unstable": ["bundle"],
