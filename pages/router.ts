@@ -5,27 +5,20 @@
  * the shape a Remix app has. `pageAction` is the whole of the mapping: a page module exports a
  * component and its title, and that is a response.
  *
- * What it adds is the rest of a static site: the browser modules from `assets.ts`, and the files
- * under `static/` served verbatim. The Markdown articles are not among them — `pages/blog/` serves
- * itself, through a controller like any other page.
+ * The rest of the site is mapped the same way. The browser modules and the files under `static/`
+ * are directories rather than pages, so each is one wildcard route handing off to the thing that
+ * serves it; the Markdown articles are not a directory at all here — `pages/blog/` answers its
+ * routes like any other page.
  *
- * `deno serve router.ts` runs it as the dev server; the build crawls the same object. Nothing here
- * is a framework convention — the directory names, the parts composed below and the deploy rules
- * are all stated here.
+ * So what is exported is a plain `@remix-run/fetch-router` router. `deno serve router.ts` runs it
+ * as the dev server and the build crawls the same object; both need only `fetch`. Nothing here is a
+ * framework convention — the directory names, the routes and the deploy rules are all stated here.
  */
 
 import { createRouter } from "@remix-run/fetch-router";
 import type { RemixNode } from "@remix-run/ui";
-import {
-  compose,
-  createFileTree,
-  githubPages,
-  serveAsHost,
-} from "@kuboon/remix-ssg/site";
-import type {
-  FileServerBehavior,
-  SiteMiddleware,
-} from "@kuboon/remix-ssg/site";
+import { createFileTree, githubPages } from "@kuboon/remix-ssg/site";
+import type { FileServerBehavior } from "@kuboon/remix-ssg/site";
 
 import { assets, assetsPath } from "./assets.ts";
 import { base } from "./lib/base.ts";
@@ -33,7 +26,7 @@ import { renderPage } from "./layout.tsx";
 import { routes } from "./routes.ts";
 
 import * as About from "./pages/about.tsx";
-import { blogController, blogPaths } from "./pages/blog/mod.ts";
+import { blogController } from "./pages/blog/mod.ts";
 import * as Home from "./pages/index.tsx";
 // Showcase: delete this import when you delete the showcase — see README.
 import * as Showcase from "./pages/showcase.tsx";
@@ -77,47 +70,25 @@ function pageAction(page: Page): () => Response {
     });
 }
 
+/** The files under `static/`, served verbatim at their own names. */
+const staticFiles = await createFileTree({
+  rootDir: "static",
+  basePath: `${base}/static`,
+  cacheControl: "public, max-age=3600",
+});
+
 const router = createRouter();
 
 router.get(routes.home, pageAction(Home));
 router.get(routes.about, pageAction(About));
-// Both blog routes at once: the listing, and one article. `pages/blog/` holds the articles and
-// everything that reads them, so the mapping here is the whole group.
+// Both blog routes at once: the listing, and one article.
 router.map(routes.blog, blogController);
 // Showcase: delete this line when you delete the showcase — see README.
 router.get(routes.showcase, pageAction(Showcase));
 
-// The browser modules, under their own prefix.
+// The two directories, each under its own prefix. A wildcard route is all it takes to hand a
+// subtree to something that already serves one.
+router.map(`${base}/static/*path`, ({ request }) => staticFiles.fetch(request));
 router.map(`${assetsPath}/*path`, ({ request }) => assets.fetch(request));
 
-/**
- * The router, as one of the site's parts.
- *
- * `compose` reads a `404` as "not mine" and moves on, which is exactly what the router returns for
- * a path it has no route for — so the pages, the articles and the chunks stack without any of them
- * knowing about the others.
- */
-const app: SiteMiddleware = {
-  basePath: base,
-  fetch: (request) => router.fetch(request),
-  paths: () => [
-    routes.home.href(),
-    routes.about.href(),
-    ...blogPaths(),
-    routes.showcase.href(),
-    ...assets.moduleUrls().values(),
-  ],
-  reload: () => assets.reload(),
-};
-
-export default serveAsHost(
-  compose(
-    app,
-    await createFileTree({
-      rootDir: "static",
-      basePath: `${base}/static`,
-      cacheControl: "public, max-age=3600",
-    }),
-  ),
-  { behavior: fileServer, base },
-);
+export default router;
