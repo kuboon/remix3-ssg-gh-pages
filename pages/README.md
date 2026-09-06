@@ -65,6 +65,11 @@ permission set for each (`-P=dev`, `-P=build`) and the `"unstable": ["bundle"]`
 the bundler needs — which is also why `deno task build` names `-c deno.json`: a
 remote main module reads a project's config only when it is told to.
 
+Its `imports` names each package once. A subpath resolves from that entry, so
+`@remix-run/ui/menu`, `@kuboon/remix-ssg/site` and `@std/front-matter/yaml` all
+work without a line of their own — and adding one would only be a second place
+to bump the version.
+
 ## Project layout
 
 ```

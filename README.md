@@ -32,7 +32,6 @@ repository**:
 | their entrypoints in `pages/assets.ts`                                                 | What compiles them                           |
 | the `showcase` route in `pages/routes.ts` and the line mapping it in `pages/router.ts` | What serves it                               |
 | the `UI showcase` link in `pages/layout.tsx`                                           | The nav entry pointing at it                 |
-| the `@remix-run/ui/*` subpath entries in `pages/deno.json`                             | Only the showcase imports those components   |
 | `pages/pages/blog/*.md`, `pages/pages/about.tsx`                                       | Placeholder content                          |
 
 `pages/pages/index.tsx` and `pages/islands/{counter,total,store}` are the
