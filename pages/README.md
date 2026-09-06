@@ -15,15 +15,18 @@ hydrated islands.
 router.get(routes.about, aboutAction);
 ```
 
-Around that, `router.ts` composes what a static site needs on top:
+The rest of the site is mapped the same way. A directory is a wildcard route
+handing a subtree to whatever already serves one:
 
-|            |                                                          |
-| ---------- | -------------------------------------------------------- |
-| the router | every page named in `routes.ts`, and the browser modules |
-| `static/`  | served verbatim                                          |
+```ts
+router.map(`${base}/static/*path`, ({ request }) => staticFiles.fetch(request));
+router.map(`${assetsPath}/*path`, ({ request }) => assets.fetch(request));
+```
 
-They stack with `compose`, which reads a `404` as "not mine" and moves on —
-which is exactly what the router returns for a path it has no route for.
+So `router.ts` default-exports a plain `@remix-run/fetch-router` router, with
+nothing wrapped around it. `deno serve` and the build both want the same thing
+from it — `fetch` — and everything the build additionally needs (`base`,
+`entryPoints`, `fileServer`) is a named export beside it.
 
 The Markdown articles are pages like any other. `pages/blog/mod.ts` sits in the
 directory the `.md` files are in and answers both blog routes — the listing and
@@ -348,11 +351,14 @@ the prefix — open <http://localhost:8000/remix3-ssg-gh-pages>.
 
 GitHub Pages serves `/about` from `about.html`, and 404s `/about/` when only
 that file exists. `router.ts` states that rule as `fileServer = githubPages()`,
-and the same object does two jobs: the build writes the file that rule would
-reach for, and `serveAsHost` makes the dev server resolve requests the way the
-deploy will — so a trailing slash that 404s in production 404s locally too.
+and the build writes the file it would reach for. Deploying somewhere with
+different rules is a matter of exporting a different behavior.
 
-Deploying somewhere with different rules is a matter of passing a different
-behavior.
+The dev server does not emulate the host — it answers the URLs the routes
+declare, which is the same set for every rule that matters here: `/about` is a
+route, `/about/` is not, and neither is `/about.html`. The one thing Pages is
+more forgiving about is that last one, serving a page at the file's own name
+too; a link written that way fails the build here instead, which is the more
+useful direction to be wrong in.
 
 Deployment is wired up in `.github/workflows/pages.yml` at the repository root.
