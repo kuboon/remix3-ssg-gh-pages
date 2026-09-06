@@ -27,9 +27,9 @@ export const routes = route(base, {
   blog: route("blog", {
     index: get("/"),
     /**
-     * One article — the only route `router.ts` does not map. Articles are Markdown files, so the
-     * file tree serves them; this states the shape of their URL so the listing can link to one.
+     * One article. Articles are Markdown files, so no list of them belongs here — but the shape of
+     * their URL does, and `pages/blog/` answers this route by reading the file the slug names.
      */
-    show: "/:slug",
+    show: get("/:slug"),
   }),
 });

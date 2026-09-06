@@ -17,16 +17,23 @@ router.get(routes.about, aboutAction);
 
 Around that, `router.ts` composes what a static site needs on top:
 
-|               |                                                          |
-| ------------- | -------------------------------------------------------- |
-| the router    | the pages named in `routes.ts`, and the browser modules  |
-| `pages/blog/` | the Markdown articles, through this site's own transform |
-| `static/`     | served verbatim                                          |
+|            |                                                          |
+| ---------- | -------------------------------------------------------- |
+| the router | every page named in `routes.ts`, and the browser modules |
+| `static/`  | served verbatim                                          |
 
 They stack with `compose`, which reads a `404` as "not mine" and moves on —
 which is exactly what the router returns for a path it has no route for.
 
-The articles are the one thing not in `routes.ts`: their URLs come from the
+The Markdown articles are pages like any other. `pages/blog/index.tsx` sits in
+the directory the `.md` files are in and answers both blog routes — the listing
+and one article — so `router.ts` maps the group in one line:
+
+```ts
+router.map(routes.blog, blogController);
+```
+
+Their URLs are the one thing not enumerated in `routes.ts`: they come from the
 files on disk, so `routes.blog.show` states only the _shape_ of an article URL,
 for the listing to link with.
 
@@ -67,20 +74,16 @@ pages/
   layout.tsx         # the HTML document shell
   client/
     hydration.ts     # run() — the client runtime, loaded by a page that hydrates
-  transforms/
-    markdown.tsx     # .md → an article page
   lib/
     base.ts          # the deploy prefix, computed once
-    articles.ts      # what an article is, and its front-matter parser
-    markdown.ts      # Markdown → a Remix UI tree (@kuboon/md)
     tokens.ts        # design tokens — colors, fonts, radii, the measure
     theme.ts         # the css() mixins more than one module uses
   pages/
     index.tsx        # home — places two client entries
     about.tsx
-    blog.tsx         # lists the articles
     showcase.tsx
     blog/
+      index.tsx      # the blog: front-matter, Markdown, listing, article
       *.md           # the articles
   islands/
     counter.tsx      # a hydrated island, and its own browser entrypoint
@@ -192,8 +195,8 @@ Three edits, in the order you would guess:
    — and `hydrate = true` if it places a client entry.
 3. Map them in `router.ts` — `router.get(routes.contact, pageAction(Contact))`.
 
-An **article** needs none of that: drop a `.md` file under `pages/blog/` and the
-transform serves it at its path.
+An **article** needs none of that: drop a `.md` file under `pages/blog/` and it
+is served at its own name.
 
 The crawl starts at `entryPoints` in `router.ts` and follows links, so **what is
 reachable is what gets generated**. A page nothing links to belongs in
@@ -217,11 +220,17 @@ summary: How this site is rendered to static HTML at build time.
 Body starts here…
 ```
 
-`transforms/markdown.tsx` turns it into a page: front-matter via
+`pages/blog/index.tsx` turns it into a page: front-matter via
 `@std/front-matter`, the body via [`@kuboon/md`](https://jsr.io/@kuboon/md) —
-GitHub-flavored, sanitized, with heading anchors and Shiki-highlighted code. The
-generator never sees Markdown; that transform and its dependencies are this
-site's, which is what keeps them out of the generator.
+GitHub-flavored, sanitized, with heading anchors and Shiki-highlighted code.
+Every piece of that is in that one module, and it is the only module that
+imports either package; the generator never sees Markdown at all, it serves what
+this site's own controller returns.
+
+It finds the files through `import.meta.dirname`, being in the directory with
+them, so no path to the articles is written down anywhere. Nothing serves that
+directory as files, either, which is why the `.tsx` can sit beside the `.md`
+without becoming a URL.
 
 ## Interactive islands (client components)
 
@@ -276,8 +285,8 @@ and the build writes four assets instead of thirty-eight.
 
 ### Links, and why the shell streams
 
-The fixed pages live in `lib/routes.ts` as a `@remix-run/fetch-router` route
-map, and links go through it:
+Every URL lives in `routes.ts` as a `@remix-run/fetch-router` route map, and
+links go through it:
 
 ```tsx
 <a href={routes.about.href()}>About</a>;

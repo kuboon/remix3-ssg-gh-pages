@@ -17,13 +17,15 @@ and never written to `dist/`.
 
 ## Why the generator never sees Markdown
 
-`transforms/markdown.tsx` claims every `.md` file under `pages/` and says where
-it is served. It belongs to this site, not to `@kuboon/remix-ssg` — which is
-what keeps `@kuboon/md` and the frontmatter parser out of the generator, and
-what lets this site swap either without asking anyone.
+`pages/blog/index.tsx` is the whole of it: the frontmatter parser, the Markdown
+renderer, the listing and the article page. It belongs to this site, not to
+`@kuboon/remix-ssg` — which is what keeps `@kuboon/md` and the frontmatter
+parser out of the generator, and what lets this site swap either without asking
+anyone.
 
-A `.tsx` file in `pages/` goes through a second transform instead, and that one
-can place islands. Markdown pages ship no JavaScript at all.
+What the generator sees is a `Response`, the same as for every other page:
+`router.ts` maps the blog's routes to that module and never learns that Markdown
+was involved. An article places no islands, so it ships no JavaScript at all.
 
 ## Authoring tips
 
