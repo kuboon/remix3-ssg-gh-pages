@@ -33,7 +33,7 @@ import { renderPage } from "./layout.tsx";
 import { routes } from "./routes.ts";
 
 import * as About from "./pages/about.tsx";
-import { blogController, blogPaths } from "./pages/blog/index.tsx";
+import { blogController, blogPaths } from "./pages/blog/mod.ts";
 import * as Home from "./pages/index.tsx";
 // Showcase: delete this import when you delete the showcase — see README.
 import * as Showcase from "./pages/showcase.tsx";

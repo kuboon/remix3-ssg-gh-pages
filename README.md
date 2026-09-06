@@ -40,7 +40,7 @@ two-islands-one-store demo. Delete those too once you have read the home page;
 the point they make is in this README's opening paragraph.
 
 What you keep is `pages/routes.ts`, `pages/router.ts`, `pages/assets.ts`,
-`pages/layout.tsx`, `pages/client/`, `pages/lib/`, `pages/pages/blog/index.tsx`,
+`pages/layout.tsx`, `pages/client/`, `pages/lib/`, `pages/pages/blog/`,
 `pages/static/`, and the workflows. `pages/lib/tokens.ts` and
 `pages/lib/theme.ts` are where the site's look lives — Remix supplies behaviour
 and a little component styling, not a theme, so the palette, spacing and

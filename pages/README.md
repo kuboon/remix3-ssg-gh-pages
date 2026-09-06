@@ -25,9 +25,9 @@ Around that, `router.ts` composes what a static site needs on top:
 They stack with `compose`, which reads a `404` as "not mine" and moves on —
 which is exactly what the router returns for a path it has no route for.
 
-The Markdown articles are pages like any other. `pages/blog/index.tsx` sits in
-the directory the `.md` files are in and answers both blog routes — the listing
-and one article — so `router.ts` maps the group in one line:
+The Markdown articles are pages like any other. `pages/blog/mod.ts` sits in the
+directory the `.md` files are in and answers both blog routes — the listing and
+one article — so `router.ts` maps the group in one line:
 
 ```ts
 router.map(routes.blog, blogController);
@@ -83,7 +83,9 @@ pages/
     about.tsx
     showcase.tsx
     blog/
-      index.tsx      # the blog: front-matter, Markdown, listing, article
+      mod.ts         # the blog's entry: the articles, and both routes
+      index.tsx      # the listing screen
+      article.tsx    # the article screen
       *.md           # the articles
   islands/
     counter.tsx      # a hydrated island, and its own browser entrypoint
@@ -220,17 +222,18 @@ summary: How this site is rendered to static HTML at build time.
 Body starts here…
 ```
 
-`pages/blog/index.tsx` turns it into a page: front-matter via
-`@std/front-matter`, the body via [`@kuboon/md`](https://jsr.io/@kuboon/md) —
-GitHub-flavored, sanitized, with heading anchors and Shiki-highlighted code.
-Every piece of that is in that one module, and it is the only module that
-imports either package; the generator never sees Markdown at all, it serves what
-this site's own controller returns.
+`pages/blog/mod.ts` turns it into a page: front-matter via `@std/front-matter`,
+the body via [`@kuboon/md`](https://jsr.io/@kuboon/md) — GitHub-flavored,
+sanitized, with heading anchors and Shiki-highlighted code. It is the only
+module importing either package, and the only one that reads the files; the two
+screens beside it, `index.tsx` and `article.tsx`, are handed what they render.
+The generator never sees Markdown at all — it serves what this site's own
+controller returns.
 
-It finds the files through `import.meta.dirname`, being in the directory with
-them, so no path to the articles is written down anywhere. Nothing serves that
-directory as files, either, which is why the `.tsx` can sit beside the `.md`
-without becoming a URL.
+`mod.ts` finds the files through `import.meta.dirname`, being in the directory
+with them, so no path to the articles is written down anywhere. Nothing serves
+that directory as files, either, which is why the source can sit beside the
+`.md` without becoming a URL.
 
 ## Interactive islands (client components)
 
