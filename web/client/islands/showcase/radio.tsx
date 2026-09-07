@@ -24,7 +24,7 @@ const optionStyle = css({
 });
 
 export const RadioDemo = clientEntry(
-  `${import.meta.url}#RadioDemo`,
+  import.meta.url,
   function RadioDemo(handle: Handle) {
     let size = "md";
 

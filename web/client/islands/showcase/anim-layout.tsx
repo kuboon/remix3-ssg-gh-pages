@@ -19,7 +19,7 @@ import {
 } from "./_lib/controls.tsx";
 
 export const LayoutDemo = clientEntry(
-  `${import.meta.url}#LayoutDemo`,
+  import.meta.url,
   function LayoutDemo(handle: Handle) {
     let expanded = false;
     let preset = "smooth";

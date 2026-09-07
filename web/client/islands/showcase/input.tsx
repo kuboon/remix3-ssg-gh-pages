@@ -25,7 +25,7 @@ const labelStyle = css({
 });
 
 export const InputDemo = clientEntry(
-  `${import.meta.url}#InputDemo`,
+  import.meta.url,
   function InputDemo(handle: Handle) {
     let size = "md";
     let withIcon = true;

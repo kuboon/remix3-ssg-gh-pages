@@ -30,7 +30,7 @@ const separators = [
 ];
 
 export const BreadcrumbsDemo = clientEntry(
-  `${import.meta.url}#BreadcrumbsDemo`,
+  import.meta.url,
   function BreadcrumbsDemo(handle: Handle) {
     let depth = 4;
     let separator = "chevron";

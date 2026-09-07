@@ -28,7 +28,7 @@ const contentStyle = css({
 });
 
 export const AccordionDemo = clientEntry(
-  `${import.meta.url}#AccordionDemo`,
+  import.meta.url,
   function AccordionDemo(handle: Handle) {
     let type = "single";
     let collapsible = true;

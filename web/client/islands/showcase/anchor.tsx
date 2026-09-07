@@ -22,7 +22,7 @@ const placements = [
 ];
 
 export const AnchorDemo = clientEntry(
-  `${import.meta.url}#AnchorDemo`,
+  import.meta.url,
   function AnchorDemo(handle: Handle) {
     let anchorEl: HTMLElement | null = null;
     let floatEl: HTMLElement | null = null;

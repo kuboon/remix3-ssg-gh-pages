@@ -50,7 +50,7 @@ const optionStyle = css({
 });
 
 export const ListboxDemo = clientEntry(
-  `${import.meta.url}#ListboxDemo`,
+  import.meta.url,
   function ListboxDemo(handle: Handle) {
     let value: ListboxValue = "remix";
     let activeValue: ListboxValue = "remix";

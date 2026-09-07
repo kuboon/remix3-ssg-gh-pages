@@ -12,7 +12,7 @@ const separatorStyle = css({
 });
 
 export const MenuDemo = clientEntry(
-  `${import.meta.url}#MenuDemo`,
+  import.meta.url,
   function MenuDemo(handle: Handle) {
     let wordWrap = true;
     let density = "comfortable";

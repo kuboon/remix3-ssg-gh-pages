@@ -55,7 +55,7 @@ const rowStyle = css({
 });
 
 export const PopoverDemo = clientEntry(
-  `${import.meta.url}#PopoverDemo`,
+  import.meta.url,
   function PopoverDemo(handle: Handle) {
     let open = false;
     let placement = "bottom-start";

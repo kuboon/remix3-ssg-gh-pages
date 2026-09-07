@@ -20,7 +20,7 @@ const rowStyle = css({
 });
 
 export const CheckboxDemo = clientEntry(
-  `${import.meta.url}#CheckboxDemo`,
+  import.meta.url,
   function CheckboxDemo(handle: Handle) {
     let size = "md";
     let checkedChildren = [true, false, false];

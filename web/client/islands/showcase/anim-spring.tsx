@@ -16,7 +16,7 @@ import {
 } from "./_lib/controls.tsx";
 
 export const SpringDemo = clientEntry(
-  `${import.meta.url}#SpringDemo`,
+  import.meta.url,
   function SpringDemo(handle: Handle) {
     let mode = "bouncy";
     let duration = 400;

@@ -38,7 +38,7 @@ const airports = [
 ];
 
 export const ComboboxDemo = clientEntry(
-  `${import.meta.url}#ComboboxDemo`,
+  import.meta.url,
   function ComboboxDemo(handle: Handle) {
     let value = "(none)";
     let label = "(none)";

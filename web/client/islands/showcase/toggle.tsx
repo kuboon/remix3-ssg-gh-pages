@@ -18,7 +18,7 @@ const rowStyle = css({
 });
 
 export const ToggleDemo = clientEntry(
-  `${import.meta.url}#ToggleDemo`,
+  import.meta.url,
   function ToggleDemo(handle: Handle) {
     let size = "md";
 

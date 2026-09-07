@@ -287,10 +287,10 @@ browser. See `client/islands/counter.tsx`.
 
 To add one:
 
-1. Write it in `client/islands/` with
-   ``clientEntry(`${import.meta.url}#Export`, …)`` from `@remix-run/ui` — the
-   module naming itself, which is one string fewer to keep in step with a file
-   name. Call `handle.update()` after changing state.
+1. Write it in `client/islands/` with `clientEntry(import.meta.url, …)` from
+   `@remix-run/ui` — the module naming itself, so there is no path to keep in
+   step with a file name. Pass a **named** function: the name is the export the
+   browser imports. Call `handle.update()` after changing state.
 2. Add it to `entrypoints` in `server/assets.ts`.
 3. Import it into a page and place it, and set `export const hydrate = true` on
    that page.
