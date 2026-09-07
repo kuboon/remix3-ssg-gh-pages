@@ -34,7 +34,7 @@ repository**:
 | the `islands/showcase/*.tsx` entrypoint glob in `web/server/assets.ts`                  | What compiles them                           |
 | `web/server/versions.ts`                                                                | The badges under its title                   |
 | the `showcase` route in `web/client/routes.ts` and its action in `web/server/router.ts` | What serves it                               |
-| the `UI showcase` link in `web/server/layout.tsx`                                       | The nav entry pointing at it                 |
+| the `UI showcase` link in `web/client/layout.tsx`                                       | The nav entry pointing at it                 |
 | `web/server/blog/*.md`, `web/client/pages/about.tsx`                                    | Placeholder content                          |
 
 `web/client/pages/index.tsx` and `web/client/islands/{counter,total,store}` are

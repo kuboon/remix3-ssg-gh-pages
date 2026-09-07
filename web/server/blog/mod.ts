@@ -22,7 +22,7 @@ import { markdownToHast } from "@kuboon/md";
 import { hastToRemix } from "@kuboon/md/hast_to_remix.ts";
 import { extract } from "@std/front-matter/yaml";
 
-import { Layout } from "../layout.tsx";
+import { Layout } from "../../client/layout.tsx";
 import { routes } from "../../client/routes.ts";
 import * as Index from "../../client/pages/blog/index.tsx";
 import * as ArticlePage from "../../client/pages/blog/article.tsx";
@@ -135,6 +135,8 @@ export const blogController = createController(routes.blog, {
         Layout({
           title: Index.title,
           description: Index.description,
+          // Neither screen places an island; an article is text, and the listing is a list.
+          script: null,
           children: Index.default(await listArticles()),
         }),
       ),
@@ -154,6 +156,7 @@ export const blogController = createController(routes.blog, {
         Layout({
           title: `${article.title} — remix-ssg`,
           description: article.summary,
+          script: null,
           children: ArticlePage.default({
             article,
             body: await renderMarkdown(article.body),

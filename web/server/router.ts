@@ -28,7 +28,7 @@ import type { FileServerBehavior } from "@kuboon/remix-ssg/site";
 
 import { assets, assetsPath } from "./assets.ts";
 import { base } from "../client/base.ts";
-import { Layout } from "./layout.tsx";
+import { Layout } from "../client/layout.tsx";
 import { routes } from "../client/routes.ts";
 
 import * as About from "../client/pages/about.tsx";
@@ -73,11 +73,23 @@ function pageAction(page: Page) {
       Layout({
         title: page.title,
         description: page.description,
-        hydrate: page.hydrate,
+        script: page.hydrate ? clientRuntime : null,
         children: page.default(),
       }),
     );
 }
+
+/**
+ * Where the client runtime was compiled to, resolved once.
+ *
+ * The shell writes one `<script>` — `run()`, which hydrates whatever islands a page placed — and
+ * this is the URL it needs, plus the chunks to preload behind it. It is resolved here because the
+ * bundle does not change while the server runs, and because a page in `client/` cannot ask.
+ */
+const clientRuntime = {
+  src: await assets.getHref("hydration.ts"),
+  preloads: await assets.getPreloads("hydration.ts"),
+};
 
 /**
  * The files under `client/static/`, served verbatim at their own names.
@@ -124,6 +136,7 @@ router.get(routes.showcase, (context) =>
     Layout({
       title: Showcase.title,
       description: Showcase.description,
+      script: Showcase.hydrate ? clientRuntime : null,
       children: Showcase.default(versions()),
     }),
   ));

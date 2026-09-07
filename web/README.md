@@ -19,8 +19,12 @@ Only `server/` is type-checked with the Deno namespace, so a `Deno.` anywhere in
 `client/` is a build error rather than a surprise in the browser. Nothing else
 enforces the line — no bundler config, no naming convention, one `lib` each.
 
-`server/` may read from `client/` and does: it imports the pages to render them,
-compiles the islands, and serves `client/static/`. Nothing goes the other way.
+`server/` may read from `client/` and does: it imports the pages and the shell
+to render them, compiles the islands, and serves `client/static/`. Nothing goes
+the other way — where a view needs something only the server knows, it takes it
+as a prop. The document shell's `script` is the one such prop: `router.ts`
+resolves where the client runtime was compiled to and hands it over, and a page
+with no islands passes `null` and ships no JavaScript.
 
 ## How it works
 
@@ -117,6 +121,7 @@ web/
     base.ts          # the deploy prefix, computed once
     tokens.ts        # design tokens — colors, fonts, radii, the measure
     theme.ts         # the css() mixins more than one module uses
+    layout.tsx       # the HTML document shell
     hydration.ts     # run() — the client runtime, loaded by a page that hydrates
     pages/
       index.tsx      # home — places two client entries
@@ -135,7 +140,6 @@ web/
   server/
     deno.json        # lib: deno.ns — plus the tasks and their permission sets
     router.ts        # the wiring — routes to pages, plus the rest of the site
-    layout.tsx       # the HTML document shell
     assets.ts        # client/ compiled as one graph
     versions.ts      # the showcase's badges, read off the import map
     blog/
@@ -198,7 +202,7 @@ for.
 Generated `css(...)` rules — this site's, and the ones first-party `remix/ui`
 components carry — all land in the native `rmx` cascade layer, and a mixin
 cannot choose its layer. So `client/static/app.css` declares the full order, and
-`server/layout.tsx` links it at the top of `<head>`:
+`client/layout.tsx` links it at the top of `<head>`:
 
 ```css
 @layer base, rmx, app;
@@ -226,7 +230,7 @@ out ahead of Remix's own rules — Remix appends its collected styles just befor
   pull the whole shell into an island's chunk.
 - **Mixins used by more than one module live in `client/theme.ts`.** A style
   used in one place belongs in that file, under a `// --- styles ---` heading at
-  the bottom — see `server/layout.tsx` or `client/pages/index.tsx`.
+  the bottom — see `client/layout.tsx` or `client/pages/index.tsx`.
 - **`mix` takes an array**, so mixins compose: `mix={[bandStyle, headerStyle]}`
   is what a stylesheet would have said with a grouped selector. When an element
   also has behaviour, the `on(...)` handlers go last.
