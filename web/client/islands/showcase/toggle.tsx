@@ -18,7 +18,7 @@ const rowStyle = css({
 });
 
 export const ToggleDemo = clientEntry(
-  "islands/showcase/toggle.tsx#ToggleDemo",
+  import.meta.url,
   function ToggleDemo(handle: Handle) {
     let size = "md";
 

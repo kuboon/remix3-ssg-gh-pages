@@ -16,7 +16,7 @@ const panelStyle = css({
 });
 
 export const TabsDemo = clientEntry(
-  "islands/showcase/tabs.tsx#TabsDemo",
+  import.meta.url,
   function TabsDemo(handle: Handle) {
     let active = "overview";
     let size = "md";

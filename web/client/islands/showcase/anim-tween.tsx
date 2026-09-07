@@ -21,7 +21,7 @@ const curveOptions = [
 ];
 
 export const TweenDemo = clientEntry(
-  "islands/showcase/anim-tween.tsx#TweenDemo",
+  import.meta.url,
   function TweenDemo(handle: Handle) {
     let curve = "easeOut";
     let duration = 700;

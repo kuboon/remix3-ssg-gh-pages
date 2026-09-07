@@ -12,7 +12,7 @@ import { clicks } from "./store.ts";
  * *same* module instance, which is what compiling them as one code-split graph buys.
  */
 export const Total = clientEntry(
-  "islands/total.tsx#Total",
+  import.meta.url,
   function Total(handle: Handle<{ label: string }>) {
     // Server-rendered as 0; the subscription only exists in the browser.
     let total = clicks.total;

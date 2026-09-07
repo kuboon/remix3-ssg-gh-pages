@@ -13,7 +13,7 @@ const frameworks = [
 ];
 
 export const SelectDemo = clientEntry(
-  "islands/showcase/select.tsx#SelectDemo",
+  import.meta.url,
   function SelectDemo(handle: Handle) {
     let value = "(none)";
     let label = "(none)";

@@ -287,12 +287,10 @@ browser. See `client/islands/counter.tsx`.
 
 To add one:
 
-1. Write it in `client/islands/` with
-   `clientEntry('islands/<name>.tsx#Export',
-   …)` from `@remix-run/ui`. The id
-   names the module and the export, not a URL: the same expression is evaluated
-   in the browser, where nothing can know the deploy prefix or predict the
-   bundler's output naming. Call `handle.update()` after changing state.
+1. Write it in `client/islands/` with `clientEntry(import.meta.url, …)` from
+   `@remix-run/ui` — the module naming itself, so there is no path to keep in
+   step with a file name. Pass a **named** function: the name is the export the
+   browser imports. Call `handle.update()` after changing state.
 2. Add it to `entrypoints` in `server/assets.ts`.
 3. Import it into a page and place it, and set `export const hydrate = true` on
    that page.
@@ -323,13 +321,17 @@ shell writes: it calls `run()`, which walks the document for the hydration
 markers the server emitted and imports each island by the URL named there.
 
 That URL is resolved on the server, by `resolveClientEntry` in
-`server/assets.ts` — `clientEntry`'s id is a source path, and turning it into a
-chunk URL needs both the deploy prefix and the bundler's output naming, neither
-of which the browser has. The same hook asks for the chunk to be preloaded,
-which earns its keep twice: the browser fetches it while the runtime is still
-starting, and the build's crawl gets a `<link>` to follow. Without that link the
-chunks are named only inside the hydration JSON, where nothing looking for links
-can see them — and the build writes four assets instead of thirty-eight.
+`server/assets.ts` — `clientEntry`'s id is the island's own module URL, and
+turning that into a chunk URL needs both the deploy prefix and the bundler's
+output naming, neither of which the browser has. The id is read only there:
+`$entryId` is what `renderToStream` passes to the hook, and nothing in the
+client runtime looks at it, which is why the same expression may mean a `file:`
+URL on one side and a chunk URL on the other. The same hook asks for the chunk
+to be preloaded, which earns its keep twice: the browser fetches it while the
+runtime is still starting, and the build's crawl gets a `<link>` to follow.
+Without that link the chunks are named only inside the hydration JSON, where
+nothing looking for links can see them — and the build writes four assets
+instead of thirty-eight.
 
 ### Links, and why the shell streams
 

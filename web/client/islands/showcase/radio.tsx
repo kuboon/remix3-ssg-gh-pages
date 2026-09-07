@@ -24,7 +24,7 @@ const optionStyle = css({
 });
 
 export const RadioDemo = clientEntry(
-  "islands/showcase/radio.tsx#RadioDemo",
+  import.meta.url,
   function RadioDemo(handle: Handle) {
     let size = "md";
 

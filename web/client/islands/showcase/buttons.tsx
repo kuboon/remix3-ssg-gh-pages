@@ -29,7 +29,7 @@ const slotStyle = css({
 });
 
 export const ButtonsDemo = clientEntry(
-  "islands/showcase/buttons.tsx#ButtonsDemo",
+  import.meta.url,
   function ButtonsDemo(handle: Handle) {
     let tone = "primary";
     let size = "md";

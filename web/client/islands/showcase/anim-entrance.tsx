@@ -31,7 +31,7 @@ const variantTransform: Record<string, string | undefined> = {
 };
 
 export const EntranceExitDemo = clientEntry(
-  "islands/showcase/anim-entrance.tsx#EntranceExitDemo",
+  import.meta.url,
   function EntranceExitDemo(handle: Handle) {
     let items: Array<{ id: number; label: string }> = [
       { id: 1, label: "Design review" },
