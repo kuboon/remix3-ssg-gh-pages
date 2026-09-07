@@ -1,6 +1,10 @@
 /**
  * The document shell — this site's, not the framework's.
  *
+ * A component like any other, which is why it lives here rather than beside the server: everything
+ * it names is in `client/`. The one thing it cannot work out — where the client runtime was
+ * compiled to — is handed to it.
+ *
  * It also carries the one thing the browser cannot work out for itself: the map from an island's
  * name to the chunk the bundler emitted, plus the scripts that load them. A page that places no
  * island gets neither, and so ships no JavaScript at all.
@@ -25,24 +29,34 @@
 
 import { css, type RemixNode } from "@remix-run/ui";
 
-import { assets } from "./assets.ts";
-import { base } from "../client/base.ts";
-import { routes } from "../client/routes.ts";
-import { color, contentWidth } from "../client/tokens.ts";
+import { base } from "./base.ts";
+import { routes } from "./routes.ts";
+import { color, contentWidth } from "./tokens.ts";
 
 /** What every page hands the shell. */
 export interface LayoutProps {
   title: string;
   description?: string;
   /**
-   * Whether this page places a client entry.
+   * The client runtime, for a page that places an island — resolved by `router.ts`, because a URL
+   * under the deploy prefix and the bundler's naming is a thing only the server knows.
    *
-   * The shell has to be told, because it cannot find out: the entries are resolved while the tree
-   * renders, and by then the `<script>` that boots them has already been written. A page that says
-   * nothing gets no script at all, which is what keeps an article free of JavaScript.
+   * The shell has to be handed it rather than finding out for itself: entries are resolved while
+   * the tree renders, and by then the `<script>` that boots them has already been written.
+   *
+   * Required, and `null` for a page with no islands — an article ships no JavaScript at all. It is
+   * not optional because forgetting it is exactly the bug that shipped a showcase whose eighteen
+   * islands never hydrated: a page rendered fine, and nothing on it worked.
    */
-  hydrate?: boolean;
+  script: ClientRuntime | null;
   children: RemixNode;
+}
+
+/** Where the client runtime lives, and what it pulls in behind it. */
+export interface ClientRuntime {
+  src: string;
+  /** The chunks it imports, for `<link rel="modulepreload">`. */
+  preloads: readonly string[];
 }
 
 /**
@@ -63,6 +77,9 @@ export function Layout(props: LayoutProps): RemixNode {
           : null}
         <link rel="stylesheet" href={`${base}/static/app.css`} />
         <link rel="icon" href={`${base}/static/favicon.svg`} />
+        {(props.script?.preloads ?? []).map((href) => (
+          <link key={href} rel="modulepreload" href={href} />
+        ))}
       </head>
       <body>
         <header mix={[bandStyle, headerStyle]}>
@@ -84,14 +101,8 @@ export function Layout(props: LayoutProps): RemixNode {
             <a href="https://remix.run">Remix v3</a>.
           </p>
         </footer>
-        {props.hydrate
-          ? (
-            <script
-              type="module"
-              src={assets.entryUrl("hydration.ts")}
-            >
-            </script>
-          )
+        {props.script
+          ? <script type="module" src={props.script.src}></script>
           : null}
       </body>
     </html>
