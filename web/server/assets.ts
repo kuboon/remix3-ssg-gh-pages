@@ -5,8 +5,10 @@
  * the point: a module two of them import — the Remix UI runtime, a shared store — is emitted once,
  * into a chunk both import, so it is one module at runtime rather than two copies with two states.
  *
- * The list is written out rather than discovered, for the same reason `routes.ts` is: a file
- * appearing in a directory is not a decision, and this is one.
+ * The entries are globbed rather than listed: an island is a file in a directory, and that is the
+ * decision — unlike a route, which is a URL someone chose. `Deno.bundle` still wants them one by
+ * one, so `@kuboon/remix-assets-deno` expands the pattern at startup, sorted, and fails on a
+ * pattern that matches nothing.
  *
  * Every path here is under `client/`: this is the server compiling the browser's half of the site,
  * and the browser's half is a directory.
@@ -28,27 +30,12 @@ export const assets = await createAssetServer({
     // The client runtime. Every page that hydrates loads this one; the islands ride in the chunks
     // it shares with them.
     "hydration.ts",
-    "islands/counter.tsx",
-    "islands/total.tsx",
-    // Showcase: delete these when you delete the showcase — see README.
-    "islands/showcase/accordion.tsx",
-    "islands/showcase/anchor.tsx",
-    "islands/showcase/anim-entrance.tsx",
-    "islands/showcase/anim-layout.tsx",
-    "islands/showcase/anim-spring.tsx",
-    "islands/showcase/anim-tween.tsx",
-    "islands/showcase/breadcrumbs.tsx",
-    "islands/showcase/buttons.tsx",
-    "islands/showcase/checkbox.tsx",
-    "islands/showcase/combobox.tsx",
-    "islands/showcase/input.tsx",
-    "islands/showcase/listbox.tsx",
-    "islands/showcase/menu.tsx",
-    "islands/showcase/popover.tsx",
-    "islands/showcase/radio.tsx",
-    "islands/showcase/select.tsx",
-    "islands/showcase/tabs.tsx",
-    "islands/showcase/toggle.tsx",
+    // Every island, by where it is rather than by name. A file appearing in this directory is the
+    // decision; naming it again here would only be a second place to keep it. `islands/_lib/` is
+    // left out by depth, which is a better rule than the underscore.
+    "islands/*.tsx",
+    // Showcase: delete this line when you delete the showcase — see README.
+    "islands/showcase/*.tsx",
   ],
   basePath: assetsPath,
   mode: "bundle",
