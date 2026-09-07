@@ -1,2 +1,4 @@
 node_modules/
 web/dist/
+# Transitional, written by `mise run build` — see mise.toml.
+pages/

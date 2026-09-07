@@ -7,4 +7,13 @@ deno = "2"
 [tasks.build]
 description = "Build the static site into web/dist"
 dir = "web"
-run = "deno task build"
+run = [
+  "deno task build",
+  # Transitional, and the whole of what `pages/` means in this repository now. The deploy
+  # workflow builds main and the pull request with a single `dist-dir` between them, and main
+  # still writes `pages/dist` — so until this rename is on main, the build leaves a copy where
+  # that value points. Once it is, delete these two lines and set `dist-dir: web/dist` in
+  # `.github/workflows/pages.yml`; main will be producing both paths by then, so that flip is
+  # green on both sides too.
+  "rm -rf ../pages && mkdir -p ../pages && cp -r dist ../pages/dist",
+]
