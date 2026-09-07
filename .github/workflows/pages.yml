@@ -18,5 +18,9 @@ jobs:
     uses: kuboon/workflows/.github/workflows/github-page-with-preview.yaml@main
     with:
       # `mise run build` (the default) installs Deno and runs `deno task build`
-      # in pages/ (see mise.toml), with BASE_URL set by the workflow.
+      # in web/ (see mise.toml), with BASE_URL set by the workflow.
+      #
+      # This one value is used for main's build and for the pull request's, and main still
+      # writes `pages/dist` — so it stays until this rename is on main, and `mise.toml` leaves
+      # a copy of `web/dist` there. See the note beside that copy.
       dist-dir: pages/dist

@@ -4,7 +4,7 @@ date: "2026-07-21"
 summary: How this site is rendered to static HTML at build time.
 ---
 
-This article is a Markdown file in `pages/blog/`. Its metadata comes from the
+This article is a Markdown file in `server/blog/`. Its metadata comes from the
 YAML frontmatter above; the body is rendered to HTML by
 [`@kuboon/md`](https://jsr.io/@kuboon/md) and dropped into the shared layout.
 

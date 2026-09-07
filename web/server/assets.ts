@@ -7,21 +7,24 @@
  *
  * The list is written out rather than discovered, for the same reason `routes.ts` is: a file
  * appearing in a directory is not a decision, and this is one.
+ *
+ * Every path here is under `client/`, and so is every id `clientEntry()` writes: this is the server
+ * compiling the browser's half of the site, and the browser's half is a directory.
  */
 
 import { createAssetServer } from "@kuboon/remix-assets-deno";
 
-import { base } from "./lib/base.ts";
+import { base } from "../client/base.ts";
 
 /** Where the chunks are served, and where `entryUrl()` resolves against. */
 export const assetsPath = `${base}/assets`;
 
 export const assets = await createAssetServer({
-  rootDir: import.meta.dirname!,
+  rootDir: `${import.meta.dirname}/../client`,
   entrypoints: [
     // The client runtime. Every page that hydrates loads this one; the islands ride in the chunks
     // it shares with them.
-    "client/hydration.ts",
+    "hydration.ts",
     "islands/counter.tsx",
     "islands/total.tsx",
     // Showcase: delete these when you delete the showcase — see README.
@@ -54,7 +57,7 @@ export const assets = await createAssetServer({
 /**
  * Resolves a `clientEntry()` id to the chunk it landed in.
  *
- * An id here is `<path under this directory>#<ExportName>` — the source module, not a URL, because
+ * An id here is `<path under client/>#<ExportName>` — the source module, not a URL, because
  * the same expression is evaluated in the browser and nothing there can know the deploy prefix or
  * predict the bundler's output naming. The server knows both, so it answers at render time.
  *

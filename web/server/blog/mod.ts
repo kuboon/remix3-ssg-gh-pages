@@ -22,10 +22,10 @@ import { markdownToHast } from "@kuboon/md";
 import { hastToRemix } from "@kuboon/md/hast_to_remix.ts";
 import { extract } from "@std/front-matter/yaml";
 
-import { renderPage } from "../../layout.tsx";
-import { routes } from "../../routes.ts";
-import * as Index from "./index.tsx";
-import * as ArticlePage from "./article.tsx";
+import { renderPage } from "../layout.tsx";
+import { routes } from "../../client/routes.ts";
+import * as Index from "../../client/pages/blog/index.tsx";
+import * as ArticlePage from "../../client/pages/blog/article.tsx";
 
 /** Where the articles are: right here, next to this file. */
 const articlesDir = import.meta.dirname!;

@@ -66,34 +66,23 @@ const animationLinks = [
   { id: "animation-layout", label: "Layout" },
 ];
 
-// The badges read this site's own import map, so they never drift from what the
-// build actually resolves. Reading a file here is fine: pages render on the
-// server at build time, and the build's permission set already grants `read`.
-function resolvedVersion(specifier: string): string {
-  try {
-    const config = JSON.parse(
-      Deno.readTextFileSync(new URL("../deno.json", import.meta.url)),
-    );
-    const entry = (config.imports ?? {})[specifier];
-    return typeof entry === "string"
-      ? entry.replace(/^[a-z]+:.*@\^?/, "")
-      : "—";
-  } catch {
-    return "—";
-  }
+/** One badge in the strip under the title. */
+export interface Version {
+  label: string;
+  value: string;
 }
 
-const versions: ReadonlyArray<{ label: string; value: string }> = [
-  { label: "@remix-run/ui", value: resolvedVersion("@remix-run/ui") },
-  { label: "@kuboon/remix-ssg", value: resolvedVersion("@kuboon/remix-ssg") },
-  { label: "Deno", value: Deno.version.deno },
-];
-
-export default function ShowcasePage(): RemixNode {
+/**
+ * @param versions What to put in the badge strip — read from the import map by `server/versions.ts`
+ * @returns The showcase page
+ */
+export default function ShowcasePage(
+  versions: readonly Version[],
+): RemixNode {
   return (
     <div mix={pageStyle}>
       <div mix={containerStyle}>
-        {Hero()}
+        {Hero(versions)}
 
         {Section({
           id: "components",
@@ -143,7 +132,7 @@ export default function ShowcasePage(): RemixNode {
   );
 }
 
-function Hero() {
+function Hero(versions: readonly Version[]) {
   return (
     <header mix={heroStyle}>
       <div mix={css({ display: "grid", gap: "18px" })}>
@@ -163,13 +152,13 @@ function Hero() {
           {LinkRow("Components", componentLinks)}
           {LinkRow("Animation", animationLinks)}
         </nav>
-        {VersionStrip()}
+        {VersionStrip(versions)}
       </div>
     </header>
   );
 }
 
-function VersionStrip() {
+function VersionStrip(versions: readonly Version[]) {
   return (
     <dl aria-label="Package versions" mix={versionStripStyle}>
       {versions.map((entry) => (

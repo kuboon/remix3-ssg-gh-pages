@@ -1,17 +1,26 @@
 /**
  * The article listing.
  *
- * It is handed the articles rather than reading them: `mod.ts` owns the files, this owns the
- * screen. What it renders is what makes the articles part of the site, though — the crawl writes
- * what something links to, so an article missing from here is an article missing from `dist/`.
+ * It is handed the articles rather than reading them: `server/blog/` owns the files, this owns the
+ * screen — which is what lets it live here, in the half of the site that is never allowed to touch
+ * a filesystem. What it renders still decides what the site contains, though: the crawl writes what
+ * something links to, so an article missing from this list is an article missing from `dist/`.
  */
 
 import { css, type RemixNode } from "@remix-run/ui";
 
-import type { Article } from "./mod.ts";
 import { routes } from "../../routes.ts";
-import { metaStyle } from "../../lib/theme.ts";
-import { color } from "../../lib/tokens.ts";
+import { metaStyle } from "../../theme.ts";
+import { color } from "../../tokens.ts";
+
+/** What the listing needs of an article. The server reads more than this and passes it along. */
+export interface ArticleSummary {
+  /** The article's URL segment. */
+  slug: string;
+  title: string;
+  date: string;
+  summary: string;
+}
 
 export const title = "Blog — remix-ssg";
 export const description =
@@ -21,7 +30,9 @@ export const description =
  * @param articles The articles, in the order they should be listed
  * @returns The listing
  */
-export default function BlogIndex(articles: Article[]): RemixNode {
+export default function BlogIndex(
+  articles: readonly ArticleSummary[],
+): RemixNode {
   return (
     <>
       <h1>Blog</h1>

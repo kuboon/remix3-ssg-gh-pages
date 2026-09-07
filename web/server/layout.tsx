@@ -26,9 +26,9 @@ import { css, type RemixNode } from "@remix-run/ui";
 import { htmlDocument } from "@kuboon/remix-ssg/site";
 
 import { assets, resolveClientEntry } from "./assets.ts";
-import { base } from "./lib/base.ts";
-import { routes } from "./routes.ts";
-import { color, contentWidth } from "./lib/tokens.ts";
+import { base } from "../client/base.ts";
+import { routes } from "../client/routes.ts";
+import { color, contentWidth } from "../client/tokens.ts";
 
 /** What every page hands the shell. */
 export interface LayoutProps {
@@ -88,7 +88,7 @@ export function renderPage(props: LayoutProps): Response {
           ? (
             <script
               type="module"
-              src={assets.entryUrl("client/hydration.ts")}
+              src={assets.entryUrl("hydration.ts")}
             >
             </script>
           )

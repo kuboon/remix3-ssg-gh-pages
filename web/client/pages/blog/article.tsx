@@ -1,19 +1,19 @@
 /**
  * One article.
  *
- * The body arrives already rendered, from `mod.ts` — this places it and dresses it with
+ * The body arrives already rendered, from `server/blog/` — this places it and dresses it with
  * `proseStyle`, which is the one mixin that reaches into markup it did not write. Text only: the
  * page places no client entry, so an article ships no JavaScript at all.
  */
 
 import type { RemixNode } from "@remix-run/ui";
 
-import type { Article } from "./mod.ts";
 import { routes } from "../../routes.ts";
-import { metaStyle, proseStyle } from "../../lib/theme.ts";
+import { metaStyle, proseStyle } from "../../theme.ts";
 
 export interface ArticleProps {
-  article: Article;
+  /** What the page shows of the article itself — its front-matter, as far as this needs it. */
+  article: { title: string; date: string };
   /** The Markdown body, already a node tree. */
   body: RemixNode;
 }
