@@ -1,8 +1,8 @@
 import { css, type RemixNode } from "@remix-run/ui";
 
 import { routes } from "../routes.ts";
-import { buttonStyle, cardStyle } from "../lib/theme.ts";
-import { color } from "../lib/tokens.ts";
+import { buttonStyle, cardStyle } from "../theme.ts";
+import { color } from "../tokens.ts";
 import { Counter } from "../islands/counter.tsx";
 import { Total } from "../islands/total.tsx";
 

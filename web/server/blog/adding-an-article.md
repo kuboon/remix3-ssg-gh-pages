@@ -4,22 +4,24 @@ date: "2026-07-20"
 summary: Drop a Markdown file next to this one — the crawl does the rest.
 ---
 
-Articles are Markdown files in `pages/blog/`. To add one, create a new `.md`
+Articles are Markdown files in `server/blog/`. To add one, create a new `.md`
 file there with `title`, `date`, and `summary` frontmatter, then write the body.
 
 ## How it shows up
 
-`pages/blog/mod.ts` reads every `.md` file beside it, sorts them by date, and
-`index.tsx` links to each one at `/blog/<filename>`. That listing is not a
-formality: the static build discovers pages by following links, so being listed
-is what makes an article part of the site. A file nothing links to is served by
-the dev server and never written to `dist/`.
+`server/blog/mod.ts` reads every `.md` file beside it, sorts them by date, and
+the listing screen in `client/pages/blog/` links to each one at
+`/blog/<filename>`. That listing is not a formality: the static build discovers
+pages by following links, so being listed is what makes an article part of the
+site. A file nothing links to is served by the dev server and never written to
+`dist/`.
 
 ## Why the generator never sees Markdown
 
-`pages/blog/mod.ts` is the whole of it: the frontmatter parser, the file reads,
-and the Markdown renderer, with a screen either side of it. It belongs to this
-site, not to `@kuboon/remix-ssg` — which is what keeps `@kuboon/md` and the
+`server/blog/mod.ts` is the whole of it: the frontmatter parser, the file reads,
+and the Markdown renderer. The two screens it hands the results to are in
+`client/pages/blog/`, where nothing may open a file. It belongs to this site,
+not to `@kuboon/remix-ssg` — which is what keeps `@kuboon/md` and the
 frontmatter parser out of the generator, and what lets this site swap either
 without asking anyone.
 

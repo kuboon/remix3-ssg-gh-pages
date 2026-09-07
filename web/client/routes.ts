@@ -17,7 +17,7 @@
 
 import { get, route } from "@remix-run/fetch-router/routes";
 
-import { base } from "./lib/base.ts";
+import { base } from "./base.ts";
 
 export const routes = route(base, {
   home: get("/"),
@@ -28,7 +28,7 @@ export const routes = route(base, {
     index: get("/"),
     /**
      * One article. Articles are Markdown files, so no list of them belongs here — but the shape of
-     * their URL does, and `pages/blog/` answers this route by reading the file the slug names.
+     * their URL does, and `server/blog/` answers this route by reading the file the slug names.
      */
     show: get("/:slug"),
   }),

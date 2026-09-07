@@ -1,4 +1,4 @@
-# pages
+# web
 
 A static-site starter built with [Remix v3](https://remix.run) — `remix/ui` for
 rendering — and [`@kuboon/remix-ssg`](https://jsr.io/@kuboon/remix-ssg) for
@@ -6,10 +6,26 @@ everything around it. The output is plain HTML that deploys to GitHub Pages:
 zero client-side JavaScript by default, with opt-in interactivity through
 hydrated islands.
 
+## Two halves
+
+The workspace has one member for each side of the wire:
+
+|           |                                                                       | checked with        |
+| --------- | --------------------------------------------------------------------- | ------------------- |
+| `client/` | pages, islands, routes, tokens — everything the browser is ever given | `dom`, no `deno.ns` |
+| `server/` | the router, the bundler, the file reads, the build                    | `deno.ns` and `dom` |
+
+Only `server/` is type-checked with the Deno namespace, so a `Deno.` anywhere in
+`client/` is a build error rather than a surprise in the browser. Nothing else
+enforces the line — no bundler config, no naming convention, one `lib` each.
+
+`server/` may read from `client/` and does: it imports the pages to render them,
+compiles the islands, and serves `client/static/`. Nothing goes the other way.
+
 ## How it works
 
-`routes.ts` states every URL the site answers, `pages/` renders them, and
-`router.ts` maps one to the other — the shape a Remix app has:
+`client/routes.ts` states every URL the site answers, `client/pages/` renders
+them, and `server/router.ts` maps one to the other — the shape a Remix app has:
 
 ```ts
 router.get(routes.about, aboutAction);
@@ -23,27 +39,27 @@ router.map(`${base}/static/*path`, ({ request }) => staticFiles.fetch(request));
 router.map(`${assetsPath}/*path`, ({ request }) => assets.fetch(request));
 ```
 
-So `router.ts` default-exports a plain `@remix-run/fetch-router` router, with
-nothing wrapped around it. `deno serve` and the build both want the same thing
-from it — `fetch` — and everything the build additionally needs (`base`,
+So `server/router.ts` default-exports a plain `@remix-run/fetch-router` router,
+with nothing wrapped around it. `deno serve` and the build both want the same
+thing from it — `fetch` — and everything the build additionally needs (`base`,
 `entryPoints`, `fileServer`) is a named export beside it.
 
-The Markdown articles are pages like any other. `pages/blog/mod.ts` sits in the
+The Markdown articles are pages like any other. `server/blog/mod.ts` sits in the
 directory the `.md` files are in and answers both blog routes — the listing and
-one article — so `router.ts` maps the group in one line:
+one article — so `server/router.ts` maps the group in one line:
 
 ```ts
 router.map(routes.blog, blogController);
 ```
 
-Their URLs are the one thing not enumerated in `routes.ts`: they come from the
-files on disk, so `routes.blog.show` states only the _shape_ of an article URL,
-for the listing to link with.
+Their URLs are the one thing not enumerated in `client/routes.ts`: they come
+from the files on disk, so `routes.blog.show` states only the _shape_ of an
+article URL, for the listing to link with.
 
-`deno serve router.ts` runs that handler as the dev server. The build drives the
-very same object with `fetch()`, writes each response to disk, and follows the
-links it finds — so what you see locally is what gets generated, and moving to a
-live server would be a change of deploy target rather than of code.
+`deno task dev` runs that handler as the dev server. The build drives the very
+same object with `fetch()`, writes each response to disk, and follows the links
+it finds — so what you see locally is what gets generated, and moving to a live
+server would be a change of deploy target rather than of code.
 
 There is no build script in this repository. `deno task build` runs the
 generator straight from JSR.
@@ -60,53 +76,71 @@ deno task build   # generate the static site into dist/
 deno task check   # type-check, lint, and format-check
 ```
 
-Neither task passes `-A` or `--unstable-bundle`. `deno.json` carries a
-permission set for each (`-P=dev`, `-P=build`) and the `"unstable": ["bundle"]`
-the bundler needs — which is also why `deno task build` names `-c deno.json`: a
-remote main module reads a project's config only when it is told to.
+`dev` and `build` are `server/`'s tasks; the ones at the root run them there, so
+either directory works. `check` runs `deno check` in each member — with that
+member's `lib`, which is the whole point — then lints and format-checks the
+workspace.
 
-Its `imports` names each package once. A subpath resolves from that entry, so
-`@remix-run/ui/menu`, `@kuboon/remix-ssg/site` and `@std/front-matter/yaml` all
-work without a line of their own — and adding one would only be a second place
-to bump the version.
+Neither task passes `-A` or `--unstable-bundle`. `server/deno.json` carries a
+permission set for each (`-P=dev`, `-P=build`) and the root config the
+`"unstable": ["bundle"]` the bundler needs — which is also why `deno task build`
+names `-c deno.json`: a remote main module reads a project's config only when it
+is told to.
+
+The root `imports` names each package once. A subpath resolves from that entry,
+so `@remix-run/ui/menu`, `@kuboon/remix-ssg/site` and `@std/front-matter/yaml`
+all work without a line of their own — and adding one would only be a second
+place to bump the version.
 
 ## Project layout
 
 ```
-pages/
-  deno.json          # tasks, imports, permission sets, compiler + JSX options
+web/
+  deno.json          # the workspace: members, imports, tasks, lint + fmt
   deno.lock          # pinned dependency versions (committed)
-  routes.ts          # every URL the site answers
-  router.ts          # the wiring — routes to pages, plus the rest of the site
-  assets.ts          # the browser modules, compiled as one graph
-  layout.tsx         # the HTML document shell
   client/
-    hydration.ts     # run() — the client runtime, loaded by a page that hydrates
-  lib/
+    deno.json        # lib: dom — no deno.ns, so nothing here can reach for Deno
+    routes.ts        # every URL the site answers
     base.ts          # the deploy prefix, computed once
     tokens.ts        # design tokens — colors, fonts, radii, the measure
     theme.ts         # the css() mixins more than one module uses
-  pages/
-    index.tsx        # home — places two client entries
-    about.tsx
-    showcase.tsx
+    hydration.ts     # run() — the client runtime, loaded by a page that hydrates
+    pages/
+      index.tsx      # home — places two client entries
+      about.tsx
+      showcase.tsx
+      blog/
+        index.tsx    # the listing screen
+        article.tsx  # the article screen
+    islands/
+      counter.tsx    # a hydrated island, and its own browser entrypoint
+      total.tsx      # a second island/entrypoint, sharing state with it
+      store.ts       # the module both islands import — the shared singleton
+    static/
+      app.css        # tokens, document defaults, the cascade layer order
+      favicon.svg
+  server/
+    deno.json        # lib: deno.ns — plus the tasks and their permission sets
+    router.ts        # the wiring — routes to pages, plus the rest of the site
+    layout.tsx       # the HTML document shell
+    assets.ts        # client/ compiled as one graph
+    versions.ts      # the showcase's badges, read off the import map
     blog/
-      mod.ts         # the blog's entry: the articles, and both routes
-      index.tsx      # the listing screen
-      article.tsx    # the article screen
+      mod.ts         # the articles, and both blog routes
       *.md           # the articles
-  islands/
-    counter.tsx      # a hydrated island, and its own browser entrypoint
-    total.tsx        # a second island/entrypoint, sharing state with it
-    store.ts         # the module both islands import — the shared singleton
-  static/
-    app.css          # tokens, document defaults, the cascade layer order
-    favicon.svg
+  dist/              # the build's output (gitignored)
 ```
+
+Two files sit across the line on purpose. `client/base.ts` reads `BASE_URL` off
+`globalThis` rather than through `Deno.env`, because a prefix is a render-time
+value that the browser is never told and `client/` may not name `Deno`; and the
+blog's screens are in `client/pages/blog/` while the module that reads the `.md`
+files beside them is `server/blog/`. Each screen states the shape it needs of an
+article, and the server's own `Article` is a superset of both.
 
 ## The UI showcase (delete me)
 
-`pages/showcase.tsx` and `islands/showcase/` are a port of
+`client/pages/showcase.tsx` and `client/islands/showcase/` are a port of
 [remix3-ui-showcase](https://github.com/kuboon/remix3-ui-showcase): every
 first-party `@remix-run/ui` component and the animation primitives, each an
 island whose parameters you can change live. It is here to demonstrate the
@@ -117,9 +151,9 @@ It is also the largest thing the island pipeline is asked to do here — 18
 entrypoints compiled as one graph, sharing `@remix-run/ui` and the demo chrome
 through code-split chunks rather than 18 copies.
 
-Helpers the demos share live in `islands/showcase/_lib/`. Nothing enforces the
-underscore any more — `assets.ts` lists its entrypoints, so a file is one
-because it is named there, not because of where it sits.
+Helpers the demos share live in `client/islands/showcase/_lib/`. Nothing
+enforces the underscore any more — `server/assets.ts` lists its entrypoints, so
+a file is one because it is named there, not because of where it sits.
 
 ## Styling
 
@@ -142,14 +176,15 @@ const cardStyle = css({
 into that page's `<head>` as `<style>` tags. So a page carries its own CSS and
 nothing else: no rules for parts of the site the reader never opened, and no
 class name that has to agree with a file somewhere else. The one stylesheet the
-site does link is `static/app.css`, and the next section is what it is for.
+site does link is `client/static/app.css`, and the next section is what it is
+for.
 
 ### The cascade
 
 Generated `css(...)` rules — this site's, and the ones first-party `remix/ui`
 components carry — all land in the native `rmx` cascade layer, and a mixin
-cannot choose its layer. So `static/app.css` declares the full order, and
-`layout.tsx` links it at the top of `<head>`:
+cannot choose its layer. So `client/static/app.css` declares the full order, and
+`server/layout.tsx` links it at the top of `<head>`:
 
 ```css
 @layer base, rmx, app;
@@ -167,22 +202,22 @@ out ahead of Remix's own rules — Remix appends its collected styles just befor
 
 ### Where a style goes
 
-- **Token values live in `static/app.css`; `lib/tokens.ts` names them.** Remix
-  supplies behaviour and a little component styling, not a theme, so the
-  palette, typography and radii are the app's. They are custom properties
+- **Token values live in `client/static/app.css`; `client/tokens.ts` names
+  them.** Remix supplies behaviour and a little component styling, not a theme,
+  so the palette, typography and radii are the app's. They are custom properties
   because light and dark swap between two sets of them, and `tokens.ts` exports
   the `var(--…)` references rather than a second copy of the values. Islands
   import from `tokens.ts` and only from there — a `css(...)` call at module
   scope is not something the bundler will drop, so importing `theme.ts` would
   pull the whole shell into an island's chunk.
-- **Mixins used by more than one module live in `lib/theme.ts`.** A style used
-  in one place belongs in that file, under a `// --- styles ---` heading at the
-  bottom — see `layout.tsx` or `pages/index.tsx`.
+- **Mixins used by more than one module live in `client/theme.ts`.** A style
+  used in one place belongs in that file, under a `// --- styles ---` heading at
+  the bottom — see `server/layout.tsx` or `client/pages/index.tsx`.
 - **`mix` takes an array**, so mixins compose: `mix={[bandStyle, headerStyle]}`
   is what a stylesheet would have said with a grouped selector. When an element
   also has behaviour, the `on(...)` handlers go last.
 - **A page that needs more room than the measure takes it itself.**
-  `pages/showcase.tsx` brings its own layout, so its wrapper sets
+  `client/pages/showcase.tsx` brings its own layout, so its wrapper sets
   `margin-inline: calc(50% - 50vw)` and widens from the main column to the full
   viewport — no flag reaches the shell for it, and its background finally spans
   both edges. `app.css` pairs that with `overflow-x: clip` on `body`, so `50vw`
@@ -193,23 +228,24 @@ out ahead of Remix's own rules — Remix appends its collected styles just befor
   scoped to the one class on the article wrapper instead of leaking out as bare
   element selectors.
 
-`static/` holds `app.css` and anything else served verbatim (the favicon,
+`client/static/` holds `app.css` and anything else served verbatim (the favicon,
 images).
 
 ## Adding a page
 
 Three edits, in the order you would guess:
 
-1. Name its URL in `routes.ts` — `contact: get("/contact")`.
-2. Write `pages/contact.tsx`, exporting a component as `default` plus a `title`
-   — and `hydrate = true` if it places a client entry.
-3. Map them in `router.ts` — `router.get(routes.contact, pageAction(Contact))`.
+1. Name its URL in `client/routes.ts` — `contact: get("/contact")`.
+2. Write `client/pages/contact.tsx`, exporting a component as `default` plus a
+   `title` — and `hydrate = true` if it places a client entry.
+3. Map them in `server/router.ts` —
+   `router.get(routes.contact, pageAction(Contact))`.
 
-An **article** needs none of that: drop a `.md` file under `pages/blog/` and it
+An **article** needs none of that: drop a `.md` file under `server/blog/` and it
 is served at its own name.
 
-The crawl starts at `entryPoints` in `router.ts` and follows links, so **what is
-reachable is what gets generated**. A page nothing links to belongs in
+The crawl starts at `entryPoints` in `server/router.ts` and follows links, so
+**what is reachable is what gets generated**. A page nothing links to belongs in
 `entryPoints`, or it is not part of the site.
 
 That is also why the blog controller reads the article files: listing them is
@@ -217,7 +253,7 @@ what makes them reachable.
 
 ## Markdown content
 
-Each article is a `.md` file under `pages/blog/` with `title`, `date`, and
+Each article is a `.md` file under `server/blog/` with `title`, `date`, and
 `summary` front-matter:
 
 ```markdown
@@ -230,7 +266,7 @@ summary: How this site is rendered to static HTML at build time.
 Body starts here…
 ```
 
-`pages/blog/mod.ts` turns it into a page: front-matter via `@std/front-matter`,
+`server/blog/mod.ts` turns it into a page: front-matter via `@std/front-matter`,
 the body via [`@kuboon/md`](https://jsr.io/@kuboon/md) — GitHub-flavored,
 sanitized, with heading anchors and Shiki-highlighted code. It is the only
 module importing either package, and the only one that reads the files; the two
@@ -247,16 +283,17 @@ that directory as files, either, which is why the source can sit beside the
 
 Most of the site is static HTML. When you need interactivity, use an **island**:
 a component that is server-rendered like everything else, then hydrated in the
-browser. See `islands/counter.tsx`.
+browser. See `client/islands/counter.tsx`.
 
 To add one:
 
-1. Write it in `islands/` with `clientEntry('islands/<name>.tsx#Export', …)`
-   from `@remix-run/ui`. The id names the module and the export, not a URL: the
-   same expression is evaluated in the browser, where nothing can know the
-   deploy prefix or predict the bundler's output naming. Call `handle.update()`
-   after changing state.
-2. Add it to `entrypoints` in `assets.ts`.
+1. Write it in `client/islands/` with
+   `clientEntry('islands/<name>.tsx#Export',
+   …)` from `@remix-run/ui`. The id
+   names the module and the export, not a URL: the same expression is evaluated
+   in the browser, where nothing can know the deploy prefix or predict the
+   bundler's output naming. Call `handle.update()` after changing state.
+2. Add it to `entrypoints` in `server/assets.ts`.
 3. Import it into a page and place it, and set `export const hydrate = true` on
    that page.
 
@@ -277,27 +314,27 @@ islands/total.js    ─┴─→ chunk-…   store.ts
 
 The home page demonstrates why that matters. `counter.tsx` and `total.tsx` are
 separate entrypoints that never reference each other; both import
-`islands/store.ts`, and the running total tracks the buttons only because that
-store was emitted once. Compile the entries independently — one bundler call
-each — and each gets a private copy, so the total would sit at zero.
+`client/islands/store.ts`, and the running total tracks the buttons only because
+that store was emitted once. Compile the entries independently — one bundler
+call each — and each gets a private copy, so the total would sit at zero.
 
 `client/hydration.ts` is an entrypoint like the islands, and the only script the
 shell writes: it calls `run()`, which walks the document for the hydration
 markers the server emitted and imports each island by the URL named there.
 
-That URL is resolved on the server, by `resolveClientEntry` in `assets.ts` —
-`clientEntry`'s id is a source path, and turning it into a chunk URL needs both
-the deploy prefix and the bundler's output naming, neither of which the browser
-has. The same hook asks for the chunk to be preloaded, which earns its keep
-twice: the browser fetches it while the runtime is still starting, and the
-build's crawl gets a `<link>` to follow. Without that link the chunks are named
-only inside the hydration JSON, where nothing looking for links can see them —
-and the build writes four assets instead of thirty-eight.
+That URL is resolved on the server, by `resolveClientEntry` in
+`server/assets.ts` — `clientEntry`'s id is a source path, and turning it into a
+chunk URL needs both the deploy prefix and the bundler's output naming, neither
+of which the browser has. The same hook asks for the chunk to be preloaded,
+which earns its keep twice: the browser fetches it while the runtime is still
+starting, and the build's crawl gets a `<link>` to follow. Without that link the
+chunks are named only inside the hydration JSON, where nothing looking for links
+can see them — and the build writes four assets instead of thirty-eight.
 
 ### Links, and why the shell streams
 
-Every URL lives in `routes.ts` as a `@remix-run/fetch-router` route map, and
-links go through it:
+Every URL lives in `client/routes.ts` as a `@remix-run/fetch-router` route map,
+and links go through it:
 
 ```tsx
 <a href={routes.about.href()}>About</a>;
@@ -327,9 +364,9 @@ because the shell renders through `renderToStream`.
 and the marker it strips, `<!-- rmx:flush document -->`, is exactly how the
 runtime recognises a whole document rather than a fragment. Serve pages without
 it and an internal link changes the URL while leaving the page alone, silently:
-no error, no console warning, and the fetch even returns 200. So `layout.tsx`
-uses `renderToStream` and reads the stream to a string itself, which is the only
-reason a bare `<a>` is enough here.
+no error, no console warning, and the fetch even returns 200. So
+`server/layout.tsx` uses `renderToStream` and reads the stream to a string
+itself, which is the only reason a bare `<a>` is enough here.
 
 If you ever do want a link to force a real document load — leaving the runtime
 and all its state behind — mark that one `<a data-rmx-document>`.
@@ -338,7 +375,7 @@ and all its state behind — mark that one `<a data-rmx-document>`.
 
 A GitHub Pages _project_ site is served under a sub-path
 (`https://<user>.github.io/<repo>/`), and per-PR previews add a further segment.
-`lib/base.ts` turns the `BASE_URL` the deploy workflow sets into that prefix;
+`client/base.ts` turns the `BASE_URL` the deploy workflow sets into that prefix;
 the shell, the pages and the router all read it from there, and the build strips
 it back off when writing so the output always lands at `dist/`'s root.
 
@@ -355,9 +392,10 @@ the prefix — open <http://localhost:8000/remix3-ssg-gh-pages>.
 ### Which file answers which URL
 
 GitHub Pages serves `/about` from `about.html`, and 404s `/about/` when only
-that file exists. `router.ts` states that rule as `fileServer = githubPages()`,
-and the build writes the file it would reach for. Deploying somewhere with
-different rules is a matter of exporting a different behavior.
+that file exists. `server/router.ts` states that rule as
+`fileServer = githubPages()`, and the build writes the file it would reach for.
+Deploying somewhere with different rules is a matter of exporting a different
+behavior.
 
 The dev server does not emulate the host — it answers the URLs the routes
 declare, which is the same set for every rule that matters here: `/about` is a
