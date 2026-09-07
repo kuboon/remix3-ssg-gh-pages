@@ -30,7 +30,7 @@ const separators = [
 ];
 
 export const BreadcrumbsDemo = clientEntry(
-  "islands/showcase/breadcrumbs.tsx#BreadcrumbsDemo",
+  `${import.meta.url}#BreadcrumbsDemo`,
   function BreadcrumbsDemo(handle: Handle) {
     let depth = 4;
     let separator = "chevron";

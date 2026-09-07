@@ -22,7 +22,7 @@ const placements = [
 ];
 
 export const AnchorDemo = clientEntry(
-  "islands/showcase/anchor.tsx#AnchorDemo",
+  `${import.meta.url}#AnchorDemo`,
   function AnchorDemo(handle: Handle) {
     let anchorEl: HTMLElement | null = null;
     let floatEl: HTMLElement | null = null;

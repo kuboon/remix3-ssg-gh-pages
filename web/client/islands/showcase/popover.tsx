@@ -55,7 +55,7 @@ const rowStyle = css({
 });
 
 export const PopoverDemo = clientEntry(
-  "islands/showcase/popover.tsx#PopoverDemo",
+  `${import.meta.url}#PopoverDemo`,
   function PopoverDemo(handle: Handle) {
     let open = false;
     let placement = "bottom-start";

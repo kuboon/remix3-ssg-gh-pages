@@ -8,15 +8,16 @@ import { clicks } from "./store.ts";
  * A client component ("island"): server-rendered to HTML like everything else, then hydrated in the
  * browser so it becomes interactive.
  *
- * `clientEntry(id, component)` marks it for hydration. The id names this module and the export to
- * import, not a URL: the same expression is evaluated in the browser, where nothing can know the
- * deploy prefix or predict the bundler's output naming. `assets.ts` resolves it at render time.
+ * `clientEntry(id, component)` marks it for hydration, and the id is the module naming itself:
+ * `import.meta.url` plus the export to import. Only the server reads it — `server/assets.ts` turns
+ * it into the chunk URL at render time, which is a thing no browser could do for itself, knowing
+ * neither the deploy prefix nor the bundler's output naming.
  *
  * Every click also lands in the {@link clicks} store, which `total.tsx` — a *separate* entrypoint —
  * reads. That the two agree is the visible proof that the shared module was emitted once.
  */
 export const Counter = clientEntry(
-  "islands/counter.tsx#Counter",
+  `${import.meta.url}#Counter`,
   function Counter(handle: Handle<{ label: string; start?: number }>) {
     let count = handle.props.start ?? 0;
 

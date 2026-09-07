@@ -50,7 +50,7 @@ const optionStyle = css({
 });
 
 export const ListboxDemo = clientEntry(
-  "islands/showcase/listbox.tsx#ListboxDemo",
+  `${import.meta.url}#ListboxDemo`,
   function ListboxDemo(handle: Handle) {
     let value: ListboxValue = "remix";
     let activeValue: ListboxValue = "remix";

@@ -8,19 +8,22 @@
  * The list is written out rather than discovered, for the same reason `routes.ts` is: a file
  * appearing in a directory is not a decision, and this is one.
  *
- * Every path here is under `client/`, and so is every id `clientEntry()` writes: this is the server
- * compiling the browser's half of the site, and the browser's half is a directory.
+ * Every path here is under `client/`: this is the server compiling the browser's half of the site,
+ * and the browser's half is a directory.
  */
 
 import { createAssetServer } from "@kuboon/remix-assets-deno";
 
 import { base } from "../client/base.ts";
 
+/** The directory every entrypoint below, and every `clientEntry()` id, is resolved against. */
+const clientDir = new URL("../client/", import.meta.url);
+
 /** Where the chunks are served, and where `entryUrl()` resolves against. */
 export const assetsPath = `${base}/assets`;
 
 export const assets = await createAssetServer({
-  rootDir: `${import.meta.dirname}/../client`,
+  rootDir: decodeURIComponent(clientDir.pathname),
   entrypoints: [
     // The client runtime. Every page that hydrates loads this one; the islands ride in the chunks
     // it shares with them.
@@ -57,9 +60,12 @@ export const assets = await createAssetServer({
 /**
  * Resolves a `clientEntry()` id to the chunk it landed in.
  *
- * An id here is `<path under client/>#<ExportName>` — the source module, not a URL, because
- * the same expression is evaluated in the browser and nothing there can know the deploy prefix or
- * predict the bundler's output naming. The server knows both, so it answers at render time.
+ * An id is `${import.meta.url}#<ExportName>` — the island naming itself, which is the convention
+ * `clientEntry` is written for and one fewer string to keep in step with a file name. It is a
+ * `file:` URL on the server and a chunk URL in the browser, and only the server ever reads it:
+ * `$entryId` is used by `renderToStream` and by nothing in the client runtime. Which is just as
+ * well, because nothing in a browser can know the deploy prefix or predict the bundler's output
+ * naming — the server knows both, so it answers here, at render time.
  *
  * It also asks for the chunk to be preloaded, which puts a `<link rel="modulepreload">` in the
  * head. That is worth it twice over: the browser fetches the module while the runtime is still
@@ -73,7 +79,14 @@ export const assets = await createAssetServer({
 export function resolveClientEntry(
   entryId: string,
 ): { href: string; exportName: string; preloads: string[] } {
-  const [specifier, exportName] = entryId.split("#");
-  const href = assets.entryUrl(specifier);
+  const hash = entryId.lastIndexOf("#");
+  const moduleUrl = entryId.slice(0, hash);
+  const exportName = entryId.slice(hash + 1);
+  // `entrypoints` above are written relative to `clientDir`, and that is how the asset server keys
+  // them, so the island's own URL comes back to the name it was listed under.
+  const href = assets.entryUrl(
+    decodeURIComponent(moduleUrl.slice(clientDir.href.length)),
+  );
+
   return { href, exportName, preloads: [href] };
 }

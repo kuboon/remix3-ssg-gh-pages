@@ -25,7 +25,7 @@ const labelStyle = css({
 });
 
 export const InputDemo = clientEntry(
-  "islands/showcase/input.tsx#InputDemo",
+  `${import.meta.url}#InputDemo`,
   function InputDemo(handle: Handle) {
     let size = "md";
     let withIcon = true;

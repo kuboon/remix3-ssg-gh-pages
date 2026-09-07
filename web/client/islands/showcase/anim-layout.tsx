@@ -19,7 +19,7 @@ import {
 } from "./_lib/controls.tsx";
 
 export const LayoutDemo = clientEntry(
-  "islands/showcase/anim-layout.tsx#LayoutDemo",
+  `${import.meta.url}#LayoutDemo`,
   function LayoutDemo(handle: Handle) {
     let expanded = false;
     let preset = "smooth";

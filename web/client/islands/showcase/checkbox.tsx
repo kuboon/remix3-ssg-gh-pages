@@ -20,7 +20,7 @@ const rowStyle = css({
 });
 
 export const CheckboxDemo = clientEntry(
-  "islands/showcase/checkbox.tsx#CheckboxDemo",
+  `${import.meta.url}#CheckboxDemo`,
   function CheckboxDemo(handle: Handle) {
     let size = "md";
     let checkedChildren = [true, false, false];

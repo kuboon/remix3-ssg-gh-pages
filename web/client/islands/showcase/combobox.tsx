@@ -38,7 +38,7 @@ const airports = [
 ];
 
 export const ComboboxDemo = clientEntry(
-  "islands/showcase/combobox.tsx#ComboboxDemo",
+  `${import.meta.url}#ComboboxDemo`,
   function ComboboxDemo(handle: Handle) {
     let value = "(none)";
     let label = "(none)";
