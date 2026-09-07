@@ -20,14 +20,15 @@
  * framework convention — the directory names, the routes and the deploy rules are all stated here.
  */
 
-import { createRouter } from "@remix-run/fetch-router";
+import { createRouter, type RouterContext } from "@remix-run/fetch-router";
+import { render } from "@remix-run/render-middleware";
 import type { RemixNode } from "@remix-run/ui";
 import { createFileTree, githubPages } from "@kuboon/remix-ssg/site";
 import type { FileServerBehavior } from "@kuboon/remix-ssg/site";
 
 import { assets, assetsPath } from "./assets.ts";
 import { base } from "../client/base.ts";
-import { renderPage } from "./layout.tsx";
+import { Layout } from "./layout.tsx";
 import { routes } from "../client/routes.ts";
 
 import * as About from "../client/pages/about.tsx";
@@ -66,14 +67,16 @@ interface Page {
  * @param page The page module — its component, its title, and whether it hydrates
  * @returns An action for `router.get`
  */
-function pageAction(page: Page): () => Response {
-  return () =>
-    renderPage({
-      title: page.title,
-      description: page.description,
-      hydrate: page.hydrate,
-      children: page.default(),
-    });
+function pageAction(page: Page) {
+  return (context: AppContext): Response =>
+    context.render(
+      Layout({
+        title: page.title,
+        description: page.description,
+        hydrate: page.hydrate,
+        children: page.default(),
+      }),
+    );
 }
 
 /**
@@ -88,7 +91,27 @@ const staticFiles = await createFileTree({
   cacheControl: "public, max-age=3600",
 });
 
-const router = createRouter();
+/**
+ * The renderer, as middleware.
+ *
+ * `render({ assets })` puts `context.render(node)` on every request: `renderToStream`, the doctype,
+ * the content type, and the two hooks a page tree needs answered — the chunk URL behind each
+ * `clientEntry(import.meta.url, …)`, and the fetch behind a frame navigation. It is Remix's own,
+ * which is why the asset server is passed to it rather than wrapped: it asks for `getHref` and
+ * `getPreloads`, and `@kuboon/remix-assets-deno` answers both.
+ */
+const router = createRouter({ middleware: [render({ assets })] });
+
+/** The request context those middlewares produce — `context.render`, in practice. */
+export type AppContext = RouterContext<typeof router>;
+
+// So `createController()` in `blog/mod.ts` types its actions against this app's context rather than
+// the bare default. One augmentation for the whole app, which is what a single-router app has.
+declare module "@remix-run/fetch-router" {
+  interface RouterTypes {
+    context: AppContext;
+  }
+}
 
 router.get(routes.home, pageAction(Home));
 router.get(routes.about, pageAction(About));
@@ -96,12 +119,14 @@ router.get(routes.about, pageAction(About));
 router.map(routes.blog, blogController);
 // Showcase: delete this line when you delete the showcase — see README. It has an action of its
 // own because its badges are read off the import map, which a page in `client/` cannot open.
-router.get(routes.showcase, () =>
-  renderPage({
-    title: Showcase.title,
-    description: Showcase.description,
-    children: Showcase.default(versions()),
-  }));
+router.get(routes.showcase, (context) =>
+  context.render(
+    Layout({
+      title: Showcase.title,
+      description: Showcase.description,
+      children: Showcase.default(versions()),
+    }),
+  ));
 
 // The two directories, each under its own prefix. A wildcard route is all it takes to hand a
 // subtree to something that already serves one.

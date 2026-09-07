@@ -22,7 +22,7 @@ import { markdownToHast } from "@kuboon/md";
 import { hastToRemix } from "@kuboon/md/hast_to_remix.ts";
 import { extract } from "@std/front-matter/yaml";
 
-import { renderPage } from "../layout.tsx";
+import { Layout } from "../layout.tsx";
 import { routes } from "../../client/routes.ts";
 import * as Index from "../../client/pages/blog/index.tsx";
 import * as ArticlePage from "../../client/pages/blog/article.tsx";
@@ -130,14 +130,17 @@ async function renderMarkdown(markdown: string): Promise<RemixNode> {
 /** Both blog routes, for `router.map(routes.blog, blogController)`. */
 export const blogController = createController(routes.blog, {
   actions: {
-    index: async () =>
-      renderPage({
-        title: Index.title,
-        description: Index.description,
-        children: Index.default(await listArticles()),
-      }),
+    index: async (context) =>
+      context.render(
+        Layout({
+          title: Index.title,
+          description: Index.description,
+          children: Index.default(await listArticles()),
+        }),
+      ),
 
-    show: async ({ params }) => {
+    show: async (context) => {
+      const { params } = context;
       const article = await readArticle(params.slug);
       // A `404` reads as "not mine" to `compose`, which is what an unknown slug is.
       if (article === null) {
@@ -147,14 +150,16 @@ export const blogController = createController(routes.blog, {
         });
       }
 
-      return renderPage({
-        title: `${article.title} — remix-ssg`,
-        description: article.summary,
-        children: ArticlePage.default({
-          article,
-          body: await renderMarkdown(article.body),
+      return context.render(
+        Layout({
+          title: `${article.title} — remix-ssg`,
+          description: article.summary,
+          children: ArticlePage.default({
+            article,
+            body: await renderMarkdown(article.body),
+          }),
         }),
-      });
+      );
     },
   },
 });
