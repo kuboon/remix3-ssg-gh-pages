@@ -44,6 +44,19 @@ with nothing wrapped around it. `deno serve` and the build both want the same
 thing from it — `fetch` — and everything the build additionally needs (`base`,
 `entryPoints`, `fileServer`) is a named export beside it.
 
+The one middleware it carries is Remix's own renderer:
+
+```ts
+const router = createRouter({ middleware: [render({ assets })] });
+```
+
+`render({ assets })` puts `context.render(node)` on every request — the doctype,
+the content type, `renderToStream`, and the two hooks a page tree needs
+answered: the chunk URL behind each `clientEntry(import.meta.url, …)`, and the
+fetch behind a frame navigation. It asks the asset server for `getHref` and
+`getPreloads`, which is all it wants from one, so `@kuboon/remix-assets-deno`
+goes straight in.
+
 The Markdown articles are pages like any other. `server/blog/mod.ts` sits in the
 directory the `.md` files are in and answers both blog routes — the listing and
 one article — so `server/router.ts` maps the group in one line:
@@ -320,17 +333,21 @@ call each — and each gets a private copy, so the total would sit at zero.
 shell writes: it calls `run()`, which walks the document for the hydration
 markers the server emitted and imports each island by the URL named there.
 
-That URL is resolved on the server, by `resolveClientEntry` in
-`server/assets.ts` — `clientEntry`'s id is the island's own module URL, and
-turning that into a chunk URL needs both the deploy prefix and the bundler's
-output naming, neither of which the browser has. The id is read only there:
-`$entryId` is what `renderToStream` passes to the hook, and nothing in the
-client runtime looks at it, which is why the same expression may mean a `file:`
-URL on one side and a chunk URL on the other. The same hook asks for the chunk
-to be preloaded, which earns its keep twice: the browser fetches it while the
-runtime is still starting, and the build's crawl gets a `<link>` to follow.
-Without that link the chunks are named only inside the hydration JSON, where
-nothing looking for links can see them — and the build writes four assets
+That URL is resolved on the server, by the `render()` middleware —
+`clientEntry`'s id is the island's own module URL, and turning that into a chunk
+URL needs both the deploy prefix and the bundler's output naming, neither of
+which the browser has. The middleware asks the asset server: `getHref(id)` for
+the URL, and `getPreloads(id)` for the chunks under it. The id is read only
+there: `$entryId` is what `renderToStream` passes to the hook, and nothing in
+the client runtime looks at it, which is why the same expression may mean a
+`file:` URL on one side and a chunk URL on the other. Where the id carries no
+`#ExportName`, the export is the component function's own name — which is why
+every island is written as a named function.
+
+Those preloads earn their keep twice: the browser fetches the whole graph while
+the runtime is still starting, and the build's crawl gets a `<link>` per chunk
+to follow. Without them the chunks are named only inside the hydration JSON,
+where nothing looking for links can see them — and the build writes four assets
 instead of thirty-eight.
 
 ### Links, and why the shell streams
@@ -366,9 +383,8 @@ because the shell renders through `renderToStream`.
 and the marker it strips, `<!-- rmx:flush document -->`, is exactly how the
 runtime recognises a whole document rather than a fragment. Serve pages without
 it and an internal link changes the URL while leaving the page alone, silently:
-no error, no console warning, and the fetch even returns 200. So
-`server/layout.tsx` uses `renderToStream` and reads the stream to a string
-itself, which is the only reason a bare `<a>` is enough here.
+no error, no console warning, and the fetch even returns 200. `context.render`
+streams, which is the only reason a bare `<a>` is enough here.
 
 If you ever do want a link to force a real document load — leaving the runtime
 and all its state behind — mark that one `<a data-rmx-document>`.

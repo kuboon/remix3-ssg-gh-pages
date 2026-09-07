@@ -9,12 +9,13 @@
  * the page rendered and writes them into `<head>`, so nothing below has a class name that has to
  * agree with a file somewhere else.
  *
- * `htmlDocument` is what turns the tree below into a response: the doctype, the content type, and
- * — the part that matters here — `renderToStream` rather than `renderToString`. The runtime turns
- * every internal `<a>` click into a frame navigation and swaps the document only when it finds
- * `<!-- rmx:flush document -->` at the end, which `renderToString` strips; without it the URL
- * changes while the page does not, with no error anywhere. Going through the helper is what keeps
- * a plain `<a href>` working on a page with islands as well as on one without.
+ * What turns this tree into a response is `context.render`, from the `render({ assets })`
+ * middleware in `router.ts`: the doctype, the content type, and — the part that matters here —
+ * `renderToStream` rather than `renderToString`. The runtime turns every internal `<a>` click into
+ * a frame navigation and swaps the document only when it finds `<!-- rmx:flush document -->` at the
+ * end, which `renderToString` strips; without it the URL changes while the page does not, with no
+ * error anywhere. That is what keeps a plain `<a href>` working on a page with islands as well as
+ * on one without.
  *
  * The one stylesheet it does link is `static/app.css`: the site's tokens, its document-level defaults,
  * and the `@layer base, rmx, app` statement the whole cascade hangs off. Its position in the head
@@ -23,9 +24,8 @@
  */
 
 import { css, type RemixNode } from "@remix-run/ui";
-import { htmlDocument } from "@kuboon/remix-ssg/site";
 
-import { assets, resolveClientEntry } from "./assets.ts";
+import { assets } from "./assets.ts";
 import { base } from "../client/base.ts";
 import { routes } from "../client/routes.ts";
 import { color, contentWidth } from "../client/tokens.ts";
@@ -51,8 +51,8 @@ export interface LayoutProps {
  * @param props The page's title, body, and whether it hydrates
  * @returns The response to serve for this page
  */
-export function renderPage(props: LayoutProps): Response {
-  return htmlDocument(
+export function Layout(props: LayoutProps): RemixNode {
+  return (
     <html lang="en">
       <head>
         <meta charset="utf-8" />
@@ -94,8 +94,7 @@ export function renderPage(props: LayoutProps): Response {
           )
           : null}
       </body>
-    </html>,
-    { resolveClientEntry },
+    </html>
   );
 }
 
