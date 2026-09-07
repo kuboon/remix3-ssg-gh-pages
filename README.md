@@ -31,7 +31,7 @@ repository**:
 | --------------------------------------------------------------------------------------- | -------------------------------------------- |
 | `web/client/pages/showcase.tsx`                                                         | The `@remix-run/ui` component showcase page  |
 | `web/client/islands/showcase/`                                                          | Its 18 demo islands and their shared helpers |
-| their entrypoints in `web/server/assets.ts`                                             | What compiles them                           |
+| the `islands/showcase/*.tsx` entrypoint glob in `web/server/assets.ts`                  | What compiles them                           |
 | `web/server/versions.ts`                                                                | The badges under its title                   |
 | the `showcase` route in `web/client/routes.ts` and its action in `web/server/router.ts` | What serves it                               |
 | the `UI showcase` link in `web/server/layout.tsx`                                       | The nav entry pointing at it                 |

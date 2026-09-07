@@ -164,9 +164,10 @@ It is also the largest thing the island pipeline is asked to do here — 18
 entrypoints compiled as one graph, sharing `@remix-run/ui` and the demo chrome
 through code-split chunks rather than 18 copies.
 
-Helpers the demos share live in `client/islands/showcase/_lib/`. Nothing
-enforces the underscore any more — `server/assets.ts` lists its entrypoints, so
-a file is one because it is named there, not because of where it sits.
+Helpers the demos share live in `client/islands/showcase/_lib/`. The underscore
+is decoration; what keeps them out of the entrypoints is the depth —
+`server/assets.ts` globs `islands/showcase/*.tsx`, and `_lib/` is a directory
+below that.
 
 ## Styling
 
@@ -304,9 +305,12 @@ To add one:
    `@remix-run/ui` — the module naming itself, so there is no path to keep in
    step with a file name. Pass a **named** function: the name is the export the
    browser imports. Call `handle.update()` after changing state.
-2. Add it to `entrypoints` in `server/assets.ts`.
-3. Import it into a page and place it, and set `export const hydrate = true` on
+2. Import it into a page and place it, and set `export const hydrate = true` on
    that page.
+
+There is no third step: `server/assets.ts` globs `islands/*.tsx`, so the file
+being there is what makes it an entrypoint. A helper a few islands share goes in
+a subdirectory — `islands/_lib/` — which the glob does not reach.
 
 A page that does not set `hydrate` ships no `<script>` at all — the article
 pages have none.
