@@ -22,7 +22,8 @@
     "canvaskit-wasm": "npm:canvaskit-wasm@^0.40.0"
   },
   "fmt": {
-    "exclude": ["dist", "node_modules"]
+    "exclude": ["dist", "node_modules"],
+    "proseWrap": "preserve"
   },
   "lint": {
     "exclude": ["dist", "node_modules"]

@@ -361,6 +361,16 @@ with them, so no path to the articles is written down anywhere. Nothing serves
 that directory as files, either, which is why the source can sit beside the
 `.md` without becoming a URL.
 
+### Line breaks, and why the formatter leaves prose alone
+
+`deno.json` sets `"proseWrap": "preserve"`, so `deno fmt` formats the code in a
+Markdown file and leaves the words where they were put. It has to: Markdown
+joins the lines of a paragraph with a space, which is invisible between English
+words and a gap in the middle of a Japanese sentence — and a formatter wrapping
+at 80 columns puts one wherever it likes. So an English article wraps at the
+margin, a Japanese one is a line per paragraph, and each is right for what it
+renders to.
+
 ## Interactive islands (client components)
 
 Most of the site is static HTML. When you need interactivity, use an **island**:
