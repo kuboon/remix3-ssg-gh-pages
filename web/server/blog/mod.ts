@@ -1,10 +1,10 @@
 /**
  * The blog: the articles, and the routes that serve them.
  *
- * This module is the blog's entry — `router.ts` imports `blogController` and `blogPaths` from here
- * and nothing else. It sits in the directory the articles are in, so the files it reads are its own
- * siblings and `import.meta.dirname` is the only path involved; there is no article directory
- * written down elsewhere for this to fall out of step with.
+ * This module is the blog's entry — `router.ts` imports `blogController` from here and nothing else.
+ * It sits in the directory the articles are in, so the files it reads are its own siblings and
+ * `import.meta.dirname` is the only path involved; there is no article directory written down
+ * elsewhere for this to fall out of step with.
  *
  * Everything Markdown is here: the front-matter shape, the parser, the file reads, and the
  * Markdown-to-nodes step. `@kuboon/md` and `@std/front-matter` are imported from nowhere else,
@@ -22,6 +22,7 @@ import { markdownToHast } from "@kuboon/md";
 import { hastToRemix } from "@kuboon/md/hast_to_remix.ts";
 import { extract } from "@std/front-matter/yaml";
 
+import { ogImage } from "../og/mod.ts";
 import { Layout } from "../../client/layout.tsx";
 import { routes } from "../../client/routes.ts";
 import * as Index from "../../client/pages/blog/index.tsx";
@@ -46,9 +47,9 @@ export interface Article {
 /**
  * The slug of every article on disk.
  *
- * Names only — no file is read — because that is all `blogPaths()` needs, and it is asked for every
- * article before anyone has asked for one. Synchronous for the same reason: the host indexes the
- * site's paths in one pass, with nowhere to await.
+ * Names only — no file is read — because a name is enough to register an article's route and its
+ * social card, and both are asked for before anyone has asked for an article. Synchronous for the
+ * same reason: registration happens as the module loads, with nowhere to await.
  *
  * @returns One slug per `.md` file
  */
@@ -127,6 +128,31 @@ async function renderMarkdown(markdown: string): Promise<RemixNode> {
 
 // --- the routes -------------------------------------------------------------
 
+/**
+ * One social card per article, registered up front.
+ *
+ * The build asks for a card without visiting the page it belongs to, so registering has to happen
+ * as the routes are wired rather than as an article is served. Only the slugs are read here —
+ * naming a file is enough to register a card, and what the card says is worked out if and when
+ * someone asks for the image.
+ */
+const articleImages = new Map(
+  readSlugs().map((slug) => [
+    slug,
+    ogImage(articlePath(slug), async () => {
+      const article = await readArticle(slug);
+      return {
+        eyebrow: "Blog",
+        title: article?.title ?? slug,
+        description: article?.summary,
+      };
+    }),
+  ]),
+);
+
+/** The listing's own card. */
+const indexImage = ogImage(routes.blog.index.href(), Index);
+
 /** Both blog routes, for `router.map(routes.blog, blogController)`. */
 export const blogController = createController(routes.blog, {
   actions: {
@@ -135,6 +161,7 @@ export const blogController = createController(routes.blog, {
         Layout({
           title: Index.title,
           description: Index.description,
+          image: indexImage,
           // Neither screen places an island; an article is text, and the listing is a list.
           script: null,
           children: Index.default(await listArticles()),
@@ -156,6 +183,7 @@ export const blogController = createController(routes.blog, {
         Layout({
           title: `${article.title} — remix-ssg`,
           description: article.summary,
+          image: articleImages.get(article.slug) ?? null,
           script: null,
           children: ArticlePage.default({
             article,
@@ -168,18 +196,14 @@ export const blogController = createController(routes.blog, {
 });
 
 /**
- * Every URL the blog answers.
+ * The path one article is served from.
  *
- * The site's paths are file-shaped — that is how the host indexes them — so the slug goes in as it
- * is on disk, not as `href()` percent-encodes it for a link.
+ * The site's paths are file-shaped — that is how the host indexes them, and how a card is filed —
+ * so the slug goes in as it is on disk, not as `href()` percent-encodes it for a link.
  *
- * @returns The listing's path, and one per article
+ * @param slug The article's slug
+ * @returns Its path, deploy prefix included
  */
-export function blogPaths(): string[] {
-  return [
-    routes.blog.index.href(),
-    ...readSlugs().map((slug) =>
-      decodeURIComponent(routes.blog.show.href({ slug }))
-    ),
-  ];
+function articlePath(slug: string): string {
+  return decodeURIComponent(routes.blog.show.href({ slug }));
 }

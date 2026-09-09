@@ -21,6 +21,10 @@
  * error anywhere. That is what keeps a plain `<a href>` working on a page with islands as well as
  * on one without.
  *
+ * The social card is the other thing handed in rather than worked out here. What it says comes from
+ * this page — its title and its description — but where the PNG ended up, and whether there is an
+ * origin to make its URL absolute with, are things only the server knows.
+ *
  * The one stylesheet it does link is `static/app.css`: the site's tokens, its document-level defaults,
  * and the `@layer base, rmx, app` statement the whole cascade hangs off. Its position in the head
  * matters — layers rank by where they are first named, and Remix appends its collected styles just
@@ -37,6 +41,17 @@ import { color, contentWidth } from "./tokens.ts";
 export interface LayoutProps {
   title: string;
   description?: string;
+  /**
+   * The page's social card — the URL of the PNG `server/og/` draws for it.
+   *
+   * Absolute when the deploy URL is known, because `og:image` is fetched by whoever is showing the
+   * link rather than by a browser that has the page open, and a path means nothing to them. `null`
+   * where there is nothing to show.
+   *
+   * Required for the same reason `script` is: a card that is missing looks exactly like a card
+   * nobody wanted, and neither the page nor the build can tell the difference.
+   */
+  image: string | null;
   /**
    * The client runtime, for a page that places an island — resolved by `router.ts`, because a URL
    * under the deploy prefix and the bundler's naming is a thing only the server knows.
@@ -74,6 +89,19 @@ export function Layout(props: LayoutProps): RemixNode {
         <title>{props.title}</title>
         {props.description
           ? <meta name="description" content={props.description} />
+          : null}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={props.title} />
+        {props.description
+          ? <meta property="og:description" content={props.description} />
+          : null}
+        {props.image
+          ? (
+            <>
+              <meta property="og:image" content={props.image} />
+              <meta name="twitter:card" content="summary_large_image" />
+            </>
+          )
           : null}
         <link rel="stylesheet" href={`${base}/static/app.css`} />
         <link rel="icon" href={`${base}/static/favicon.svg`} />
