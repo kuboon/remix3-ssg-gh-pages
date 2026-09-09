@@ -22,9 +22,10 @@ enforces the line — no bundler config, no naming convention, one `lib` each.
 `server/` may read from `client/` and does: it imports the pages and the shell
 to render them, compiles the islands, and serves `client/static/`. Nothing goes
 the other way — where a view needs something only the server knows, it takes it
-as a prop. The document shell's `script` is the one such prop: `router.ts`
-resolves where the client runtime was compiled to and hands it over, and a page
-with no islands passes `null` and ships no JavaScript.
+as a prop. The document shell has two such props. `script` is where the client
+runtime was compiled to, which `router.ts` resolves and hands over — a page with
+no islands passes `null` and ships no JavaScript. `image` is the page's social
+card, drawn by `server/og/`.
 
 ## How it works
 
@@ -41,6 +42,7 @@ handing a subtree to whatever already serves one:
 ```ts
 router.map(`${base}/static/*path`, ({ request }) => staticFiles.fetch(request));
 router.map(`${assetsPath}/*path`, ({ request }) => assets.fetch(request));
+router.map(`${base}/og/*path`, ({ request }) => serveOgImage(request));
 ```
 
 So `server/router.ts` default-exports a plain `@remix-run/fetch-router` router,
@@ -145,6 +147,10 @@ web/
     blog/
       mod.ts         # the articles, and both blog routes
       *.md           # the articles
+    og/
+      mod.ts         # which page gets which social card, and the route serving them
+      card.ts        # the drawing — Skia, via canvaskit-wasm
+      fonts/         # Inter and Noto Sans JP — every .ttf here is registered
   dist/              # the build's output (gitignored)
 ```
 
@@ -257,7 +263,8 @@ Three edits, in the order you would guess:
 2. Write `client/pages/contact.tsx`, exporting a component as `default` plus a
    `title` — and `hydrate = true` if it places a client entry.
 3. Map them in `server/router.ts` —
-   `router.get(routes.contact, pageAction(Contact))`.
+   `router.get(routes.contact, pageAction(routes.contact, Contact))`. The route
+   goes in twice because the second one is what files the page's social card.
 
 An **article** needs none of that: drop a `.md` file under `server/blog/` and it
 is served at its own name.
@@ -268,6 +275,63 @@ The crawl starts at `entryPoints` in `server/router.ts` and follows links, so
 
 That is also why the blog controller reads the article files: listing them is
 what makes them reachable.
+
+## Social cards
+
+Every page gets an `og:image`: a 1200×630 PNG with the page's own title and
+description on it, drawn during the build and written to `dist/og/`.
+
+`server/og/card.ts` draws it with [Skia](https://skia.org), through
+[`canvaskit-wasm`](https://www.npmjs.com/package/canvaskit-wasm) — the text
+stack a browser uses, compiled to WebAssembly. That is more than a rectangle and
+some words needs, until you look at the words: a title is arbitrary length and
+the box is not, so it has to be shaped, wrapped, and cut with an ellipsis at a
+line count. Skia does that with the same shaper the page itself will use, and it
+does it without a browser, a font server, or a network round trip.
+
+`server/og/mod.ts` decides what each card says. A page already exports a `title`
+and a `description`, so a card is registered from those rather than from a
+second list of pages to keep in step:
+
+```ts
+const image = ogImage(routes.about.href(), About);
+```
+
+One call does both halves — it records how to draw the card and returns the URL
+to put in `<meta property="og:image">` — so there is no way to register a card
+without getting its URL, and none to write the URL without registering the card.
+
+Two things follow from a card not being linked to from anywhere. `og:image` is
+an absolute URL fetched by whoever is showing the link, so the deploy origin
+matters: `BASE_URL` carries it, and a local build, having none, writes a
+relative tag rather than inventing a host. And the crawl has no link to follow,
+so `entryPoints` in `server/router.ts` names the images — `["/", ...ogPaths()]`
+— which is why that export sits at the bottom of the file, after the routes that
+filled the register.
+
+### Fonts, and Japanese
+
+`server/og/fonts/` holds what the cards are drawn with; every `.ttf` or `.otf`
+in it is registered, in file-name order, and that order is the fallback order.
+The fonts are vendored because Skia needs real font data — there is no system
+font stack to fall back on and no CSS to resolve one.
+
+Inter draws the Latin. Noto Sans JP sorts after it and answers for the Japanese,
+so a mixed title comes out as it should — `静的サイトを書く` in Noto, the `HTML`
+in the middle of it still Inter. Skia synthesises the bold face, so Japanese
+needs only the one weight.
+
+It is cut down to JIS X 0208 — every kana and all 6,355 level-1 and level-2
+kanji, 2.2MB against the full font's 5.3MB. A character outside that set is
+drawn as nothing at all, so the build says which ones and on which page:
+
+```
+og: no glyph for 鷗 in /blog/mori-ogai — see server/og/fonts/README.md
+```
+
+[`server/og/fonts/README.md`](./server/og/fonts/README.md) has the exact set,
+the commands that produced it, and what to drop in for a script neither font
+covers.
 
 ## Markdown content
 
@@ -296,6 +360,16 @@ controller returns.
 with them, so no path to the articles is written down anywhere. Nothing serves
 that directory as files, either, which is why the source can sit beside the
 `.md` without becoming a URL.
+
+### Line breaks, and why the formatter leaves prose alone
+
+`deno.json` sets `"proseWrap": "preserve"`, so `deno fmt` formats the code in a
+Markdown file and leaves the words where they were put. It has to: Markdown
+joins the lines of a paragraph with a space, which is invisible between English
+words and a gap in the middle of a Japanese sentence — and a formatter wrapping
+at 80 columns puts one wherever it likes. So an English article wraps at the
+margin, a Japanese one is a line per paragraph, and each is right for what it
+renders to.
 
 ## Interactive islands (client components)
 

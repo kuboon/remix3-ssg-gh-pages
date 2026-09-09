@@ -27,6 +27,7 @@ import { createFileTree, githubPages } from "@kuboon/remix-ssg/site";
 import type { FileServerBehavior } from "@kuboon/remix-ssg/site";
 
 import { assets, assetsPath } from "./assets.ts";
+import { ogImage, ogPaths, serveOgImage } from "./og/mod.ts";
 import { base } from "../client/base.ts";
 import { Layout } from "../client/layout.tsx";
 import { routes } from "../client/routes.ts";
@@ -40,14 +41,6 @@ import { versions } from "./versions.ts";
 
 /** Deploy path prefix. The build strips it back off when writing, so output lands at the root. */
 export { base };
-
-/**
- * Where the crawl starts.
- *
- * Everything else is reached by following links, so the blog index listing its articles is what
- * makes them part of the site.
- */
-export const entryPoints: readonly string[] = ["/"];
 
 /** Where this deploys. The build writes the file this rule would serve. */
 export const fileServer: FileServerBehavior = githubPages();
@@ -64,15 +57,23 @@ interface Page {
 /**
  * Renders a page module into the shell.
  *
+ * The route comes in alongside the module because the page's own path is what its social card is
+ * registered under — the card is drawn from the same `title` and `description` the `<head>` gets,
+ * so there is one place where a page says what it is called.
+ *
+ * @param route The route this page answers, for its card's URL
  * @param page The page module — its component, its title, and whether it hydrates
  * @returns An action for `router.get`
  */
-function pageAction(page: Page) {
+function pageAction(route: { href(): string }, page: Page) {
+  const image = ogImage(route.href(), page);
+
   return (context: AppContext): Response =>
     context.render(
       Layout({
         title: page.title,
         description: page.description,
+        image,
         script: page.hydrate ? clientRuntime : null,
         children: page.default(),
       }),
@@ -125,25 +126,44 @@ declare module "@remix-run/fetch-router" {
   }
 }
 
-router.get(routes.home, pageAction(Home));
-router.get(routes.about, pageAction(About));
+router.get(routes.home, pageAction(routes.home, Home));
+router.get(routes.about, pageAction(routes.about, About));
 // Both blog routes at once: the listing, and one article.
 router.map(routes.blog, blogController);
 // Showcase: delete this line when you delete the showcase — see README. It has an action of its
 // own because its badges are read off the import map, which a page in `client/` cannot open.
+const showcaseImage = ogImage(routes.showcase.href(), Showcase);
 router.get(routes.showcase, (context) =>
   context.render(
     Layout({
       title: Showcase.title,
       description: Showcase.description,
+      image: showcaseImage,
       script: Showcase.hydrate ? clientRuntime : null,
       children: Showcase.default(versions()),
     }),
   ));
 
-// The two directories, each under its own prefix. A wildcard route is all it takes to hand a
-// subtree to something that already serves one.
+// The three directories, each under its own prefix. A wildcard route is all it takes to hand a
+// subtree to something that already serves one. `og/` is a directory only in the finished site —
+// nothing is on disk until a card is drawn.
 router.map(`${base}/static/*path`, ({ request }) => staticFiles.fetch(request));
 router.map(`${assetsPath}/*path`, ({ request }) => assets.fetch(request));
+router.map(`${base}/og/*path`, ({ request }) => serveOgImage(request));
+
+/**
+ * Where the crawl starts.
+ *
+ * Everything else is reached by following links, so the blog index listing its articles is what
+ * makes them part of the site.
+ *
+ * The social cards are the exception, and the reason this is a list rather than just `/`: nothing
+ * on the site links to one. An `og:image` is an absolute URL meant for someone else's server, so a
+ * crawler that followed it would be leaving — the build is told about them instead.
+ *
+ * It is down here rather than up with the other exports because a card is registered as its page's
+ * route is wired, and this reads the register.
+ */
+export const entryPoints: readonly string[] = ["/", ...ogPaths()];
 
 export default router;

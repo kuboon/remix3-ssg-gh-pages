@@ -12,7 +12,8 @@ page shows what that buys.
 
 The site lives in [`web/`](./web), a Deno workspace of two members: `client/`
 holds everything the browser is ever given and is type-checked without
-`deno.ns`, `server/` holds the router, the bundler and the build. See
+`deno.ns`, `server/` holds the router, the bundler and the build. Each page also
+gets an `og:image` drawn at build time with Skia. See
 [`web/README.md`](./web/README.md) for how it works and how to develop it.
 
 ```sh
@@ -42,12 +43,13 @@ the two-islands-one-store demo. Delete those too once you have read the home
 page; the point they make is in this README's opening paragraph.
 
 What you keep is the two `deno.json` members and everything wiring them:
-`web/client/{routes,base,tokens,theme,hydration}.ts`, `web/client/static/`,
-`web/client/pages/blog/`, `web/server/{router,assets,layout}`,
-`web/server/blog/mod.ts`, and the workflows. `web/client/tokens.ts` and
-`web/client/theme.ts` are where the site's look lives — Remix supplies behaviour
-and a little component styling, not a theme, so the palette, spacing and
-typography are the app's. Change them there and the whole site follows.
+`web/client/{routes,base,tokens,theme,hydration}.ts`, `web/client/layout.tsx`,
+`web/client/static/`, `web/client/pages/blog/`, `web/server/{router,assets}.ts`,
+`web/server/blog/mod.ts`, `web/server/og/`, and the workflows.
+`web/client/tokens.ts` and `web/client/theme.ts` are where the site's look lives
+— Remix supplies behaviour and a little component styling, not a theme, so the
+palette, spacing and typography are the app's. Change them there and the whole
+site follows.
 
 After deleting, `deno task check && deno task build` should still pass — if it
 does not, something you kept was linking to something you removed, which is the
