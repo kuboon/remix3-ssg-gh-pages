@@ -150,7 +150,7 @@ web/
     og/
       mod.ts         # which page gets which social card, and the route serving them
       card.ts        # the drawing — Skia, via canvaskit-wasm
-      fonts/         # what it draws with: every .ttf here is registered
+      fonts/         # Inter and Noto Sans JP — every .ttf here is registered
   dist/              # the build's output (gitignored)
 ```
 
@@ -309,17 +309,29 @@ so `entryPoints` in `server/router.ts` names the images — `["/", ...ogPaths()]
 — which is why that export sits at the bottom of the file, after the routes that
 filled the register.
 
-### Fonts
+### Fonts, and Japanese
 
 `server/og/fonts/` holds what the cards are drawn with; every `.ttf` or `.otf`
-in it is registered, in file-name order. Inter is vendored here because Skia
-needs real font data — there is no system font stack to fall back on and no CSS
-to resolve one.
+in it is registered, in file-name order, and that order is the fallback order.
+The fonts are vendored because Skia needs real font data — there is no system
+font stack to fall back on and no CSS to resolve one.
 
-Skia falls back per glyph through the registered families in that order, so
-covering a script Inter does not have is dropping a font in beside it. Inter has
-no CJK: a Japanese title renders as `NO GLYPH` boxes until a font that covers it
-is in this directory, named so it sorts after `Inter-`.
+Inter draws the Latin. Noto Sans JP sorts after it and answers for the Japanese,
+so a mixed title comes out as it should — `静的サイトを書く` in Noto, the `HTML`
+in the middle of it still Inter. Skia synthesises the bold face, so Japanese
+needs only the one weight.
+
+It is cut down to JIS X 0208 — every kana and all 6,355 level-1 and level-2
+kanji, 2.2MB against the full font's 5.3MB. A character outside that set is
+drawn as nothing at all, so the build says which ones and on which page:
+
+```
+og: no glyph for 鷗 in /blog/mori-ogai — see server/og/fonts/README.md
+```
+
+[`server/og/fonts/README.md`](./server/og/fonts/README.md) has the exact set,
+the commands that produced it, and what to drop in for a script neither font
+covers.
 
 ## Markdown content
 

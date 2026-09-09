@@ -12,8 +12,12 @@
  * does that, and it does it with the same shaper the page itself will use.
  *
  * The palette is the site's dark theme, copied from `client/static/app.css` — CSS custom
- * properties are resolved by a browser, and there is no browser here. Eight values, one comment
- * apiece, rather than a stylesheet parser.
+ * properties are resolved by a browser, and there is no browser here. Five values, restated,
+ * rather than a stylesheet parser.
+ *
+ * The fonts come from `fonts/`, whatever is in it, and Skia falls back through them per glyph — so
+ * a Japanese title is Japanese and the Latin around it is still Inter. A character nothing covers
+ * is reported rather than silently drawn as a box; see `report` and `fonts/README.md`.
  *
  * Nothing here touches the network or the clock, so a card is a pure function of its text: the same
  * article builds the same bytes on every machine, which is what keeps a rebuild from churning the
@@ -126,11 +130,20 @@ export async function renderCard(card: Card): Promise<Uint8Array<ArrayBuffer>> {
     accent.delete();
 
     const paragraphs: Paragraph[] = [];
-    /** Lays a paragraph out to the content width and draws it, returning the next free baseline. */
-    const draw = (paragraph: Paragraph, top: number, gap = 0): number => {
+    /** Characters no registered font had a glyph for. See `report`. */
+    const missing = new Set<number>();
+
+    /** Lays a paragraph out to the content width, which is when Skia resolves its glyphs. */
+    const lay = (paragraph: Paragraph): Paragraph => {
       paragraphs.push(paragraph);
       paragraph.layout(WIDTH - PADDING * 2);
-      canvas.drawParagraph(paragraph, PADDING, top);
+      paragraph.unresolvedCodepoints().forEach((code) => missing.add(code));
+      return paragraph;
+    };
+
+    /** Lays a paragraph out and draws it, returning the next free baseline. */
+    const draw = (paragraph: Paragraph, top: number, gap = 0): number => {
+      canvas.drawParagraph(lay(paragraph), PADDING, top);
       return top + paragraph.getHeight() + gap;
     };
 
@@ -169,8 +182,7 @@ export async function renderCard(card: Card): Promise<Uint8Array<ArrayBuffer>> {
       ...type.footer,
       color: color.muted,
     });
-    paragraphs.push(footer);
-    footer.layout(WIDTH - PADDING * 2);
+    lay(footer);
     const footerTop = HEIGHT - PADDING - footer.getHeight();
 
     const rule = new ck.Paint();
@@ -183,6 +195,7 @@ export async function renderCard(card: Card): Promise<Uint8Array<ArrayBuffer>> {
 
     canvas.drawParagraph(footer, PADDING, footerTop);
     paragraphs.forEach((paragraph) => paragraph.delete());
+    report(missing, card);
 
     const image = surface.makeImageSnapshot();
     try {
@@ -202,6 +215,29 @@ export async function renderCard(card: Card): Promise<Uint8Array<ArrayBuffer>> {
     // site.
     surface.delete();
   }
+}
+
+/**
+ * Says which characters had no glyph, once per card.
+ *
+ * A character no registered font covers is drawn as whatever the font's `.notdef` is — a box in
+ * some, nothing at all in others, which is how a name can quietly lose a letter. Either way it is
+ * visible only to someone looking at the card, and nobody looks at a card; that is the point of
+ * one. So the build says it out loud instead. It is a warning rather than an error because one
+ * missing character is not a reason to fail a deploy, and because the fix is a font file rather
+ * than a code change: `fonts/README.md` says which set is covered and how to widen it.
+ *
+ * @param missing The code points Skia could not resolve
+ * @param card The card they were on, for naming it
+ */
+function report(missing: Set<number>, card: Card): void {
+  if (missing.size === 0) return;
+
+  const characters = [...missing].map((code) => String.fromCodePoint(code))
+    .join(" ");
+  console.warn(
+    `og: no glyph for ${characters} in ${card.footer} — see server/og/fonts/README.md`,
+  );
 }
 
 /** How one run of text is drawn. */
@@ -282,10 +318,10 @@ async function start(): Promise<
  * A directory rather than a list, for the same reason the islands are globbed: a font file being
  * there is the decision, and naming it again here would only be a second place to keep it.
  *
- * Skia falls back per glyph through the families in the order they are registered, so the file
- * names decide which font draws a character two of them have. Inter has no CJK, so a Japanese
- * title needs a font that does — drop one in here, named so it sorts after `Inter-`, and it will
- * cover what Inter cannot without taking the Latin away from it.
+ * Skia falls back per glyph through the families in the order they are registered, so the names
+ * decide which font draws a character two of them have: Inter sorts first and keeps the Latin,
+ * Noto Sans JP follows and answers for the Japanese. Covering another script is dropping a file in
+ * here, and `report` names the characters that nothing covered yet. See `fonts/README.md`.
  *
  * @returns The font files, sorted by name
  */
