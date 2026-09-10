@@ -86,11 +86,12 @@ function pageAction(route: { href(): string }, page: Page) {
  * The shell writes one `<script>` — `run()`, which hydrates whatever islands a page placed — and
  * this is the URL it needs, plus the chunks to preload behind it. It is resolved here because the
  * bundle does not change while the server runs, and because a page in `client/` cannot ask.
+ *
+ * One call rather than two, and the same one the renderer makes for each island: `getScriptEntry`
+ * is what an asset server answers as of `remix@3.0.0-rc.2`.
  */
-const clientRuntime = {
-  src: await assets.getHref("hydration.ts"),
-  preloads: await assets.getPreloads("hydration.ts"),
-};
+const runtime = await assets.getScriptEntry("hydration.ts");
+const clientRuntime = { src: runtime.href, preloads: runtime.preloads };
 
 /**
  * The files under `client/static/`, served verbatim at their own names.
