@@ -12,12 +12,13 @@
     "exclude": ["jsr:@kuboon/*"]
   },
   "imports": {
-    "@remix-run/fetch-router": "npm:@remix-run/fetch-router@^0.21.0",
-    "@remix-run/render-middleware": "npm:@remix-run/render-middleware@^0.2.0",
-    "@remix-run/ui": "npm:@remix-run/ui@^0.8.0",
-    "@kuboon/remix-assets-deno": "jsr:@kuboon/remix-assets-deno@^0.6.0",
-    "@kuboon/remix-ssg": "jsr:@kuboon/remix-ssg@^0.8.0",
-    "@kuboon/md": "jsr:@kuboon/md@^0.3.0",
+    "@remix-run/fetch-router": "npm:@remix-run/fetch-router@^0.22.0",
+    "@remix-run/render-middleware": "npm:@remix-run/render-middleware@^0.3.0",
+    "@remix-run/ui": "npm:@remix-run/ui@^0.9.0",
+    "@kuboon/remix-assets-deno": "jsr:@kuboon/remix-assets-deno@^0.7.0",
+    "@kuboon/remix-ssg": "jsr:@kuboon/remix-ssg@^0.9.0",
+    "@kuboon/md": "jsr:@kuboon/md@^0.4.0",
+    "@kuboon/remix-ui-pinch-pan": "jsr:@kuboon/remix-ui-pinch-pan@^0.1.0",
     "@std/front-matter": "jsr:@std/front-matter@^1.0.9",
     "canvaskit-wasm": "npm:canvaskit-wasm@^0.40.0"
   },
