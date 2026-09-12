@@ -6,6 +6,7 @@
     "jsr:@kuboon/remix-assets-deno@0.7": "0.7.0",
     "jsr:@kuboon/remix-ssg@*": "0.9.0",
     "jsr:@kuboon/remix-ssg@0.9": "0.9.0",
+    "jsr:@kuboon/remix-ui-pinch-pan@0.1": "0.1.0",
     "jsr:@std/cli@1": "1.0.32",
     "jsr:@std/collections@^1.1.3": "1.3.0",
     "jsr:@std/front-matter@^1.0.9": "1.0.9",
@@ -86,6 +87,12 @@
         "npm:@remix-run/response",
         "npm:@remix-run/ui",
         "npm:es-module-lexer@^2.3.0"
+      ]
+    },
+    "@kuboon/remix-ui-pinch-pan@0.1.0": {
+      "integrity": "e6ba14474ef45f8d044b4cbcb3e9e849a09dabb6e0aac1aa5ff5b4a65a01af16",
+      "dependencies": [
+        "npm:@remix-run/ui"
       ]
     },
     "@std/cli@1.0.32": {
@@ -1865,6 +1872,7 @@
       "jsr:@kuboon/md@0.4",
       "jsr:@kuboon/remix-assets-deno@0.7",
       "jsr:@kuboon/remix-ssg@0.9",
+      "jsr:@kuboon/remix-ui-pinch-pan@0.1",
       "jsr:@std/front-matter@^1.0.9",
       "npm:@remix-run/fetch-router@0.22",
       "npm:@remix-run/render-middleware@0.3",

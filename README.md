@@ -36,6 +36,8 @@ repository**:
 | `web/server/versions.ts`                                                                | The badges under its title                   |
 | the `showcase` route in `web/client/routes.ts` and its action in `web/server/router.ts` | What serves it                               |
 | the `UI showcase` link in `web/client/layout.tsx`                                       | The nav entry pointing at it                 |
+| `web/client/pages/pinch-pan.tsx`, `web/client/islands/pinch-pan.tsx`                    | The pinch/pan gesture demo                   |
+| its route, action, nav link, and `@kuboon/remix-ui-pinch-pan` in `web/deno.json`        | What serves it                               |
 | `web/server/blog/*.md`, `web/client/pages/about.tsx`                                    | Placeholder content                          |
 
 `web/client/pages/index.tsx` and `web/client/islands/{counter,total,store}` are

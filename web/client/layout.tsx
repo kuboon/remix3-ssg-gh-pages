@@ -116,6 +116,7 @@ export function Layout(props: LayoutProps): RemixNode {
             <a href={routes.home.href()}>Home</a>
             <a href={routes.about.href()}>About</a>
             <a href={routes.blog.index.href()}>Blog</a>
+            <a href={routes["pinch-pan"].href()}>Pinch &amp; pan</a>
             {/* Showcase: delete this link when you delete the showcase — see README. */}
             <a href={routes.showcase.href()}>UI showcase</a>
           </nav>

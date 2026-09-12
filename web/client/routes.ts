@@ -22,6 +22,7 @@ import { base } from "./base.ts";
 export const routes = route(base, {
   home: get("/"),
   about: get("/about"),
+  "pinch-pan": get("/pinch-pan"),
   // Showcase: delete this route when you delete the showcase — see README.
   showcase: get("/showcase"),
   blog: route("blog", {

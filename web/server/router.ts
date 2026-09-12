@@ -35,6 +35,7 @@ import { routes } from "../client/routes.ts";
 import * as About from "../client/pages/about.tsx";
 import { blogController } from "./blog/mod.ts";
 import * as Home from "../client/pages/index.tsx";
+import * as PinchPan from "../client/pages/pinch-pan.tsx";
 // Showcase: delete these two imports when you delete the showcase — see README.
 import * as Showcase from "../client/pages/showcase.tsx";
 import { versions } from "./versions.ts";
@@ -128,6 +129,7 @@ declare module "@remix-run/fetch-router" {
 
 router.get(routes.home, pageAction(routes.home, Home));
 router.get(routes.about, pageAction(routes.about, About));
+router.get(routes["pinch-pan"], pageAction(routes["pinch-pan"], PinchPan));
 // Both blog routes at once: the listing, and one article.
 router.map(routes.blog, blogController);
 // Showcase: delete this line when you delete the showcase — see README. It has an action of its
