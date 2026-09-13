@@ -124,8 +124,7 @@ export function Layout(props: LayoutProps): RemixNode {
         <footer mix={[bandStyle, footerStyle]}>
           <p>
             Built with{" "}
-            <a href="https://jsr.io/@kuboon/remix-ssg">@kuboon/remix-ssg</a> and
-            {" "}
+            <a href="https://jsr.io/@remix-kbn/ssg">@remix-kbn/ssg</a> and{" "}
             <a href="https://remix.run">Remix v3</a>.
           </p>
         </footer>
