@@ -20,7 +20,7 @@ export default function Home(): RemixNode {
       <p mix={leadStyle}>
         This starter serves <a href="https://remix.run">Remix v3</a>{" "}
         pages from a handler you write in <code>router.ts</code>, and{" "}
-        <a href="https://jsr.io/@kuboon/remix-ssg">@kuboon/remix-ssg</a>{" "}
+        <a href="https://jsr.io/@remix-kbn/ssg">@remix-kbn/ssg</a>{" "}
         crawls that same handler into static HTML for GitHub Pages.
       </p>
       <ul mix={featureListStyle}>

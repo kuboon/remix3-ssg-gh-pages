@@ -23,8 +23,8 @@
 import { createRouter, type RouterContext } from "@remix-run/fetch-router";
 import { render } from "@remix-run/render-middleware";
 import type { RemixNode } from "@remix-run/ui";
-import { createFileTree, githubPages } from "@kuboon/remix-ssg/site";
-import type { FileServerBehavior } from "@kuboon/remix-ssg/site";
+import { createFileTree, githubPages } from "@remix-kbn/ssg/site";
+import type { FileServerBehavior } from "@remix-kbn/ssg/site";
 
 import { assets, assetsPath } from "./assets.ts";
 import { ogImage, ogPaths, serveOgImage } from "./og/mod.ts";
@@ -111,8 +111,8 @@ const staticFiles = await createFileTree({
  * `render({ assets })` puts `context.render(node)` on every request: `renderToStream`, the doctype,
  * the content type, and the two hooks a page tree needs answered — the chunk URL behind each
  * `clientEntry(import.meta.url, …)`, and the fetch behind a frame navigation. It is Remix's own,
- * which is why the asset server is passed to it rather than wrapped: it asks for `getHref` and
- * `getPreloads`, and `@kuboon/remix-assets-deno` answers both.
+ * which is why the asset server is passed to it rather than wrapped: as of `remix@3.0.0-rc.2` it
+ * asks for `getScriptEntry` alone, and `@remix-kbn/assets-deno` answers it.
  */
 const router = createRouter({ middleware: [render({ assets })] });
 

@@ -11,7 +11,7 @@
  * page the prefix is already in its HTML — so a browser has no variable to read and no use for one.
  */
 
-import { normalizeBase } from "@kuboon/remix-ssg/site";
+import { normalizeBase } from "@remix-kbn/ssg/site";
 
 /** The two runtimes this runs in: one has an environment, the other has none. */
 type MaybeDeno = { Deno?: { env: { get(key: string): string | undefined } } };
