@@ -3,9 +3,9 @@
   "specifiers": {
     "jsr:@deno/loader@0.5": "0.5.0",
     "jsr:@kuboon/md@0.4": "0.4.0",
-    "jsr:@kuboon/remix-assets-deno@0.7": "0.7.0",
-    "jsr:@kuboon/remix-ssg@*": "0.9.0",
-    "jsr:@kuboon/remix-ssg@0.9": "0.9.0",
+    "jsr:@remix-kbn/assets-deno@0.8": "0.8.0",
+    "jsr:@remix-kbn/ssg@*": "0.10.0",
+    "jsr:@remix-kbn/ssg@0.10": "0.10.0",
     "jsr:@std/cli@1": "1.0.32",
     "jsr:@std/collections@^1.1.3": "1.3.0",
     "jsr:@std/front-matter@^1.0.9": "1.0.9",
@@ -69,8 +69,8 @@
         "npm:unist-util-visit"
       ]
     },
-    "@kuboon/remix-assets-deno@0.7.0": {
-      "integrity": "d5801e2a531a172fba8164d0ed3d09d336acb1917bbbe626bb39845f7c0d31de",
+    "@remix-kbn/assets-deno@0.8.0": {
+      "integrity": "10a28591c2f775a370e7353989cc4d12e702a9df0f9e953c6e01ec83a64ce706",
       "dependencies": [
         "jsr:@deno/loader",
         "jsr:@std/fs",
@@ -78,10 +78,10 @@
         "npm:es-module-lexer@^2.3.2"
       ]
     },
-    "@kuboon/remix-ssg@0.9.0": {
-      "integrity": "b4868f975b71cad880321d3de0c3417936aeaa76c8cc7ccca66b588f686f98f6",
+    "@remix-kbn/ssg@0.10.0": {
+      "integrity": "f776b83557a4aecc83950041fdf1733f17b358e6f9dc8a3f78bad16edf7193d9",
       "dependencies": [
-        "jsr:@kuboon/remix-assets-deno",
+        "jsr:@remix-kbn/assets-deno",
         "jsr:@std/cli",
         "npm:@remix-run/response",
         "npm:@remix-run/ui",
@@ -1863,8 +1863,8 @@
   "workspace": {
     "dependencies": [
       "jsr:@kuboon/md@0.4",
-      "jsr:@kuboon/remix-assets-deno@0.7",
-      "jsr:@kuboon/remix-ssg@0.9",
+      "jsr:@remix-kbn/assets-deno@0.8",
+      "jsr:@remix-kbn/ssg@0.10",
       "jsr:@std/front-matter@^1.0.9",
       "npm:@remix-run/fetch-router@0.22",
       "npm:@remix-run/render-middleware@0.3",

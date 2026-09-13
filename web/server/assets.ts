@@ -7,14 +7,14 @@
  *
  * The entries are globbed rather than listed: an island is a file in a directory, and that is the
  * decision — unlike a route, which is a URL someone chose. `Deno.bundle` still wants them one by
- * one, so `@kuboon/remix-assets-deno` expands the pattern at startup, sorted, and fails on a
+ * one, so `@remix-kbn/assets-deno` expands the pattern at startup, sorted, and fails on a
  * pattern that matches nothing.
  *
  * Every path here is under `client/`: this is the server compiling the browser's half of the site,
  * and the browser's half is a directory.
  */
 
-import { createAssetServer } from "@kuboon/remix-assets-deno";
+import { createAssetServer } from "@remix-kbn/assets-deno";
 
 import { base } from "../client/base.ts";
 
