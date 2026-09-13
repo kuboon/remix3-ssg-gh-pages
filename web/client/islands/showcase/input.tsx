@@ -55,7 +55,7 @@ export const InputDemo = clientEntry(
               Search
               {withIcon
                 ? (
-                  <div mix={input.root()}>
+                  <div mix={input.root({ size: size as "md" | "lg" })}>
                     <SearchIcon />
                     <input
                       mix={input.field()}
@@ -93,9 +93,14 @@ export const InputDemo = clientEntry(
               }}
             />
             <Readout>
-              {withIcon
-                ? `<div mix={input.root()}><SearchIcon /><input mix={input.field()} /></div>`
-                : `<input mix={input({ size: '${size}' })} />`}
+              {[
+                `<input mix={input({ size: '${size}' })} />`,
+                withIcon
+                  ? `<div mix={input.root({ size: '${size}' })}><SearchIcon /><input mix={input.field()} /></div>`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join("\n")}
             </Readout>
           </>
         }

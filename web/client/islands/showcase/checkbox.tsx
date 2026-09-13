@@ -110,7 +110,7 @@ export const CheckboxDemo = clientEntry(
                 />
               </Field>
               <Readout>
-                {`parent state = "${parentState}" (${checkedCount}/${children.length})`}
+                {`<input type="checkbox" mix={checkbox({ size: '${size}', state: '${parentState}' })} />\n\nparent state = "${parentState}" (${checkedCount}/${children.length})`}
               </Readout>
             </>
           }

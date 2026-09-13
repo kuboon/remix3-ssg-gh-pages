@@ -72,7 +72,9 @@ export const TabsDemo = clientEntry(
                 }}
               />
             </Field>
-            <Readout>{`activeTab = "${active}"`}</Readout>
+            <Readout>
+              {`<Tabs activeTab="${active}" size="${size}">`}
+            </Readout>
           </>
         }
         note="Arrow keys move between tabs; Home and End jump to the first and last."
