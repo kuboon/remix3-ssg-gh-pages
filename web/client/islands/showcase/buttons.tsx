@@ -45,6 +45,16 @@ export const ButtonsDemo = clientEntry(
         .filter(Boolean)
         .join(", ");
 
+      const snippet = [
+        `<button mix={button({ ${attrs} })}${disabled ? " disabled" : ""}>`,
+        startIcon ? "  <AddIcon />" : null,
+        "  Create project",
+        endIcon ? "  <ChevronRightIcon />" : null,
+        "</button>",
+      ]
+        .filter(Boolean)
+        .join("\n");
+
       return (
         <DemoCard
           id="button"
@@ -123,9 +133,7 @@ export const ButtonsDemo = clientEntry(
                   }}
                 />
               </ControlGrid>
-              <Readout>
-                {`<button mix={button({ ${attrs} })}>Create project</button>`}
-              </Readout>
+              <Readout>{snippet}</Readout>
             </>
           }
         />

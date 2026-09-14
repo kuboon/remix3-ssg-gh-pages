@@ -30,9 +30,6 @@ export const SpringDemo = clientEntry(
       const transition = custom
         ? spring.transition("left", { duration, bounce })
         : spring.transition("left", mode as SpringPreset);
-      const easing = custom
-        ? spring({ duration, bounce }).easing
-        : spring(mode as SpringPreset).easing;
 
       return (
         <DemoCard
@@ -133,7 +130,7 @@ export const SpringDemo = clientEntry(
                   </ControlGrid>
                 )
                 : null}
-              <Readout>{`transition: left ${easing}`}</Readout>
+              <Readout>{`transition: ${transition}`}</Readout>
             </>
           }
         />

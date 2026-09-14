@@ -61,7 +61,11 @@ export const SelectDemo = clientEntry(
                 }}
               />
             </Field>
-            <Readout>{`value = "${value}"\nlabel = "${label}"`}</Readout>
+            <Readout>
+              {`<Select name="framework"${
+                disabled ? " disabled" : ""
+              }>...</Select>\n\nvalue = "${value}"\nlabel = "${label}"`}
+            </Readout>
           </>
         }
         note="React Router is a disabled option — keyboard and pointer selection skip it."

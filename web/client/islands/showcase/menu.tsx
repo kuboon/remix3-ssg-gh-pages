@@ -102,7 +102,18 @@ export const MenuDemo = clientEntry(
               />
             </ControlGrid>
             <Readout>
-              {`wordWrap = ${wordWrap}\ndensity  = "${density}"\nlast     = ${lastAction}`}
+              {[
+                `<MenuItem name="minimap"${
+                  disableMinimap ? " disabled" : ""
+                }>Minimap</MenuItem>`,
+                includeSubmenu
+                  ? `<Submenu label="Zoom">...</Submenu>`
+                  : `{/* submenu omitted */}`,
+                ``,
+                `wordWrap = ${wordWrap}`,
+                `density  = "${density}"`,
+                `last     = ${lastAction}`,
+              ].join("\n")}
             </Readout>
           </>
         }

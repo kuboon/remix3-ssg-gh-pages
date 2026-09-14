@@ -77,9 +77,9 @@ export const BreadcrumbsDemo = clientEntry(
                 />
               </Field>
               <Readout>
-                {separatorNode
-                  ? `<Breadcrumbs items={items} separator="${separatorNode}" />`
-                  : `<Breadcrumbs items={items} />`}
+                {`<Breadcrumbs items={[${
+                  items.map((item) => `'${item.label}'`).join(", ")
+                }]}${separatorNode ? ` separator="${separatorNode}"` : ""} />`}
               </Readout>
             </>
           }

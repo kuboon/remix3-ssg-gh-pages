@@ -143,9 +143,15 @@ export const AccordionDemo = clientEntry(
                 />
               </ControlGrid>
               <Readout>
-                {multiple
-                  ? `<Accordion type="multiple" defaultValue={['account']} headingLevel={${headingLevel}}>`
-                  : `<Accordion defaultValue="account" collapsible={${collapsible}} headingLevel={${headingLevel}}>`}
+                {[
+                  multiple
+                    ? `<Accordion type="multiple" defaultValue={['account']} headingLevel={${headingLevel}}>`
+                    : `<Accordion defaultValue="account" collapsible={${collapsible}} headingLevel={${headingLevel}}>`,
+                  `  <AccordionItem value="billing"${
+                    disableItem ? " disabled" : ""
+                  }>...</AccordionItem>`,
+                  `</Accordion>`,
+                ].join("\n")}
               </Readout>
             </>
           }

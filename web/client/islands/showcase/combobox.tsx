@@ -87,7 +87,11 @@ export const ComboboxDemo = clientEntry(
                 }}
               />
             </Field>
-            <Readout>{`value = "${value}"\nlabel = "${label}"`}</Readout>
+            <Readout>
+              {`<Combobox name="airport"${
+                disabled ? " disabled" : ""
+              }>...</Combobox>\n\nvalue = "${value}"\nlabel = "${label}"`}
+            </Readout>
           </>
         }
         note='Try typing a code like "hnd" or a city like "tokyo" — searchValue aliases match both.'
