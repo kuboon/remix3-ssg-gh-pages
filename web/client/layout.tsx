@@ -53,6 +53,15 @@ export interface LayoutProps {
    */
   image: string | null;
   /**
+   * The page's viewport meta, for the rare page that needs one of its own.
+   *
+   * Optional because almost nothing does: `width=device-width, initial-scale=1` is right for a
+   * document. The exception is a page laying out to the edges of a phone screen, which needs
+   * `viewport-fit=cover` before `env(safe-area-inset-*)` reports anything but zero — and that is
+   * a choice per page, since covering the notch on an article would only push its text under one.
+   */
+  viewport?: string;
+  /**
    * The client runtime, for a page that places an island — resolved by `router.ts`, because a URL
    * under the deploy prefix and the bundler's naming is a thing only the server knows.
    *
@@ -85,7 +94,10 @@ export function Layout(props: LayoutProps): RemixNode {
     <html lang="en">
       <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+          name="viewport"
+          content={props.viewport ?? "width=device-width, initial-scale=1"}
+        />
         <title>{props.title}</title>
         {props.description
           ? <meta name="description" content={props.description} />
@@ -116,6 +128,7 @@ export function Layout(props: LayoutProps): RemixNode {
             <a href={routes.home.href()}>Home</a>
             <a href={routes.about.href()}>About</a>
             <a href={routes.blog.index.href()}>Blog</a>
+            <a href={routes.fullscreen.href()}>Fullscreen</a>
             {/* Showcase: delete this link when you delete the showcase — see README. */}
             <a href={routes.showcase.href()}>UI showcase</a>
           </nav>

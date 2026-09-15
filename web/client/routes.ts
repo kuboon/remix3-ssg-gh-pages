@@ -22,6 +22,8 @@ import { base } from "./base.ts";
 export const routes = route(base, {
   home: get("/"),
   about: get("/about"),
+  /** A demo page: what a page can and cannot do about mobile Safari's chrome. */
+  fullscreen: get("/fullscreen"),
   // Showcase: delete this route when you delete the showcase — see README.
   showcase: get("/showcase"),
   blog: route("blog", {
