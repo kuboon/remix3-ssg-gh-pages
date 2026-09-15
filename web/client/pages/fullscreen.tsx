@@ -1,6 +1,13 @@
 /**
  * Mobile Safari's chrome, and what a page can actually do about it.
  *
+ * DELETE ME in a repository made from this template: this page, the two islands it imports
+ * (`islands/viewport-probe.tsx` and `islands/fullscreen-demo.tsx`), its route in `routes.ts`, its
+ * import and line in `server/router.ts`, and the nav link in `layout.tsx`. See the root README.
+ *
+ * What is worth keeping is the shell's optional `viewport` prop, which this page is the only
+ * caller of: it stays useful the moment any page of yours needs `viewport-fit=cover`.
+ *
  * The question this exists to answer is one everybody asks once: the URL bar and the tab bar eat
  * the top and bottom of an iPhone screen, scrolling a little shrinks them, and surely there is a
  * CSS property for that. There is not, and the page says so in the first paragraph rather than

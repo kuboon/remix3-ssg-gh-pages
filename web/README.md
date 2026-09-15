@@ -129,6 +129,7 @@ web/
       index.tsx      # home — places two client entries
       about.tsx
       showcase.tsx
+      fullscreen.tsx # the mobile-Safari demo — delete me
       blog/
         index.tsx    # the listing screen
         article.tsx  # the article screen
@@ -136,6 +137,8 @@ web/
       counter.tsx    # a hydrated island, and its own browser entrypoint
       total.tsx      # a second island/entrypoint, sharing state with it
       store.ts       # the module both islands import — the shared singleton
+      viewport-probe.tsx   # fullscreen demo — delete me
+      fullscreen-demo.tsx  # fullscreen demo — delete me
     static/
       app.css        # tokens, document defaults, the cascade layer order
       favicon.svg
@@ -178,6 +181,21 @@ Helpers the demos share live in `client/islands/showcase/_lib/`. The underscore
 is decoration; what keeps them out of the entrypoints is the depth —
 `server/assets.ts` globs `islands/showcase/*.tsx`, and `_lib/` is a directory
 below that.
+
+## The mobile Safari demo (delete me)
+
+`client/pages/fullscreen.tsx` answers one question — can CSS hide Safari's URL
+bar and tab bar? — with measurements rather than prose. Its two islands read the
+viewport back live: `viewport-probe.tsx` resolves `100svh`, `100dvh` and
+`100lvh` on hidden probe elements and prints the pixels, and
+`fullscreen-demo.tsx` wires the Fullscreen API to a button. The root README
+lists it among the things to delete in a repository made from this template.
+
+It is also the only page that overrides the shell's viewport meta, which is the
+part worth keeping: `env(safe-area-inset-*)` reads `0px` unless the page opts in
+with `viewport-fit=cover`, so `LayoutProps.viewport` exists for whichever of
+your pages lays out to the edges of a phone screen. Deleting the demo leaves
+that prop in place and unused, which is where the next such page will want it.
 
 ## Styling
 
@@ -261,7 +279,10 @@ Three edits, in the order you would guess:
 
 1. Name its URL in `client/routes.ts` — `contact: get("/contact")`.
 2. Write `client/pages/contact.tsx`, exporting a component as `default` plus a
-   `title` — and `hydrate = true` if it places a client entry.
+   `title` — and `hydrate = true` if it places a client entry. A page that needs
+   a viewport meta of its own exports `viewport` too;
+   `client/pages/fullscreen.tsx` is the one that does, for
+   `viewport-fit=cover`.
 3. Map them in `server/router.ts` —
    `router.get(routes.contact, pageAction(routes.contact, Contact))`. The route
    goes in twice because the second one is what files the page's social card.

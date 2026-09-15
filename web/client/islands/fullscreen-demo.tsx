@@ -1,6 +1,8 @@
 /**
  * The one API that genuinely removes Safari's chrome inside a tab, wired to a button.
  *
+ * DELETE ME with the rest of the fullscreen demo — see `pages/fullscreen.tsx` and the root README.
+ *
  * Everything CSS can do stops at *measuring* the browser's UI. The Fullscreen API is the only thing
  * on this page that removes it, and it comes with the condition that makes it not-a-CSS-feature: it
  * has to be called from a user gesture. That is why this is a button and not something the page

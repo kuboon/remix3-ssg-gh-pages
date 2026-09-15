@@ -36,7 +36,15 @@ repository**:
 | `web/server/versions.ts`                                                                | The badges under its title                   |
 | the `showcase` route in `web/client/routes.ts` and its action in `web/server/router.ts` | What serves it                               |
 | the `UI showcase` link in `web/client/layout.tsx`                                       | The nav entry pointing at it                 |
+| `web/client/pages/fullscreen.tsx`                                                       | The mobile-Safari fullscreen demo page       |
+| `web/client/islands/{viewport-probe,fullscreen-demo}.tsx`                               | Its two islands                              |
+| the `fullscreen` route in `web/client/routes.ts` and its line in `web/server/router.ts` | What serves it                               |
+| the `Fullscreen` link in `web/client/layout.tsx`                                        | The nav entry pointing at it                 |
 | `web/server/blog/*.md`, `web/client/pages/about.tsx`                                    | Placeholder content                          |
+
+Each wiring row above is marked at its line in the source, so
+`grep -rn "delete the showcase\|delete the demo" web` lists every edit the two
+demo pages ask for.
 
 `web/client/pages/index.tsx` and `web/client/islands/{counter,total,store}` are
 the two-islands-one-store demo. Delete those too once you have read the home

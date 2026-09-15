@@ -128,6 +128,7 @@ export function Layout(props: LayoutProps): RemixNode {
             <a href={routes.home.href()}>Home</a>
             <a href={routes.about.href()}>About</a>
             <a href={routes.blog.index.href()}>Blog</a>
+            {/* Fullscreen demo: delete this link when you delete the demo — see README. */}
             <a href={routes.fullscreen.href()}>Fullscreen</a>
             {/* Showcase: delete this link when you delete the showcase — see README. */}
             <a href={routes.showcase.href()}>UI showcase</a>

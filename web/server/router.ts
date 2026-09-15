@@ -34,6 +34,7 @@ import { routes } from "../client/routes.ts";
 
 import * as About from "../client/pages/about.tsx";
 import { blogController } from "./blog/mod.ts";
+// Fullscreen demo: delete this import when you delete the demo — see README.
 import * as Fullscreen from "../client/pages/fullscreen.tsx";
 import * as Home from "../client/pages/index.tsx";
 // Showcase: delete these two imports when you delete the showcase — see README.
@@ -133,6 +134,7 @@ declare module "@remix-run/fetch-router" {
 
 router.get(routes.home, pageAction(routes.home, Home));
 router.get(routes.about, pageAction(routes.about, About));
+// Fullscreen demo: delete this line when you delete the demo — see README.
 router.get(routes.fullscreen, pageAction(routes.fullscreen, Fullscreen));
 // Both blog routes at once: the listing, and one article.
 router.map(routes.blog, blogController);

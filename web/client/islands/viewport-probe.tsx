@@ -1,6 +1,10 @@
 /**
  * What the viewport actually measures, read back live.
  *
+ * DELETE ME with the rest of the fullscreen demo — see `pages/fullscreen.tsx` and the root README.
+ * Nothing but that page places it, and `server/assets.ts` globs `islands/*.tsx`, so removing the
+ * file is the whole of removing the entrypoint.
+ *
  * The page it sits on answers one question — can CSS hide Safari's toolbars? — and this is the
  * part that answers it with numbers rather than prose. Everything here is measured in the browser
  * because none of it can be known any other way: the same document reports a different height
