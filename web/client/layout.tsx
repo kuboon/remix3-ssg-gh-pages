@@ -91,7 +91,7 @@ export interface ClientRuntime {
  */
 export function Layout(props: LayoutProps): RemixNode {
   return (
-    <html lang="en">
+    <html lang="ja">
       <head>
         <meta charset="utf-8" />
         <meta
