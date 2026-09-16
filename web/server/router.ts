@@ -165,13 +165,22 @@ router.map(`${base}/og/*path`, ({ request }) => serveOgImage(request));
  * Everything else is reached by following links, so the blog index listing its articles is what
  * makes them part of the site.
  *
- * The social cards are the exception, and the reason this is a list rather than just `/`: nothing
- * on the site links to one. An `og:image` is an absolute URL meant for someone else's server, so a
- * crawler that followed it would be leaving — the build is told about them instead.
+ * Two kinds of file are the exception, and the reason this is a list rather than just `/`.
+ *
+ * The social cards, because nothing on the site links to one. An `og:image` is an absolute URL
+ * meant for someone else's server, so a crawler that followed it would be leaving.
+ *
+ * `static/kiso.css`, because the only thing that asks for it is an `@import` inside
+ * `static/app.css`, and the crawl reads HTML rather than CSS. A stylesheet that arrives as a 404
+ * fails silently, so the file is named here instead of being found.
  *
  * It is down here rather than up with the other exports because a card is registered as its page's
  * route is wired, and this reads the register.
  */
-export const entryPoints: readonly string[] = ["/", ...ogPaths()];
+export const entryPoints: readonly string[] = [
+  "/",
+  "/static/kiso.css",
+  ...ogPaths(),
+];
 
 export default router;

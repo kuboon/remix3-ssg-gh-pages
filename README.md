@@ -59,6 +59,25 @@ What you keep is the two `deno.json` members and everything wiring them:
 palette, spacing and typography are the app's. Change them there and the whole
 site follows.
 
+### Japanese by default
+
+The document is `lang="ja"` and the CSS underneath it is
+[kiso.css](https://github.com/tak-dcxi/kiso.css) — a reset written for Japanese
+text, vendored verbatim at `web/client/static/kiso.css` (MIT, v1.2.4) and pulled
+into a `reset` cascade layer by `app.css`. It is what puts the thin space
+between 日本語 and alphanumerics, closes the gap around 「」 and 、, and stops a
+line breaking before a small kana; `app.css` pairs it with
+`font-feature-settings: "palt"` and a Hiragino/Noto stack. None of it is
+reachable with a font choice alone.
+
+Update it by replacing that one file — nothing in this repository patches it,
+and `deno fmt` is told to leave it alone in `web/deno.json`.
+
+Writing an English site instead? Change `lang` in `web/client/layout.tsx`. Half
+of kiso.css is written against `:lang(ja)` or `:lang(en)`, so that attribute is
+most of the switch: it is what decides whether `<em>` comes out bold, the
+Japanese convention, or italic.
+
 After deleting, `deno task check && deno task build` should still pass — if it
 does not, something you kept was linking to something you removed, which is the
 build telling you the same thing it tells you about any dead link.
