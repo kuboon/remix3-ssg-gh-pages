@@ -22,6 +22,8 @@ import { base } from "./base.ts";
 export const routes = route(base, {
   home: get("/"),
   about: get("/about"),
+  // Fullscreen demo: delete this route when you delete the demo — see README.
+  fullscreen: get("/fullscreen"),
   // Showcase: delete this route when you delete the showcase — see README.
   showcase: get("/showcase"),
   blog: route("blog", {

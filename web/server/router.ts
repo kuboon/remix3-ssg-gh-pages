@@ -34,6 +34,8 @@ import { routes } from "../client/routes.ts";
 
 import * as About from "../client/pages/about.tsx";
 import { blogController } from "./blog/mod.ts";
+// Fullscreen demo: delete this import when you delete the demo — see README.
+import * as Fullscreen from "../client/pages/fullscreen.tsx";
 import * as Home from "../client/pages/index.tsx";
 // Showcase: delete these two imports when you delete the showcase — see README.
 import * as Showcase from "../client/pages/showcase.tsx";
@@ -52,6 +54,8 @@ interface Page {
   description?: string;
   /** Set by a page that places a client entry, so the shell boots the runtime for it. */
   hydrate?: boolean;
+  /** Set by a page that needs a viewport meta of its own — `viewport-fit=cover`, in practice. */
+  viewport?: string;
 }
 
 /**
@@ -74,6 +78,7 @@ function pageAction(route: { href(): string }, page: Page) {
         title: page.title,
         description: page.description,
         image,
+        viewport: page.viewport,
         script: page.hydrate ? clientRuntime : null,
         children: page.default(),
       }),
@@ -129,6 +134,8 @@ declare module "@remix-run/fetch-router" {
 
 router.get(routes.home, pageAction(routes.home, Home));
 router.get(routes.about, pageAction(routes.about, About));
+// Fullscreen demo: delete this line when you delete the demo — see README.
+router.get(routes.fullscreen, pageAction(routes.fullscreen, Fullscreen));
 // Both blog routes at once: the listing, and one article.
 router.map(routes.blog, blogController);
 // Showcase: delete this line when you delete the showcase — see README. It has an action of its
