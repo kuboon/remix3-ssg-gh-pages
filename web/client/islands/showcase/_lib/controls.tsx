@@ -334,11 +334,6 @@ const sliderStyle = css({
   width: "100%",
   accentColor: theme.colors.action.primary.background,
   cursor: "pointer",
-  // The reset gives every form control a 1px border, so that an unstyled one is still visible. A
-  // range input is not a box, and the line it draws sits around the whole track. `transparent`
-  // rather than `none`, per the reset's own note: a removed border disappears in forced-colors
-  // mode, a transparent one is repainted.
-  borderColor: "transparent",
 });
 
 const toggleStyle = css({

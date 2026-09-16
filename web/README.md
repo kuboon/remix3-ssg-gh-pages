@@ -140,9 +140,7 @@ web/
       viewport-probe.tsx   # fullscreen demo — delete me
       fullscreen-demo.tsx  # fullscreen demo — delete me
     static/
-      app.css        # tokens, document defaults, the flow, the layer order
-      kiso.css       # the reset, vendored verbatim — do not edit
-      LICENSE-kiso.txt
+      app.css        # tokens, document defaults, the cascade layer order
       favicon.svg
   server/
     deno.json        # lib: deno.ns — plus the tasks and their permission sets
@@ -231,54 +229,18 @@ cannot choose its layer. So `client/static/app.css` declares the full order, and
 `client/layout.tsx` links it at the top of `<head>`:
 
 ```css
-@layer reset, base, rmx, app;
-@import url("kiso.css") layer(reset);
+@layer base, rmx, app;
 ```
 
 Layers rank by where they are first named, which is why that link has to come
 out ahead of Remix's own rules — Remix appends its collected styles just before
 `</head>`.
 
-| Layer   | What is in it                                                                                                                                                                                                                                 |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `reset` | `kiso.css`, vendored. Not this site's opinion — the browser's defaults, made consistent and made good for Japanese text. Lowest, so nothing in it is ever something to fight.                                                                 |
-| `base`  | `app.css`. Tokens, and defaults for elements nobody styles by hand (`body`, `a`, `h1`, `code`, the flow). Being _before_ `rmx`, every one is a default a component may override — which is why nothing here needs `:where()` or `!important`. |
-| `rmx`   | Remix's. Every mixin on this site, and the styling `remix/ui` components bring with them.                                                                                                                                                     |
-| `app`   | Empty, and named anyway: where a rule would go that has to beat a component's own styling on purpose. Unlayered CSS would also win, but it would win by accident.                                                                             |
-
-### The reset
-
-[kiso.css](https://github.com/tak-dcxi/kiso.css) is at `client/static/kiso.css`,
-byte-for-byte as upstream ships it (v1.2.4, MIT — `LICENSE-kiso.txt` beside it).
-Update it by replacing the file; nothing here patches it, and `web/deno.json`
-excludes it from `deno fmt` so a format pass cannot quietly rewrite a vendored
-dependency.
-
-Two things about how it is wired are worth knowing before you move either:
-
-- **`@import … layer(reset)`, not a second `<link>`.** A stylesheet cannot name
-  its own layer from an HTML attribute, and kiso.css is written entirely in
-  `:where()` — every rule in it has zero specificity. Unlayered CSS beats
-  layered CSS whatever its specificity, so an unlayered kiso would win against
-  every rule in `base` and every `remix/ui` component on the site. In the first
-  layer it loses to all of them, which is what a reset is for.
-- **`static/kiso.css` is in `entryPoints`.** The only thing that asks for it is
-  that `@import`, and the crawl reads HTML, not CSS. A stylesheet that 404s
-  fails silently, so `server/router.ts` names the file the same way it names the
-  social cards.
-
-A reset that good at Japanese also takes things away, and three of them come
-back in `base` — each is commented where it is:
-
-| Back in `base`                         | Why                                                                                                                        |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| block margins on `p`, `h2`–`h6`, lists | kiso strips every UA margin and expects a design system to supply the spacing. This site writes plain `<p>` on most pages. |
-| `list-style-type` and list indent      | kiso hides markers because most `<ul>`s in an app are furniture. Most `<ul>`s here are a bulleted list in an article.      |
-| the underline on `a`                   | kiso asks you to opt in per link. Colour alone is not a distinction everyone can see (WCAG 1.4.1).                         |
-
-The flow numbers are the ones `theme.ts` already used for article prose, so a
-Markdown article and a hand-written page now share one rhythm rather than
-agreeing by coincidence — which is why `proseStyle` no longer sets any of them.
+| Layer  | What is in it                                                                                                                                                                                                                                      |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base` | `app.css`. Tokens, the box model, and defaults for elements nobody styles by hand (`body`, `a`, `h1`, `code`). Being _before_ `rmx`, every one is a default a component may override — which is why nothing here needs `:where()` or `!important`. |
+| `rmx`  | Remix's. Every mixin on this site, and the styling `remix/ui` components bring with them.                                                                                                                                                          |
+| `app`  | Empty, and named anyway: where a rule would go that has to beat a component's own styling on purpose. Unlayered CSS would also win, but it would win by accident.                                                                                  |
 
 ### Where a style goes
 
@@ -308,8 +270,8 @@ agreeing by coincidence — which is why `proseStyle` no longer sets any of them
   scoped to the one class on the article wrapper instead of leaking out as bare
   element selectors.
 
-`client/static/` holds `app.css`, the vendored `kiso.css`, and anything else
-served verbatim (the favicon, images).
+`client/static/` holds `app.css` and anything else served verbatim (the favicon,
+images).
 
 ## Adding a page
 

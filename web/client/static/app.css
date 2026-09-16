@@ -1,17 +1,14 @@
 /*
- * The site's reset, its design tokens, and its document-level defaults.
+ * The site's design tokens and document-level defaults.
  *
  * Everything else on this site is a `css(...)` mixin from `@remix-run/ui`, rendered into each
- * page's <head>. Three things cannot be, and they are all here.
+ * page's <head>. Two things cannot be, and they are both here.
  *
  * The cascade order, first. Generated `css(...)` rules — this site's mixins and the styling
  * first-party remix/ui components carry — all land in the native `rmx` layer, and a mixin cannot
  * choose its layer. So:
  *
- *   reset kiso.css, imported below. Nothing here is this site's opinion; it is the browser's
- *         defaults made consistent. Lowest, so every rule in it is a starting point rather than
- *         something to fight.
- *   base  this file. Tokens, and the defaults for elements nobody styles by hand.
+ *   base  this file. Tokens, the box model, and the defaults for elements nobody styles by hand.
  *         Being before `rmx`, every one is a default a component may override without a fight,
  *         which is why nothing below needs :where() or !important.
  *   rmx   Remix's. Every mixin on this site, and what remix/ui components bring with them.
@@ -19,41 +16,20 @@
  *         on purpose. Unlayered CSS would also win, but it would win by accident.
  *
  * Layers rank by where they are first named, and this file is linked at the top of <head> while
- * Remix appends its styles just before </head> — so naming all four here settles the order.
+ * Remix appends its styles just before </head> — so naming all three here settles the order.
  *
  * The token values, second. Remix supplies behaviour and a little component styling, not a theme,
  * so the palette, typography and radii are the app's. They live here as custom properties because
  * light and dark swap between two sets of them; `lib/tokens.ts` is the TypeScript side, and holds
  * the names rather than a second copy of the values.
  *
- * The flow, third — see the note above the rhythm block. A reset that strips the UA's block
- * margins hands that decision back to the site, and this is the site.
+ * The font stack and `palt` below are the document's Japanese setting, and they go together: the
+ * stack is ordered so kana never gets drawn by a Latin font, and `palt` is what stops a line of
+ * 日本語 setting with a hole after every 、. The page declares `lang="ja"` to match — see
+ * `layout.tsx`.
  */
 
-@layer reset, base, rmx, app;
-
-/*
- * kiso.css — a reset built for Japanese text, vendored verbatim at `kiso.css` (v1.2.4, MIT, see
- * `LICENSE-kiso.txt`). Update it by replacing that file; nothing here is patched into it.
- *
- * What it is here for is the typography a Japanese page cannot get any other way:
- * `text-autospace` puts the thin space between 日本語 and alphanumerics, `text-spacing-trim`
- * closes the gap around 「」 and 、, and `line-break: strict` stops a line breaking before a
- * small kana. The rest — a consistent box model, images that do not overflow, form controls that
- * inherit their font, a focus ring with room around it — is the part every reset does, done
- * without `appearance: none` or anything else destructive.
- *
- * `layer(reset)` rather than a second `<link>`, because a stylesheet cannot name its own layer
- * from an HTML attribute. It matters more than it sounds: kiso is written entirely in `:where()`,
- * so every rule in it has zero specificity — and unlayered CSS beats layered CSS whatever its
- * specificity, so an unlayered kiso would win against every rule below and every component on the
- * site. Imported into the first layer, it loses to all of them instead, which is what a reset is.
- *
- * The cost is that the browser learns about this file only after app.css has arrived. Nothing
- * links to it, either, so the build is told about it by name in `server/router.ts`'s
- * `entryPoints` — the same list the social cards are in, and for the same reason.
- */
-@import url("kiso.css") layer(reset);
+@layer base, rmx, app;
 
 @layer base {
   :root {
@@ -61,7 +37,7 @@
 
     /*
      * A Japanese stack. The first two names cover Latin text, the next three cover 日本語, and the
-     * order is what decides which font draws which script: a browser walks the list per character,
+     * order is what decides which script each font draws: a browser walks the list per character,
      * so Helvetica Neue and Arial — neither of which has kana — hand the Japanese on to Hiragino
      * or Noto without ever being asked to fake it.
      */
@@ -100,7 +76,14 @@
     }
   }
 
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
   body {
+    margin: 0;
     /*
      * `clip`, not `hidden`: it stops a full-bleed child from dragging a horizontal scrollbar
      * behind the vertical one — `50vw` counts the scrollbar's width, the viewport does not —
@@ -111,9 +94,8 @@
     font-family: var(--font-sans);
     /*
      * `palt` — proportional alternate widths. Japanese fonts ship every glyph on the same square
-     * em, which leaves a visible hole after 、and around （）; this swaps in the proportional
-     * forms so a line of 日本語 sets evenly. It is inherited, and wrong for a monospaced font,
-     * which is why kiso sets `font-feature-settings: initial` on code, kbd and samp.
+     * em, which leaves a visible hole after 、and around （）; this swaps in the proportional forms
+     * so a line of 日本語 sets evenly. It inherits, which is what the `code` rule below undoes.
      */
     font-feature-settings: "palt";
     line-height: 1.6;
@@ -121,89 +103,14 @@
     background: var(--bg);
   }
 
-  /*
-   * The vertical rhythm.
-   *
-   * kiso strips the UA's block margins from every flow element, on the grounds that a design
-   * system sets its own spacing and half-remembered UA values are a poor default to inherit. That
-   * is the right call and it leaves a gap: this site writes plain `<p>` and `<h2>` on most of its
-   * pages, so something has to say how far apart they sit. Here, rather than in a `.flow` utility,
-   * because the mixins are where a component's own spacing goes and these are the elements no
-   * component owns.
-   *
-   * The numbers are the ones `theme.ts` already used for article prose, so an article and a
-   * hand-written page now share one rhythm instead of agreeing by coincidence.
-   */
-  h1 {
-    font-size: 2rem;
-    line-height: 1.2;
-    margin-block: 0 1rem;
-  }
-
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    line-height: 1.25;
-    margin-block: 2rem 0.5rem;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-  }
-
-  h3 {
-    font-size: 1.2rem;
-  }
-
-  p,
-  ul,
-  ol,
-  dl,
-  blockquote,
-  figure,
-  pre,
-  table {
-    margin-block: 1rem;
-  }
-
-  li {
-    margin-block: 0.3rem;
-  }
-
-  /*
-   * Markers and indentation, back on a list that is prose.
-   *
-   * kiso turns both off everywhere — `list-style-type: ""` rather than `none`, so VoiceOver still
-   * announces the list — because most `<ul>`s in an application are a nav or a card grid. Most
-   * `<ul>`s on a site like this one are a bulleted list in an article, so the default is flipped
-   * back and the handful that are furniture turn it off in their own mixin, which they already do.
-   *
-   * `revert` rather than a literal `disc`: it takes the UA's value, which is how a nested list
-   * still gets its own marker and an `<ol>` gets numbers.
-   */
-  ul,
-  ol {
-    padding-inline-start: revert;
-    list-style-type: revert;
-  }
-
   a {
     color: var(--accent);
   }
 
-  /*
-   * Underlines, likewise. kiso drops them and asks you to opt in per link; this site opts in for
-   * all of them, because colour on its own is not a distinction everyone can see (WCAG 1.4.1) and
-   * every link here sits in a sentence. The two that are furniture — the wordmark and the call to
-   * action — already set `text-decoration: none` in their own mixin.
-   *
-   * Only the line comes back: kiso's `text-decoration-thickness: from-font` stays, so the rule
-   * under a 日本語 line is the weight the font says it should be rather than the browser's guess.
-   */
-  a:any-link {
-    text-decoration-line: underline;
+  h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-top: 0;
   }
 
   code {
@@ -212,5 +119,17 @@
     background: var(--card);
     padding: 0.1rem 0.35rem;
     border-radius: var(--radius-sm);
+  }
+
+  /*
+   * `palt` is inherited, and a proportional width is the one thing a monospaced font is not for —
+   * it would pull a code block's columns out of line. `normal` stops it at the boundary. `pre` is
+   * named as well as `code` because a read-out is sometimes a bare `<pre>`.
+   */
+  code,
+  kbd,
+  samp,
+  pre {
+    font-feature-settings: normal;
   }
 }

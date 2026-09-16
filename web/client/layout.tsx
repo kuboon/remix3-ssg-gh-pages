@@ -25,16 +25,10 @@
  * this page — its title and its description — but where the PNG ended up, and whether there is an
  * origin to make its URL absolute with, are things only the server knows.
  *
- * The one stylesheet it does link is `static/app.css`: the site's tokens, its document-level
- * defaults, the `@import` that pulls in the kiso.css reset, and the `@layer reset, base, rmx, app`
- * statement the whole cascade hangs off. Its position in the head matters — layers rank by where
- * they are first named, and Remix appends its collected styles just before `</head>`, so the link
- * has to come first.
- *
- * `lang` is `ja`, which is a styling decision as much as a semantic one: a good half of kiso.css
- * is written against `:lang(ja)` or `:lang(en)`, so this attribute is what decides whether `<em>`
- * comes out bold (the Japanese convention) or italic. Change it and the page's typography changes
- * with it, which is the point.
+ * The one stylesheet it does link is `static/app.css`: the site's tokens, its document-level defaults,
+ * and the `@layer base, rmx, app` statement the whole cascade hangs off. Its position in the head
+ * matters — layers rank by where they are first named, and Remix appends its collected styles just
+ * before `</head>`, so the link has to come first.
  */
 
 import { css, type RemixNode } from "@remix-run/ui";
