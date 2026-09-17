@@ -3,7 +3,7 @@
   "specifiers": {
     "jsr:@deno/loader@0.5": "0.5.0",
     "jsr:@kuboon/md@0.4": "0.4.0",
-    "jsr:@kuboon/share-element@0.2": "0.2.0",
+    "jsr:@kuboon/share-element@0.3": "0.3.0",
     "jsr:@remix-kbn/assets-deno@0.8": "0.8.0",
     "jsr:@remix-kbn/ssg@*": "0.10.0",
     "jsr:@remix-kbn/ssg@0.10": "0.10.0",
@@ -70,8 +70,8 @@
         "npm:unist-util-visit"
       ]
     },
-    "@kuboon/share-element@0.2.0": {
-      "integrity": "37aebfaf09fac96d26113d014548b5c5f5fb435443c62aa981839159e6710291"
+    "@kuboon/share-element@0.3.0": {
+      "integrity": "5c61a0c8bd69288ec4d7035b4fb310c1f633220474ba966d26a95e265cd3bbab"
     },
     "@remix-kbn/assets-deno@0.8.0": {
       "integrity": "10a28591c2f775a370e7353989cc4d12e702a9df0f9e953c6e01ec83a64ce706",
@@ -1867,7 +1867,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@kuboon/md@0.4",
-      "jsr:@kuboon/share-element@0.2",
+      "jsr:@kuboon/share-element@0.3",
       "jsr:@remix-kbn/assets-deno@0.8",
       "jsr:@remix-kbn/ssg@0.10",
       "jsr:@std/front-matter@^1.0.9",
