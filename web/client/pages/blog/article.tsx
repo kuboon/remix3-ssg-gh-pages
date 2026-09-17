@@ -2,12 +2,17 @@
  * One article.
  *
  * The body arrives already rendered, from `server/blog/` — this places it and dresses it with
- * `proseStyle`, which is the one mixin that reaches into markup it did not write. Text only: the
- * page places no client entry, so an article ships no JavaScript at all.
+ * `proseStyle`, which is the one mixin that reaches into markup it did not write.
+ *
+ * It is also the only screen on this site that hydrates without being a demo of hydration: the
+ * share row under the body is an island, so an article ships the client runtime and that one
+ * entrypoint. The blog listing next door is the page to look at for what a screen with no island
+ * ships, which is nothing.
  */
 
-import type { RemixNode } from "@remix-run/ui";
+import { css, type RemixNode } from "@remix-run/ui";
 
+import { ShareRow } from "../../islands/share.tsx";
 import { routes } from "../../routes.ts";
 import { metaStyle, proseStyle } from "../../theme.ts";
 
@@ -36,9 +41,22 @@ export default function BlogArticle(props: ArticleProps): RemixNode {
         )
         : null}
       {body}
-      <p>
+      <div mix={footerRowStyle}>
         <a href={routes.blog.index.href()}>← All posts</a>
-      </p>
+        <ShareRow label="Share this post" />
+      </div>
     </article>
   );
 }
+
+// --- styles -----------------------------------------------------------------
+
+/** The line under the body: back to the listing on one side, the share row on the other. */
+const footerRowStyle = css({
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "1rem",
+  marginTop: "2.5rem",
+});

@@ -23,6 +23,7 @@ import { hastToRemix } from "@kuboon/md/hast_to_remix.ts";
 import { extract } from "@std/front-matter/yaml";
 
 import { ogImage } from "../og/mod.ts";
+import { clientRuntime } from "../runtime.ts";
 import { Layout } from "../../client/layout.tsx";
 import { routes } from "../../client/routes.ts";
 import * as Index from "../../client/pages/blog/index.tsx";
@@ -162,7 +163,8 @@ export const blogController = createController(routes.blog, {
           title: Index.title,
           description: Index.description,
           image: indexImage,
-          // Neither screen places an island; an article is text, and the listing is a list.
+          // The listing places no island, so it ships no JavaScript at all. The article screen
+          // next door does — see `show`.
           script: null,
           children: Index.default(await listArticles()),
         }),
@@ -184,7 +186,10 @@ export const blogController = createController(routes.blog, {
           title: `${article.title} — remix-ssg`,
           description: article.summary,
           image: articleImages.get(article.slug) ?? null,
-          script: null,
+          // The article screen places one island — its share row — so it needs the runtime.
+          // `router.ts` reads `hydrate` off a page module for this; a controller says it here,
+          // because it builds the `Layout` call itself.
+          script: clientRuntime,
           children: ArticlePage.default({
             article,
             body: await renderMarkdown(article.body),

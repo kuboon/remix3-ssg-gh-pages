@@ -68,9 +68,9 @@ export interface LayoutProps {
    * The shell has to be handed it rather than finding out for itself: entries are resolved while
    * the tree renders, and by then the `<script>` that boots them has already been written.
    *
-   * Required, and `null` for a page with no islands — an article ships no JavaScript at all. It is
-   * not optional because forgetting it is exactly the bug that shipped a showcase whose eighteen
-   * islands never hydrated: a page rendered fine, and nothing on it worked.
+   * Required, and `null` for a page with no islands — the blog listing ships no JavaScript at
+   * all. It is not optional because forgetting it is exactly the bug that shipped a showcase whose
+   * eighteen islands never hydrated: a page rendered fine, and nothing on it worked.
    */
   script: ClientRuntime | null;
   children: RemixNode;
