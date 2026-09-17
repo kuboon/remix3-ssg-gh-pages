@@ -148,17 +148,11 @@
  * whatever the specificity — so a rule in `app` loses to `:where(.share-dialog)` even though
  * `:where()` counts for nothing. Verified both ways in Chromium.
  *
- * `[hidden]` is a workaround, not styling. `.open()`/`.close()` only toggle the `hidden`
- * attribute, and the package's own `:where(.share-dialog) { display: block }` beats the UA
- * stylesheet's `[hidden] { display: none }` — author origin outranks UA origin, specificity does
- * not come into it — so as of 0.1.0 a closed panel is a visible panel. Upstream this is one line
- * next to the rule that causes it (`:where(.share-dialog[hidden]) { display: none }`); delete this
- * block's first rule once a release carries it.
+ * Hiding is the package's own job and it does it — `.open()`/`.close()` toggle `hidden`, and its
+ * defaults end with a `.share-dialog[hidden]` rule that outranks the `display: block` above it.
+ * (It did not in 0.1.0, which is why this block briefly carried that rule itself.) So nothing
+ * below touches `display`.
  */
-
-.share-dialog[hidden] {
-  display: none;
-}
 
 .share-dialog {
   position: fixed;

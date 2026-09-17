@@ -36,8 +36,8 @@ declare global {
  * arrives empty in the HTML; in the browser the registration upgrades it and it fills in.
  *
  * The tag is written in the markup rather than built with the package's own `createShareDialog()`
- * on purpose — as of 0.1.0 that function does not work in a browser. See the note on
- * `shareDialog` below.
+ * so that the panel is part of the page the server rendered rather than something the browser adds
+ * afterwards — and so that Remix, which owns this subtree, is the one that puts it there.
  *
  * The URL it shares is `location.href`, read at the moment of the click. That is the one form of
  * the article's address that is right everywhere this site is served from — the domain root, a
@@ -53,14 +53,8 @@ export const ShareButton = clientEntry(
     /**
      * The panel, bound as the element is inserted.
      *
-     * A `ref` rather than `createShareDialog()`, because in `@kuboon/share-element@0.1.0` the
-     * element's constructor adds the panel's own class, `hidden` attribute and children — which a
-     * custom element constructor may not do. `document.createElement()`, which is all
-     * `createShareDialog()` is, refuses it (`NotSupportedError: The result must not have
-     * attributes`) and hands back a `<share-dialog>` that never upgraded, so calling `.open()` on
-     * it throws. An element the HTML parser made — one written in markup, as here — upgrades
-     * through a different path that does not check, and works. Swap this for
-     * `createShareDialog()` once a release builds in `connectedCallback` instead.
+     * Undefined until then, and the click handler says so rather than asserting: an island's
+     * render runs on the server too, where there is no element to bind and no click to handle.
      */
     let dialog: ShareDialogElement | undefined;
 
