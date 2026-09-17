@@ -18,7 +18,7 @@
     "@remix-kbn/assets-deno": "jsr:@remix-kbn/assets-deno@^0.8.0",
     "@remix-kbn/ssg": "jsr:@remix-kbn/ssg@^0.10.0",
     "@kuboon/md": "jsr:@kuboon/md@^0.4.0",
-    "@kuboon/share-element": "jsr:@kuboon/share-element@^0.3.0",
+    "@kuboon/share-element": "jsr:@kuboon/share-element@^0.4.0",
     "@std/front-matter": "jsr:@std/front-matter@^1.0.9",
     "canvaskit-wasm": "npm:canvaskit-wasm@^0.40.0"
   },

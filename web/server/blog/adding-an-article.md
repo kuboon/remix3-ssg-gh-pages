@@ -28,7 +28,7 @@ without asking anyone.
 What the generator sees is a `Response`, the same as for every other page:
 `router.ts` maps the blog's routes to that module and never learns that Markdown
 was involved. The listing places no islands, so it ships no JavaScript at all;
-an article places one — its share button — and so loads the client runtime.
+an article places one — its share row — and so loads the client runtime.
 
 ## Authoring tips
 

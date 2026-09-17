@@ -137,7 +137,7 @@ web/
       counter.tsx    # a hydrated island, and its own browser entrypoint
       total.tsx      # a second island/entrypoint, sharing state with it
       store.ts       # the module both islands import — the shared singleton
-      share.tsx      # the article share button — a custom element, wrapped
+      share.tsx      # the article share row — a custom element, wrapped
       viewport-probe.tsx   # fullscreen demo — delete me
       fullscreen-demo.tsx  # fullscreen demo — delete me
     static/
@@ -466,31 +466,22 @@ instead of thirty-eight.
 
 ### A custom element inside an island
 
-`client/islands/share.tsx` is the share button under every article, and the only
-place on this site where a Remix island wraps something that is not a Remix
-component: `<share-dialog>`, from
-[`@kuboon/share-element`](https://jsr.io/@kuboon/share-element). Remix renders
-and hydrates the button; the package owns the panel — its X / LINE / Threads
-buttons, the native share sheet where `navigator.share` exists, and the copy-URL
-fallback where it does not.
+`client/islands/share.tsx` is the line under every article, and the only place on
+this site where a Remix island wraps something that is not a Remix component:
+`<share-buttons>`, from
+[`@kuboon/share-element`](https://jsr.io/@kuboon/share-element). Everything about
+the buttons is the package's — X, LINE and Threads, the copy-URL button, and the
+native share sheet where one exists. Everything about _where they go_ is this
+site's, and that is the whole of what the island writes: a line, a label, and the
+tag.
 
-Three things make that work, and each is a decision worth knowing about.
+Three things are worth knowing about.
 
 **The import is safe on the server.** The package registers the element wherever
 there is a DOM and does nothing anywhere else, so the island can import it at the
 top like any other module even though the build evaluates the file in Deno. On
-the server `<share-dialog>` is just a tag and the panel is written out empty; in
+the server `<share-buttons>` is just a tag and the row is written out empty; in
 the browser the registration upgrades it and it fills itself in.
-
-**The tag is declared, not constructed.** The package also exports
-`createShareDialog()`, and it is not used here. As of 0.1.0 the element's
-constructor adds the panel's class, `hidden` attribute and children, which a
-custom element constructor may not do — `document.createElement()` refuses it
-(`NotSupportedError: The result must not have attributes`) and returns a
-`<share-dialog>` that never upgraded, so `.open()` throws. An element the HTML
-parser made upgrades through a path that does not check, and works. Writing the
-tag in the markup is therefore both the documented declarative usage and the one
-that runs.
 
 **The tag needs a type.** `JSX.IntrinsicElements` has no catch-all for
 hyphenated names, so the island augments it:
@@ -499,20 +490,27 @@ hyphenated names, so the island augments it:
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      "share-dialog": HostProps<ShareDialogElement>;
+      "share-buttons": HostProps<ShareButtonsElement>;
     }
   }
 }
 ```
 
-Naming the package's own element interface there is what makes the `ref` mixin
-hand back something with `.open()` on it, rather than a bare `Element`.
+Naming the package's own element interface there is what makes `url` and `show`
+checked like any other prop rather than accepted as an `any`.
 
-What it shares is `location.href`, read at the click. That is the one form of an
-article's address that is right at the domain root, under a repo sub-path and on
-a PR preview alike, with no origin for the server to work out.
+**Nothing here passes a URL.** An empty `<share-buttons>` shares the page it is
+on, read at the moment of the click — the one form of an article's address that
+is right at the domain root, under a repo sub-path and on a PR preview alike, and
+still right after a frame navigation, which is how this site moves between pages.
 
-The panel's own styling is in `static/app.css` rather than in a `css(...)`
+The row sits inline rather than behind a "Share" button because the package
+collapses to the native share sheet alone on a touch device that has one: on a
+phone this is a single button, and a single button behind another button is two
+taps to reach one. On a desktop it is the five that are actually worth having
+there.
+
+The buttons' own colors are in `static/app.css` rather than in a `css(...)`
 mixin, for a reason that is in the comment there: the package ships its defaults
 as an unlayered `<style>`, and unlayered CSS outranks every `@layer` whatever
 the specificity — so a rule in `app` would lose to a `:where()` selector.

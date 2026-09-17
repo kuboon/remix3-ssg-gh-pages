@@ -186,7 +186,7 @@ export const blogController = createController(routes.blog, {
           title: `${article.title} — remix-ssg`,
           description: article.summary,
           image: articleImages.get(article.slug) ?? null,
-          // The article screen places one island — its share button — so it needs the runtime.
+          // The article screen places one island — its share row — so it needs the runtime.
           // `router.ts` reads `hydrate` off a page module for this; a controller says it here,
           // because it builds the `Layout` call itself.
           script: clientRuntime,

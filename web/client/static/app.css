@@ -135,53 +135,30 @@
 }
 
 /*
- * The share panel — `<share-dialog>`, from @kuboon/share-element, opened by the button under each
+ * The share buttons — `<share-buttons>`, from @kuboon/share-element, on the line under each
  * article. See `client/islands/share.tsx` for the other half.
  *
  * It renders in light DOM with `:where(...)` defaults exactly so a page can restyle it, and this
- * is a page doing that: the tokens above, so the panel follows the site into dark mode, and
- * `position: fixed`, because the package deliberately has no opinion on where a panel goes — it is
- * a `<div>` and not a `<dialog>`, with no top layer and no backdrop of its own.
+ * is a page doing that: the package's own borders and backgrounds are fixed light-mode greys, so
+ * without these three rules the buttons would stay white-on-white in dark mode. Nothing here
+ * touches layout or which buttons are shown — the row is a flex line and the collapse to the
+ * native share sheet on a touch device are both the package's, and both are what this site wants.
  *
  * Unlayered, and that is the part not to "tidy up" into `@layer app`. The package appends its
  * defaults as a plain `<style>` with no layer of its own, and unlayered CSS outranks every layer
- * whatever the specificity — so a rule in `app` loses to `:where(.share-dialog)` even though
- * `:where()` counts for nothing. Verified both ways in Chromium.
- *
- * Hiding is the package's own job and it does it — `.open()`/`.close()` toggle `hidden`, and its
- * defaults end with a `.share-dialog[hidden]` rule that outranks the `display: block` above it.
- * (It did not in 0.1.0, which is why this block briefly carried that rule itself.) So nothing
- * below touches `display`.
+ * whatever the specificity — so a rule in `app` loses to `:where(.share-buttons__button)` even
+ * though `:where()` counts for nothing. Verified both ways in Chromium.
  */
 
-.share-dialog {
-  position: fixed;
-  z-index: 10;
-  inset-block-end: 1rem;
-  inset-inline: 1rem;
-  /* End-aligned where there is room, and the full gutter where there is not. */
-  margin-inline-start: auto;
-  max-width: min(24rem, calc(100vw - 2rem));
-  border-color: var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-  color: var(--fg);
-  box-shadow: 0 1rem 2.5rem rgb(0 0 0 / 0.25);
-}
-
-.share-dialog__button {
+.share-buttons__button {
   border-color: var(--border);
   border-radius: var(--radius-md);
   background: var(--bg);
   color: var(--fg);
 }
 
-.share-dialog__button:hover {
+.share-buttons__button:hover {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--bg);
-}
-
-.share-dialog__close {
-  color: var(--muted);
 }

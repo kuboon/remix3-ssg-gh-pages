@@ -54,9 +54,9 @@ What you keep is the two `deno.json` members and everything wiring them:
 `web/client/{routes,base,tokens,theme,hydration}.ts`, `web/client/layout.tsx`,
 `web/client/static/`, `web/client/pages/blog/`, `web/client/islands/share.tsx`,
 `web/server/{router,assets,runtime}.ts`, `web/server/blog/mod.ts`,
-`web/server/og/`, and the workflows. `share.tsx` is the share button under each
-article — [`@kuboon/share-element`](https://jsr.io/@kuboon/share-element) driven
-from a Remix island — so it goes when the blog does, and not before.
+`web/server/og/`, and the workflows. `share.tsx` is the share row under each
+article — [`@kuboon/share-element`](https://jsr.io/@kuboon/share-element) placed
+by a Remix island — so it goes when the blog does, and not before.
 `web/client/tokens.ts` and `web/client/theme.ts` are where the site's look lives
 — Remix supplies behaviour and a little component styling, not a theme, so the
 palette, spacing and typography are the app's. Change them there and the whole

@@ -5,14 +5,14 @@
  * `proseStyle`, which is the one mixin that reaches into markup it did not write.
  *
  * It is also the only screen on this site that hydrates without being a demo of hydration: the
- * share button under the body is an island, so an article ships the client runtime and that one
+ * share row under the body is an island, so an article ships the client runtime and that one
  * entrypoint. The blog listing next door is the page to look at for what a screen with no island
  * ships, which is nothing.
  */
 
 import { css, type RemixNode } from "@remix-run/ui";
 
-import { ShareButton } from "../../islands/share.tsx";
+import { ShareRow } from "../../islands/share.tsx";
 import { routes } from "../../routes.ts";
 import { metaStyle, proseStyle } from "../../theme.ts";
 
@@ -43,7 +43,7 @@ export default function BlogArticle(props: ArticleProps): RemixNode {
       {body}
       <div mix={footerRowStyle}>
         <a href={routes.blog.index.href()}>← All posts</a>
-        <ShareButton label="Share this post" text={article.title} />
+        <ShareRow label="Share this post" />
       </div>
     </article>
   );
@@ -51,7 +51,7 @@ export default function BlogArticle(props: ArticleProps): RemixNode {
 
 // --- styles -----------------------------------------------------------------
 
-/** The line under the body: back to the listing on one side, the share button on the other. */
+/** The line under the body: back to the listing on one side, the share row on the other. */
 const footerRowStyle = css({
   display: "flex",
   flexWrap: "wrap",

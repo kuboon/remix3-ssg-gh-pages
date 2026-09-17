@@ -1,96 +1,74 @@
-import { clientEntry, css, on, ref } from "@remix-run/ui";
+import { clientEntry, css } from "@remix-run/ui";
 import type { Handle, HostProps } from "@remix-run/ui";
-import type { ShareDialogElement } from "@kuboon/share-element";
-// Imported for its side effect: this is what registers `<share-dialog>`.
+import type { ShareButtonsElement } from "@kuboon/share-element";
+// Imported for its side effect: this is what registers `<share-buttons>`.
 import "@kuboon/share-element";
 
-import { color, radius } from "../tokens.ts";
+import { color } from "../tokens.ts";
 
 /**
- * `<share-dialog>` is a custom element, so Remix's JSX has to be told the tag exists.
+ * `<share-buttons>` is a custom element, so Remix's JSX has to be told the tag exists.
  *
  * `IntrinsicElements` is where a host tag is declared, and it carries no catch-all for hyphenated
  * names — an undeclared one is a type error rather than an `any`. Typing it against the package's
- * own element interface is what makes `ref` below hand back something with `.open()` on it.
+ * own element interface is what makes `url` and `show` checked like any other prop.
  */
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      "share-dialog": HostProps<ShareDialogElement>;
+      "share-buttons": HostProps<ShareButtonsElement>;
     }
   }
 }
 
 /**
- * The article share button, and the one custom element on this site.
+ * The line under every article, and the one custom element on this site.
  *
  * [`@kuboon/share-element`](https://jsr.io/@kuboon/share-element) is a plain custom element rather
- * than a Remix component, so this island is the adapter between the two: Remix renders and hydrates
- * the button and the empty `<share-dialog>` beside it, and the button hands the element a URL.
- * Nothing about the panel is written here — the X / LINE / Threads buttons, the native share sheet
- * where `navigator.share` exists and the copy-URL fallback where it does not, are the package's.
+ * than a Remix component, so this island is the join between the two. Everything about the buttons
+ * is the package's — X, LINE and Threads, the copy-URL button, and the native share sheet where
+ * one exists. Everything about *where they go* is this site's, which is the whole of what is
+ * written here: a line, a label, and the tag.
  *
- * Importing the package at the top of this file is safe even though this module renders on the
- * server first: it registers the element wherever there is a DOM and does nothing anywhere else,
- * which is exactly the shape an SSG build needs. On the server the tag is just a tag, and the panel
- * arrives empty in the HTML; in the browser the registration upgrades it and it fills in.
+ * It sits inline rather than behind a "Share" button on purpose. The package collapses the row to
+ * the native share sheet alone on a touch device that has one, so on a phone this is a single
+ * button — and a single button behind another button is two taps to reach one. On a desktop it is
+ * the five that are actually worth having there.
  *
- * The tag is written in the markup rather than built with the package's own `createShareDialog()`
- * so that the panel is part of the page the server rendered rather than something the browser adds
- * afterwards — and so that Remix, which owns this subtree, is the one that puts it there.
+ * Nothing here passes a URL. An empty `<share-buttons>` shares the page it is on, read at the
+ * moment of the click, which is the one form of an article's address that is right at the domain
+ * root, under a repo sub-path and on a PR preview alike — and still right after a frame
+ * navigation, which is how this site moves between pages.
  *
- * The URL it shares is `location.href`, read at the moment of the click. That is the one form of
- * the article's address that is right everywhere this site is served from — the domain root, a
- * repo sub-path, a PR preview URL — without the server having to work out an origin it may not
- * know. `text` is display-only: the package shows it inside the panel and never sends it anywhere.
+ * Importing the package at the top is safe even though this module renders on the server first: it
+ * registers the element wherever there is a DOM and does nothing anywhere else, which is exactly
+ * the shape an SSG build needs. On the server the tag is just a tag and the row arrives empty in
+ * the HTML; in the browser the registration upgrades it and it fills in.
  *
- * The panel itself is styled by `static/app.css`, not from here — see the note at the end of that
- * file for why a `css(...)` mixin could not have done it.
+ * The buttons themselves are dressed by `static/app.css`, not from here — see the note at the end
+ * of that file for why a `css(...)` mixin could not have done it.
  */
-export const ShareButton = clientEntry(
+export const ShareRow = clientEntry(
   import.meta.url,
-  function ShareButton(handle: Handle<{ label: string; text: string }>) {
-    /**
-     * The panel, bound as the element is inserted.
-     *
-     * Undefined until then, and the click handler says so rather than asserting: an island's
-     * render runs on the server too, where there is no element to bind and no click to handle.
-     */
-    let dialog: ShareDialogElement | undefined;
-
+  function ShareRow(handle: Handle<{ label: string }>) {
     return () => (
-      <>
-        <button
-          type="button"
-          mix={[
-            shareButtonStyle,
-            on("click", () => {
-              dialog?.open({ url: location.href, text: handle.props.text });
-            }),
-          ]}
-        >
-          {handle.props.label}
-        </button>
-        <share-dialog
-          mix={ref((node) => {
-            dialog = node;
-          })}
-        />
-      </>
+      <div mix={rowStyle}>
+        <span mix={labelStyle}>{handle.props.label}</span>
+        <share-buttons />
+      </div>
     );
   },
 );
 
-/** The island's own CSS, in the island's own file — the button only; the panel is the package's. */
-const shareButtonStyle = css({
-  font: "inherit",
-  fontWeight: 600,
-  cursor: "pointer",
-  padding: "0.5rem 0.9rem",
-  border: `1px solid ${color.border}`,
-  borderRadius: radius.md,
-  background: color.card,
-  color: color.fg,
-  "&:hover": { borderColor: color.accent, color: color.accent },
-  "&:active": { transform: "translateY(1px)" },
+/** The island's own CSS, in the island's own file — the line, not the buttons. */
+const rowStyle = css({
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "center",
+  gap: "0.75rem",
+});
+
+const labelStyle = css({
+  color: color.muted,
+  fontSize: "0.9rem",
 });
