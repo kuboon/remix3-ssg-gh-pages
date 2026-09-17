@@ -133,3 +133,61 @@
     font-feature-settings: normal;
   }
 }
+
+/*
+ * The share panel — `<share-dialog>`, from @kuboon/share-element, opened by the button under each
+ * article. See `client/islands/share.tsx` for the other half.
+ *
+ * It renders in light DOM with `:where(...)` defaults exactly so a page can restyle it, and this
+ * is a page doing that: the tokens above, so the panel follows the site into dark mode, and
+ * `position: fixed`, because the package deliberately has no opinion on where a panel goes — it is
+ * a `<div>` and not a `<dialog>`, with no top layer and no backdrop of its own.
+ *
+ * Unlayered, and that is the part not to "tidy up" into `@layer app`. The package appends its
+ * defaults as a plain `<style>` with no layer of its own, and unlayered CSS outranks every layer
+ * whatever the specificity — so a rule in `app` loses to `:where(.share-dialog)` even though
+ * `:where()` counts for nothing. Verified both ways in Chromium.
+ *
+ * `[hidden]` is a workaround, not styling. `.open()`/`.close()` only toggle the `hidden`
+ * attribute, and the package's own `:where(.share-dialog) { display: block }` beats the UA
+ * stylesheet's `[hidden] { display: none }` — author origin outranks UA origin, specificity does
+ * not come into it — so as of 0.1.0 a closed panel is a visible panel. Upstream this is one line
+ * next to the rule that causes it (`:where(.share-dialog[hidden]) { display: none }`); delete this
+ * block's first rule once a release carries it.
+ */
+
+.share-dialog[hidden] {
+  display: none;
+}
+
+.share-dialog {
+  position: fixed;
+  z-index: 10;
+  inset-block-end: 1rem;
+  inset-inline: 1rem;
+  /* End-aligned where there is room, and the full gutter where there is not. */
+  margin-inline-start: auto;
+  max-width: min(24rem, calc(100vw - 2rem));
+  border-color: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--fg);
+  box-shadow: 0 1rem 2.5rem rgb(0 0 0 / 0.25);
+}
+
+.share-dialog__button {
+  border-color: var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.share-dialog__button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--bg);
+}
+
+.share-dialog__close {
+  color: var(--muted);
+}

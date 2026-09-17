@@ -12,7 +12,7 @@ YAML frontmatter above; the body is rendered to HTML by
 
 The page was produced by a handler this repository writes — `router.ts` — and
 written to disk as static HTML by
-[`@kuboon/remix-ssg`](https://jsr.io/@kuboon/remix-ssg). No client-side
+[`@remix-kbn/ssg`](https://jsr.io/@remix-kbn/ssg). No client-side
 JavaScript was required, and none was shipped: count the `<script>` tags on this
 page.
 

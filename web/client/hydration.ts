@@ -6,7 +6,7 @@
  * reaches here — `assets.ts` resolved it during render — so this hook is the whole of it.
  *
  * The shell loads this as a `<script type="module">` on any page that hydrates, and on no other:
- * an article places no client entry, so it ships no JavaScript at all.
+ * the blog listing places no client entry, so it ships no JavaScript at all.
  */
 
 import { run } from "@remix-run/ui";

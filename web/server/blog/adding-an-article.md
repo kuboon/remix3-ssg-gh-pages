@@ -21,13 +21,14 @@ site. A file nothing links to is served by the dev server and never written to
 `server/blog/mod.ts` is the whole of it: the frontmatter parser, the file reads,
 and the Markdown renderer. The two screens it hands the results to are in
 `client/pages/blog/`, where nothing may open a file. It belongs to this site,
-not to `@kuboon/remix-ssg` — which is what keeps `@kuboon/md` and the
+not to `@remix-kbn/ssg` — which is what keeps `@kuboon/md` and the
 frontmatter parser out of the generator, and what lets this site swap either
 without asking anyone.
 
 What the generator sees is a `Response`, the same as for every other page:
 `router.ts` maps the blog's routes to that module and never learns that Markdown
-was involved. An article places no islands, so it ships no JavaScript at all.
+was involved. The listing places no islands, so it ships no JavaScript at all;
+an article places one — its share button — and so loads the client runtime.
 
 ## Authoring tips
 
