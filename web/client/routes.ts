@@ -26,6 +26,14 @@ export const routes = route(base, {
   fullscreen: get("/fullscreen"),
   // Showcase: delete this route when you delete the showcase — see README.
   showcase: get("/showcase"),
+  // SPA demo: delete this route when you delete the demo — see README.
+  spa: route("spa", {
+    /**
+     * One view of the SPA demo. Three of these exist — `client/spa/panel.tsx` says which — and the
+     * build generates each as its own static file, reached by the links the page renders.
+     */
+    show: get("/:id"),
+  }),
   blog: route("blog", {
     index: get("/"),
     /**

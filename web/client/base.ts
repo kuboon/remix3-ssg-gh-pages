@@ -1,22 +1,72 @@
 /**
- * The deploy prefix, computed once.
+ * The deploy prefix, computed once — on both sides.
  *
- * The Pages workflow passes the full public URL in `BASE_URL`; locally it is unset and the site is
- * served from the root. Everything that emits a URL reads it from here — the routes, and through
- * them every page — which is why it sits in `client/` with them.
+ * Every URL the site emits carries this, and no output path does. The Pages workflow passes the
+ * full public URL in `BASE_URL`; locally it is unset and the site is served from the root.
  *
- * It reads the variable off `globalThis` rather than through `Deno.env` because nothing in
- * `client/` is type-checked with `deno.ns`: a file here may not name a runtime the browser does not
- * have. Nothing is lost by that. The prefix is a render-time value — by the time a browser sees a
- * page the prefix is already in its HTML — so a browser has no variable to read and no use for one.
+ * Where it comes from depends on who is asking, and that is the whole of this file:
+ *
+ * - **On the server**, from `BASE_URL`, read off `globalThis` rather than through `Deno.env`
+ *   because nothing in `client/` is type-checked with `deno.ns` — a file here may not name a
+ *   runtime the browser does not have.
+ * - **In the browser**, from the `<meta>` the shell writes, because there is no environment to
+ *   read and the prefix is not guessable from the URL: `/repo/preview/about` and `/about` are the
+ *   same page under two deploys.
+ *
+ * The browser used to have no reason to ask — a prefix is a render-time value, and by the time a
+ * page is on screen the prefix is already in its HTML. Client-side routing is what changed that:
+ * `client/spa/app.tsx` matches `location.pathname` against the same route patterns the server
+ * matches, and a router that thought the prefix was empty would fail to match every URL under a
+ * sub-path deploy. Which is every pull request preview.
+ *
+ * ## Why {@link normalizeBase} is spelled out here
+ *
+ * `@remix-kbn/ssg/site` exports this function, and importing it from there is what this file used
+ * to do. That entry point is the Deno half of the framework, though — the bundler, the file trees,
+ * the loader — so a browser module that reaches for it drags `node:fs`, `node:path` and a WebAssembly
+ * loader into the bundle, and the bundle then fails to load. It went unnoticed while nothing in a
+ * browser entrypoint imported `routes.ts`; the SPA demo's router does.
+ *
+ * Six lines of string handling is the cheaper of the two prices. `@remix-kbn/ssg` grows a `./base`
+ * subpath in its next release — these helpers and nothing else — and this can go back to importing
+ * them.
  */
 
-import { normalizeBase } from "@remix-kbn/ssg/site";
+/** The two runtimes this runs in: one has an environment, the other has a document. */
+type Host = {
+  Deno?: { env: { get(key: string): string | undefined } };
+  document?: {
+    querySelector(
+      selectors: string,
+    ): { getAttribute(name: string): string | null } | null;
+  };
+};
 
-/** The two runtimes this runs in: one has an environment, the other has none. */
-type MaybeDeno = { Deno?: { env: { get(key: string): string | undefined } } };
+/** The `<meta name>` the shell writes the prefix into, for the browser to read back. */
+export const BASE_META_NAME = "rmx-base";
+
+/**
+ * Turns a deploy URL or a bare prefix into a path prefix.
+ *
+ * A Pages workflow hands out a full URL; a person writing it by hand types `/repo`. Both arrive
+ * here and leave as `/repo`, and a root deploy leaves as `''`.
+ *
+ * @param value A full URL, a path prefix, or nothing
+ * @returns The prefix, without a trailing slash, or `''` for a root deploy
+ */
+function normalizeBase(value: string | undefined | null): string {
+  const raw = (value ?? "").trim();
+  if (raw === "") return "";
+
+  const prefix = /^https?:\/\//.test(raw) ? new URL(raw).pathname : raw;
+  const trimmed = prefix.replace(/^\/+/, "").replace(/\/+$/, "");
+  return trimmed === "" ? "" : `/${trimmed}`;
+}
 
 /** URL path prefix the site is mounted under, without a trailing slash (e.g. `''` or `/repo`). */
 export const base: string = normalizeBase(
-  (globalThis as unknown as MaybeDeno).Deno?.env.get("BASE_URL"),
+  (globalThis as Host).Deno?.env.get("BASE_URL") ??
+    (globalThis as Host).document
+      ?.querySelector(`meta[name="${BASE_META_NAME}"]`)
+      ?.getAttribute("content"),
 );

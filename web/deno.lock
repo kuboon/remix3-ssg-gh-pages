@@ -18,6 +18,7 @@
     "npm:@remix-run/fetch-router@~0.22.1": "0.22.1",
     "npm:@remix-run/render-middleware@~0.3.1": "0.3.1_@emnapi+core@1.11.2_@emnapi+runtime@1.11.2",
     "npm:@remix-run/response@~0.3.8": "0.3.9",
+    "npm:@remix-run/spa@~0.1.2": "0.1.2",
     "npm:@remix-run/ui@0.10": "0.10.0",
     "npm:@types/hast@^3.0.5": "3.0.5",
     "npm:@types/mdast@^4.0.4": "4.0.4",
@@ -647,6 +648,14 @@
     },
     "@remix-run/route-pattern@0.24.1": {
       "integrity": "sha512-HRee7tz2Ct7QdTQGDErHcVTAlXa5BBV6GOLEa/INw21ceTWTWlaU13FJupYVX0k1mh608rod880+SA5NlTPPfw=="
+    },
+    "@remix-run/spa@0.1.2": {
+      "integrity": "sha512-SENjl7/Qtd7PYMG7kkOCGwJCVj3Hm2QHy1sMp1MA3qvIUkMHN/2d1wrR1bwaZwpUbmSQGnl32uie1Q4gkcNNwA==",
+      "dependencies": [
+        "@remix-run/fetch-router",
+        "@remix-run/render-middleware",
+        "@remix-run/ui"
+      ]
     },
     "@remix-run/ui@0.10.0": {
       "integrity": "sha512-mdrreloyguRGQFj2Cl5go8HAGlsTVi8CllxR2NDOKunACUw5ywhJ4GB/1FT5fuyHzrBv++lbgaDpcDQQPgFqUw==",
@@ -1873,6 +1882,7 @@
       "jsr:@std/front-matter@^1.0.9",
       "npm:@remix-run/fetch-router@~0.22.1",
       "npm:@remix-run/render-middleware@~0.3.1",
+      "npm:@remix-run/spa@~0.1.2",
       "npm:@remix-run/ui@0.10",
       "npm:canvaskit-wasm@0.40"
     ]

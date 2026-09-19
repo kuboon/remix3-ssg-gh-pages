@@ -27,7 +27,8 @@ import { createFileTree, githubPages } from "@remix-kbn/ssg/site";
 import type { FileServerBehavior } from "@remix-kbn/ssg/site";
 
 import { assets, assetsPath } from "./assets.ts";
-import { clientRuntime } from "./runtime.ts";
+// `spaRuntime` is the SPA demo's — delete it from this import when you delete the demo.
+import { clientRuntime, spaRuntime } from "./runtime.ts";
 import { ogImage, ogPaths, serveOgImage } from "./og/mod.ts";
 import { base } from "../client/base.ts";
 import { Layout } from "../client/layout.tsx";
@@ -40,6 +41,8 @@ import * as Fullscreen from "../client/pages/fullscreen.tsx";
 import * as Home from "../client/pages/index.tsx";
 // Showcase: delete these two imports when you delete the showcase — see README.
 import * as Showcase from "../client/pages/showcase.tsx";
+// SPA demo: delete this import when you delete the demo — see README.
+import * as Spa from "../client/pages/spa.tsx";
 import { versions } from "./versions.ts";
 
 /** Deploy path prefix. The build strips it back off when writing, so output lands at the root. */
@@ -139,6 +142,47 @@ router.get(routes.showcase, (context) =>
       children: Showcase.default(versions()),
     }),
   ));
+
+// SPA demo: delete everything down to the next comment when you delete the demo — see README. It
+// has an action of its own because the view its `:id` names is handed to the screen rather than
+// read back out of the router, and because it loads a different script than every other page.
+const spaImages = new Map(
+  Spa.SPA_IDS.map((id) => [
+    id,
+    ogImage(routes.spa.show.href({ id }), {
+      title: Spa.titleFor(id),
+      description: Spa.description,
+    }),
+  ]),
+);
+
+router.get(routes.spa.show, (context) => {
+  const id = Spa.parseSpaId(context.params.id);
+  // A `404` for anything that is not one of the demo's views, which is what an unknown id is. The
+  // router in the browser answers the same URL the same way — see `client/spa/app.tsx`.
+  if (id === null) {
+    return new Response("Not Found", {
+      status: 404,
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    });
+  }
+
+  return context.render(
+    Layout({
+      title: Spa.titleFor(id),
+      description: Spa.description,
+      image: spaImages.get(id) ?? null,
+      // Not `clientRuntime`: this page starts a router rather than hydrating islands, and a
+      // document gets one runtime. See `client/spa/entry.ts`.
+      script: spaRuntime,
+      // The shell's links leave the client router's world, so they go to the browser.
+      documentLinks: true,
+      // What the build writes into the file. `run()` replaces it with its own first render as
+      // soon as the script loads, which is the takeover the screen reports.
+      children: Spa.default({ id, renderedBy: "server", navigations: 0 }),
+    }),
+  );
+});
 
 // The three directories, each under its own prefix. A wildcard route is all it takes to hand a
 // subtree to something that already serves one. `og/` is a directory only in the finished site —
