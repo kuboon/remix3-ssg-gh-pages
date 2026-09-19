@@ -27,7 +27,8 @@ import { createFileTree, githubPages } from "@remix-kbn/ssg/site";
 import type { FileServerBehavior } from "@remix-kbn/ssg/site";
 
 import { assets, assetsPath } from "./assets.ts";
-import { clientRuntime } from "./runtime.ts";
+// `spaRuntime` is the SPA demo's — delete it from this import when you delete the demo.
+import { clientRuntime, spaRuntime } from "./runtime.ts";
 import { ogImage, ogPaths, serveOgImage } from "./og/mod.ts";
 import { base } from "../client/base.ts";
 import { Layout } from "../client/layout.tsx";
@@ -40,9 +41,8 @@ import * as Fullscreen from "../client/pages/fullscreen.tsx";
 import * as Home from "../client/pages/index.tsx";
 // Showcase: delete these two imports when you delete the showcase — see README.
 import * as Showcase from "../client/pages/showcase.tsx";
-// SPA demo: delete these two imports when you delete the demo — see README.
+// SPA demo: delete this import when you delete the demo — see README.
 import * as Spa from "../client/pages/spa.tsx";
-import { parseSpaId, SPA_IDS, SpaPanel } from "../client/spa/panel.tsx";
 import { versions } from "./versions.ts";
 
 /** Deploy path prefix. The build strips it back off when writing, so output lands at the root. */
@@ -112,14 +112,6 @@ const staticFiles = await createFileTree({
  */
 const router = createRouter({ middleware: [render({ assets })] });
 
-/**
- * The header `@remix-run/render-middleware` marks a frame's sub-request with.
- *
- * SPA demo: delete this when you delete the demo — see README. A route only needs to know about it
- * when it serves a `<Frame>` whose source is the route's own URL, which is one route here.
- */
-const FRAME_HEADER = "X-Remix-Frame";
-
 /** The request context those middlewares produce — `context.render`, in practice. */
 export type AppContext = RouterContext<typeof router>;
 
@@ -152,10 +144,10 @@ router.get(routes.showcase, (context) =>
   ));
 
 // SPA demo: delete everything down to the next comment when you delete the demo — see README. It
-// has an action of its own because it answers two kinds of request at one URL, and because the view
-// its `:id` names is handed to the page rather than read back out of the router.
+// has an action of its own because the view its `:id` names is handed to the screen rather than
+// read back out of the router, and because it loads a different script than every other page.
 const spaImages = new Map(
-  SPA_IDS.map((id) => [
+  Spa.SPA_IDS.map((id) => [
     id,
     ogImage(routes.spa.show.href({ id }), {
       title: Spa.titleFor(id),
@@ -165,8 +157,9 @@ const spaImages = new Map(
 );
 
 router.get(routes.spa.show, (context) => {
-  const id = parseSpaId(context.params.id);
-  // A `404` for anything that is not one of the demo's views, which is what an unknown id is.
+  const id = Spa.parseSpaId(context.params.id);
+  // A `404` for anything that is not one of the demo's views, which is what an unknown id is. The
+  // router in the browser answers the same URL the same way — see `client/spa/app.tsx`.
   if (id === null) {
     return new Response("Not Found", {
       status: 404,
@@ -174,21 +167,19 @@ router.get(routes.spa.show, (context) => {
     });
   }
 
-  // A frame request wants the panel and nothing around it. Two callers send one: the browser, when
-  // JavaScript has not loaded the resolver that would have answered locally, and this very render —
-  // `<Frame src>` resolves by asking the router for its source, which is how the panel gets into
-  // the static HTML of each of the three URLs.
-  if (context.request.headers.get(FRAME_HEADER) === "true") {
-    return context.render(SpaPanel({ id, renderedBy: "server" }));
-  }
-
   return context.render(
     Layout({
       title: Spa.titleFor(id),
       description: Spa.description,
       image: spaImages.get(id) ?? null,
-      script: clientRuntime,
-      children: Spa.default(id),
+      // Not `clientRuntime`: this page starts a router rather than hydrating islands, and a
+      // document gets one runtime. See `client/spa/entry.ts`.
+      script: spaRuntime,
+      // The shell's links leave the client router's world, so they go to the browser.
+      documentLinks: true,
+      // What the build writes into the file. `run()` replaces it with its own first render as
+      // soon as the script loads, which is the takeover the screen reports.
+      children: Spa.default({ id, renderedBy: "server", navigations: 0 }),
     }),
   );
 });

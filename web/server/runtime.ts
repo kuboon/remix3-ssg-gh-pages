@@ -25,3 +25,20 @@ export const clientRuntime: ClientRuntime = {
   src: entry.href,
   preloads: entry.preloads,
 };
+
+/**
+ * The same, for the SPA demo's entrypoint.
+ *
+ * SPA demo: delete this when you delete the demo — see README.
+ *
+ * It is a second script rather than a flag on the first because the two start different runtimes
+ * and a document gets one: `hydration.ts` hydrates islands, `spa/entry.ts` hands the runtime a
+ * router. A page loads whichever it needs, and never both.
+ */
+const spaEntry = await assets.getScriptEntry("spa/entry.ts");
+
+/** The `<script type="module">` the SPA demo's pages load. */
+export const spaRuntime: ClientRuntime = {
+  src: spaEntry.href,
+  preloads: spaEntry.preloads,
+};

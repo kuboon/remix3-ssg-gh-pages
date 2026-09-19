@@ -1,60 +1,113 @@
 /**
- * Client-side routing inside a statically generated site.
+ * A `@remix-run/spa` application, inside a statically generated site.
  *
  * DELETE ME in a repository made from this template: this page, `client/spa/`, its route in
- * `routes.ts`, its import and action in `server/router.ts`, the frame resolver in `hydration.ts`,
- * and the nav link in `layout.tsx`. See the root README.
+ * `routes.ts`, its import and action in `server/router.ts`, its entrypoint in `server/assets.ts`,
+ * `spaRuntime` in `server/runtime.ts`, the `documentLinks` prop in `layout.tsx`, and the nav link
+ * in the shell. See the root README.
  *
- * The question it answers is the one a static site raises the moment it has more than one page: the
- * default here is a *soft* navigation — the runtime fetches the next page's HTML and swaps the
- * document — which is already fast, and is what every other link on this site does. What it is not
- * is client-side routing: the markup still comes from a request.
+ * The question it answers is the one a static site raises the moment it has more than one page. The
+ * default here is already a *soft* navigation — the runtime intercepts the click, fetches the
+ * destination's HTML and reconciles it into the open document — which is fast and costs no code.
+ * What it is not is client-side routing: the markup still comes from a request.
  *
- * So this page is the smaller thing underneath: one named `<Frame>`, three links that target it,
- * and a resolver in the browser that answers with a component tree instead of a fetch. The page
- * around the frame is untouched by a view change; only the panel is replaced.
+ * `@remix-run/spa` is the step underneath. `client/spa/app.tsx` is an ordinary fetch router that
+ * happens to run in the browser: same `routes.ts`, same matcher, same `Request` in and `Response`
+ * out — only the response carries a component tree instead of a body, and `run()` dispatches
+ * navigations through it rather than over the network.
  *
- * It stays a real part of the static site throughout. Each of the three URLs is server-rendered
- * with its panel already in it, so a cold open or a reload is a static file and not a spinner, and
- * the three `<a href>`s below are what the build's crawler reads to find out that those URLs exist.
- * That last part is the reason the links are anchors with real hrefs: a crawler reads HTML, it does
- * not run the page, so a route reachable only through client code would never be generated.
+ * Two consequences are worth knowing before copying this, and both are visible on the page:
+ *
+ * - `run()` owns the whole of `<body>`. It clears it and renders the router's output, which is why
+ *   the shell is rendered by the client router too (see `Shell` in `layout.tsx`) and why links out
+ *   of the app are marked `data-rmx-document`.
+ * - `<head>` stays the server's. Each of the three URLs is still generated with its own title,
+ *   description and social card, because that is what a crawler and a link preview read.
+ *
+ * And it stays a real part of the static site: each URL is server-rendered with its screen already
+ * in it, so a cold open is a file and not a spinner, and the three `<a href>`s below are what the
+ * build's crawler reads to learn those URLs exist. The build never runs the router.
  */
 
-import { css, Frame, link, type RemixNode } from "@remix-run/ui";
+import { css, type RemixNode } from "@remix-run/ui";
 
 import { routes } from "../routes.ts";
-import { SPA_FRAME } from "../spa/frame.ts";
-import { SPA_IDS, spaHeading, type SpaId } from "../spa/panel.tsx";
 import { color, radius } from "../tokens.ts";
+
+/** The demo's three views. The URL for each is `/spa/<id>`. */
+export const SPA_IDS = ["1", "2", "3"] as const;
+
+/** One of {@link SPA_IDS}. */
+export type SpaId = typeof SPA_IDS[number];
 
 export const title = "Client-side routing — remix-ssg";
 export const description =
-  "Three URLs served as static HTML, swapped in the browser with no request: " +
-  "one named frame, a resolver that returns components instead of fetching, " +
-  "and links the build's crawler can still read.";
+  "A @remix-run/spa router running in the browser, over three URLs that are " +
+  "still generated as static HTML: same routes.ts, same matcher, no request " +
+  "on navigation.";
 
-/** The page holds a frame the runtime drives, so the shell boots the runtime for it. */
+/** This page boots a client router rather than islands — see `server/router.ts`. */
 export const hydrate = true;
+
+/**
+ * Narrows a URL segment to one of the demo's views.
+ *
+ * The parameter is typed as possibly missing because that is how a matched route param reaches an
+ * action, and anything that is not one of the three is not a view of this demo.
+ *
+ * @param value The `:id` segment, as the router matched it
+ * @returns The view, or `null` when there is no such view
+ */
+export function parseSpaId(value: string | undefined): SpaId | null {
+  return (SPA_IDS as readonly string[]).includes(value ?? "")
+    ? value as SpaId
+    : null;
+}
 
 /** The `<title>` for one view, so each of the three URLs is its own page. */
 export function titleFor(id: SpaId): string {
-  return `${spaHeading(id)} — SPA — remix-ssg`;
+  return `${views[id].heading} — SPA — remix-ssg`;
+}
+
+/** What the screen is handed. */
+export interface SpaPageProps {
+  /** The view the URL names. */
+  id: SpaId;
+  /**
+   * Which router produced this render.
+   *
+   * `"server"` is what the build writes into the static file — view source and that is what is
+   * there. It is replaced the moment `run()` starts, because a `@remix-run/spa` app renders its
+   * first route itself; so on screen this is always `"browser"`, and the difference is visible
+   * with JavaScript off or in `curl`.
+   */
+  renderedBy: "server" | "browser";
+  /**
+   * How many navigations the browser's router has answered in this document.
+   *
+   * Zero on the render that takes over from the server — nothing has been navigated yet, the
+   * reader is still on the URL they opened. Every click after that is one more, and a reload
+   * starts a new document and puts it back to zero. That is the demo's evidence, and it is a prop
+   * rather than a lookup so the screen stays a function of its arguments.
+   */
+  navigations: number;
 }
 
 /**
- * The page around the frame.
+ * The demo's screen: the same tree the server writes into the static file and the browser's router
+ * renders on every navigation.
  *
- * @param current The view the URL names — the frame's initial source
- * @returns The page body
+ * @param props The view to show, and the router's dispatch count
+ * @returns The page body, for the shell to wrap
  */
-export default function SpaPage(current: SpaId): RemixNode {
+export default function SpaPage(props: SpaPageProps): RemixNode {
+  const view = views[props.id];
+
   return (
     <>
       <h1>Client-side routing</h1>
       <p mix={leadStyle}>
-        Three URLs, one frame. The panel below is replaced in the browser
-        without a request going out, and each of the three is still its own
+        Three URLs, one router — running in the browser. Each is still its own
         static file.
       </p>
 
@@ -62,32 +115,112 @@ export default function SpaPage(current: SpaId): RemixNode {
         {SPA_IDS.map((id) => (
           <a
             key={id}
-            mix={[
-              tabStyle,
-              // `link()` on an anchor is the attributes and nothing else: the `href` stays a real
-              // one, and `data-rmx-target` is what sends the navigation to the frame below rather
-              // than to the document. Before the runtime loads — and for the build's crawler —
-              // this is an ordinary link to an ordinary page.
-              link(routes.spa.show.href({ id }), { target: SPA_FRAME }),
-            ]}
-            aria-current={id === current ? "page" : undefined}
+            mix={tabStyle}
+            // An ordinary link with an ordinary href. That is what the runtime intercepts and
+            // hands to the browser's router, what the build's crawler reads to find the other two
+            // views, and what works when neither has loaded.
+            href={routes.spa.show.href({ id })}
+            aria-current={id === props.id ? "page" : undefined}
           >
             View {id}
           </a>
         ))}
       </nav>
 
-      {
-        /*
-        The frame's initial content is not written here. The runtime resolves `src` when the page
-        renders — on the server that is a sub-request the action answers with the panel alone (see
-        `server/router.ts`), and in the browser it is the resolver in `hydration.ts`.
-      */
-      }
-      <Frame name={SPA_FRAME} src={routes.spa.show.href({ id: current })} />
+      <p mix={counterStyle}>
+        {props.renderedBy === "server"
+          ? "server-rendered — the file the build wrote, before any JavaScript ran"
+          : props.navigations === 0
+          ? "the browser's router has taken over — no navigation yet"
+          : `${props.navigations} client-side navigation${
+            props.navigations === 1 ? "" : "s"
+          } — no request went out for any of them`}
+      </p>
+
+      <section mix={panelStyle}>
+        <h2 mix={headingStyle}>{view.heading}</h2>
+        {view.body}
+      </section>
     </>
   );
 }
+
+/** What each view says. The heading is also the page's title, so it is written once. */
+const views: Record<SpaId, { heading: string; body: RemixNode }> = {
+  "1": {
+    heading: "A fetch router in the browser",
+    body: (
+      <>
+        <p>
+          <code>client/spa/app.tsx</code> is a <code>createRouter()</code>{" "}
+          like the one in{" "}
+          <code>server/router.ts</code>: middleware, params, status codes, a
+          default handler. It maps <code>routes.spa.show</code>{" "}
+          — the same route object the server maps, from the same{" "}
+          <code>client/routes.ts</code>. Nothing here parses a URL by hand.
+        </p>
+        <p>
+          What <code>@remix-run/spa</code> adds is two functions.{" "}
+          <code>render()</code>{" "}
+          is middleware whose responses carry a component tree instead of a
+          body, and <code>run(router)</code>{" "}
+          points the Remix runtime at the router, so a navigation is dispatched
+          rather than fetched.
+        </p>
+      </>
+    ),
+  },
+  "2": {
+    heading: "run() owns the whole body",
+    body: (
+      <>
+        <p>
+          The counter above is the evidence: click between the views with the
+          network panel open and nothing goes out. The URL still changes, and
+          back and forward still work, because the runtime drives all of it
+          through the browser's Navigation API.
+        </p>
+        <p>
+          The part to know before copying this: <code>run()</code> renders into
+          {" "}
+          <code>&lt;body&gt;</code>{" "}
+          and clears what was there. So the site's shell — the header you are
+          looking at, and the footer — is rendered by this router too, through
+          the transform passed to <code>render()</code>. And its links carry
+          {" "}
+          <code>data-rmx-document</code>: without it a click on <em>Blog</em>
+          {" "}
+          would be routed by <em>this</em>{" "}
+          router, which has never heard of that URL.
+        </p>
+      </>
+    ),
+  },
+  "3": {
+    heading: "Still three static files",
+    body: (
+      <>
+        <p>
+          <code>/spa/1</code>, <code>/spa/2</code> and <code>/spa/3</code>{" "}
+          are each their own file in <code>web/dist</code>, screen and all.{" "}
+          <code>&lt;head&gt;</code>{" "}
+          stays the server's, so each carries its own title, description and
+          social card — which is what a crawler and a link preview read, neither
+          of them running the page.
+        </p>
+        <p>
+          The build finds those URLs the way it finds every other page: by
+          reading the three <code>&lt;a href&gt;</code>{" "}
+          above out of the rendered HTML. It never runs the router. That is the
+          constraint to carry into your own: a route reachable only through
+          client code is invisible to the build and will not be generated — link
+          to it with a real <code>href</code>, as this does, or name it in{" "}
+          <code>entryPoints</code>.
+        </p>
+      </>
+    ),
+  },
+};
 
 // --- styles -----------------------------------------------------------------
 
@@ -97,7 +230,7 @@ const tabsStyle = css({
   display: "flex",
   flexWrap: "wrap",
   gap: "0.5rem",
-  marginBlock: "1.5rem",
+  marginBlock: "1.5rem 1rem",
 });
 
 const tabStyle = css({
@@ -114,3 +247,23 @@ const tabStyle = css({
     fontWeight: 600,
   },
 });
+
+const counterStyle = css({
+  margin: "0 0 1.5rem",
+  padding: "0.35rem 0.7rem",
+  display: "inline-block",
+  borderRadius: radius.sm,
+  border: `1px solid ${color.border}`,
+  color: color.muted,
+  fontSize: "0.85rem",
+});
+
+const panelStyle = css({
+  padding: "1.25rem",
+  border: `1px solid ${color.border}`,
+  borderRadius: radius.lg,
+  background: color.card,
+  "& > :last-child": { marginBottom: 0 },
+});
+
+const headingStyle = css({ marginBlock: "0 1rem", fontSize: "1.3rem" });
