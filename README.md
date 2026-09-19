@@ -40,11 +40,21 @@ repository**:
 | `web/client/islands/{viewport-probe,fullscreen-demo}.tsx`                               | Its two islands                              |
 | the `fullscreen` route in `web/client/routes.ts` and its line in `web/server/router.ts` | What serves it                               |
 | the `Fullscreen` link in `web/client/layout.tsx`                                        | The nav entry pointing at it                 |
+| `web/client/pages/spa.tsx`, `web/client/spa/`                                           | The client-side-routing demo                 |
+| the `spa` branch in `web/client/hydration.ts`                                           | The frame resolver that routes it            |
+| the `spa` route in `web/client/routes.ts` and its action in `web/server/router.ts`      | What serves it                               |
+| the `SPA` link in `web/client/layout.tsx`                                               | The nav entry pointing at it                 |
 | `web/server/blog/*.md`, `web/client/pages/about.tsx`                                    | Placeholder content                          |
 
 Each wiring row above is marked at its line in the source, so
-`grep -rn "delete the showcase\|delete the demo" web` lists every edit the two
+`grep -rn "delete the showcase\|delete the demo" web` lists every edit the three
 demo pages ask for.
+
+The SPA demo is the one worth reading before deleting: it is where this template
+says what a static build can and cannot see. The build follows `<a href>`s out of
+rendered HTML and does not run your client code, so a route that only client-side
+routing knows about is never generated — link to it, or list it in `entryPoints`.
+`web/README.md` has the detail.
 
 `web/client/pages/index.tsx` and `web/client/islands/{counter,total,store}` are
 the two-islands-one-store demo. Delete those too once you have read the home

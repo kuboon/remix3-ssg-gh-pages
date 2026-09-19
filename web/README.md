@@ -130,9 +130,13 @@ web/
       about.tsx
       showcase.tsx
       fullscreen.tsx # the mobile-Safari demo — delete me
+      spa.tsx        # the client-side-routing demo — delete me
       blog/
         index.tsx    # the listing screen
         article.tsx  # the article screen
+    spa/             # the client-side-routing demo — delete me
+      frame.ts       # the frame's name, on its own so hydration.ts can import just that
+      panel.tsx      # the screen it swaps — rendered by the server and by the browser
     islands/
       counter.tsx    # a hydrated island, and its own browser entrypoint
       total.tsx      # a second island/entrypoint, sharing state with it
@@ -183,6 +187,43 @@ Helpers the demos share live in `client/islands/showcase/_lib/`. The underscore
 is decoration; what keeps them out of the entrypoints is the depth —
 `server/assets.ts` globs `islands/showcase/*.tsx`, and `_lib/` is a directory
 below that.
+
+## The client-side routing demo (delete me)
+
+`client/pages/spa.tsx` and `client/spa/` are three URLs — `/spa/1`, `/spa/2`,
+`/spa/3` — that swap in the browser without a request going out. The root README
+lists it among the things to delete in a repository made from this template.
+
+It exists because the default on this site is one step short of that. Every link
+here is already a _soft_ navigation: the runtime intercepts the click, fetches
+the destination's HTML and reconciles it into the open document. Fast, and no
+code to write — but the markup still comes from a request. Client-side routing
+is the smaller thing underneath, and it is three pieces:
+
+- `client/pages/spa.tsx` renders a named `<Frame>` and three links that carry
+  `data-rmx-target="spa"` (via the `link()` mixin), so a click reloads that frame
+  instead of swapping the document.
+- `client/hydration.ts` answers `run()`'s `resolveFrame` hook. For that frame's
+  name it returns a component tree; for everything else it does what Remix would
+  have done and fetches. Note that a `resolveFrame` _replaces_ the default rather
+  than layering over it, which is why the fetch is written out there.
+- `server/router.ts` serves each of the three URLs twice over: as a whole
+  document, and — when the request carries `X-Remix-Frame: true` — as the panel
+  alone. The second one is what `<Frame src>` resolves against while the page is
+  being rendered, which is how the panel ends up inside each static file.
+
+The last piece is what keeps it a static site rather than a client-rendered one.
+`deno task build` writes `spa/1.html`, `spa/2.html` and `spa/3.html`, each with
+its panel already in it, so a cold open or a reload is a file and not a spinner.
+And the build _finds_ those three URLs the ordinary way — by reading the three
+`<a href>`s out of the rendered HTML. It never runs the demo's client code.
+
+That is the constraint worth carrying into your own client-side routing: the
+crawler reads HTML, it does not execute it. A route reachable only through
+client code — a `navigate()` in a click handler, a path in a table the browser
+consults — is invisible to the build and will not be generated. Either link to
+it with a real `href`, as this demo does, or name it in `entryPoints` in
+`server/router.ts`, the way the social cards are.
 
 ## The mobile Safari demo (delete me)
 

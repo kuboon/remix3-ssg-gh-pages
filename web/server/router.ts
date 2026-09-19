@@ -40,6 +40,9 @@ import * as Fullscreen from "../client/pages/fullscreen.tsx";
 import * as Home from "../client/pages/index.tsx";
 // Showcase: delete these two imports when you delete the showcase — see README.
 import * as Showcase from "../client/pages/showcase.tsx";
+// SPA demo: delete these two imports when you delete the demo — see README.
+import * as Spa from "../client/pages/spa.tsx";
+import { parseSpaId, SPA_IDS, SpaPanel } from "../client/spa/panel.tsx";
 import { versions } from "./versions.ts";
 
 /** Deploy path prefix. The build strips it back off when writing, so output lands at the root. */
@@ -109,6 +112,14 @@ const staticFiles = await createFileTree({
  */
 const router = createRouter({ middleware: [render({ assets })] });
 
+/**
+ * The header `@remix-run/render-middleware` marks a frame's sub-request with.
+ *
+ * SPA demo: delete this when you delete the demo — see README. A route only needs to know about it
+ * when it serves a `<Frame>` whose source is the route's own URL, which is one route here.
+ */
+const FRAME_HEADER = "X-Remix-Frame";
+
 /** The request context those middlewares produce — `context.render`, in practice. */
 export type AppContext = RouterContext<typeof router>;
 
@@ -139,6 +150,48 @@ router.get(routes.showcase, (context) =>
       children: Showcase.default(versions()),
     }),
   ));
+
+// SPA demo: delete everything down to the next comment when you delete the demo — see README. It
+// has an action of its own because it answers two kinds of request at one URL, and because the view
+// its `:id` names is handed to the page rather than read back out of the router.
+const spaImages = new Map(
+  SPA_IDS.map((id) => [
+    id,
+    ogImage(routes.spa.show.href({ id }), {
+      title: Spa.titleFor(id),
+      description: Spa.description,
+    }),
+  ]),
+);
+
+router.get(routes.spa.show, (context) => {
+  const id = parseSpaId(context.params.id);
+  // A `404` for anything that is not one of the demo's views, which is what an unknown id is.
+  if (id === null) {
+    return new Response("Not Found", {
+      status: 404,
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    });
+  }
+
+  // A frame request wants the panel and nothing around it. Two callers send one: the browser, when
+  // JavaScript has not loaded the resolver that would have answered locally, and this very render —
+  // `<Frame src>` resolves by asking the router for its source, which is how the panel gets into
+  // the static HTML of each of the three URLs.
+  if (context.request.headers.get(FRAME_HEADER) === "true") {
+    return context.render(SpaPanel({ id, renderedBy: "server" }));
+  }
+
+  return context.render(
+    Layout({
+      title: Spa.titleFor(id),
+      description: Spa.description,
+      image: spaImages.get(id) ?? null,
+      script: clientRuntime,
+      children: Spa.default(id),
+    }),
+  );
+});
 
 // The three directories, each under its own prefix. A wildcard route is all it takes to hand a
 // subtree to something that already serves one. `og/` is a directory only in the finished site —

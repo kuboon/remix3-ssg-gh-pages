@@ -132,6 +132,8 @@ export function Layout(props: LayoutProps): RemixNode {
             <a href={routes.fullscreen.href()}>Fullscreen</a>
             {/* Showcase: delete this link when you delete the showcase — see README. */}
             <a href={routes.showcase.href()}>UI showcase</a>
+            {/* SPA demo: delete this link when you delete the demo — see README. */}
+            <a href={routes.spa.show.href({ id: "1" })}>SPA</a>
           </nav>
         </header>
         <main mix={[bandStyle, mainStyle]}>{props.children}</main>
