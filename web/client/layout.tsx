@@ -157,9 +157,14 @@ export interface ShellProps {
    * SPA demo: delete this prop when you delete the demo — see README.
    *
    * Every link here is a soft navigation by default, which is what the rest of the site wants. A
-   * page whose `<body>` belongs to a client router is the exception: the runtime would route a
-   * click on `Blog` through *that* router, which has never heard of `/blog`. `data-rmx-document`
-   * hands those navigations back to the browser.
+   * page whose `<body>` belongs to a client router is the exception, in both directions:
+   *
+   * - **Leaving it**, which is what this prop is for: the runtime would route a click on `Blog`
+   *   through *that* router, which has never heard of `/blog`.
+   * - **Entering it**, which the `SPA` link below handles on its own, because it has to be a
+   *   document load from every page rather than only from these.
+   *
+   * `data-rmx-document` hands the navigation back to the browser in both cases.
    */
   documentLinks?: boolean;
 }
@@ -207,11 +212,18 @@ export function Shell(props: ShellProps): RemixNode {
           <a href={routes.showcase.href()} data-rmx-document={document}>
             UI showcase
           </a>
-          {/* SPA demo: delete this link when you delete the demo — see README. */}
-          <a
-            href={routes.spa.show.href({ id: "1" })}
-            data-rmx-document={document}
-          >
+          {
+            /*
+            SPA demo: delete this link when you delete the demo — see README.
+
+            Always a document navigation, on every page — not just on the ones `documentLinks`
+            covers. A document gets one runtime, and this link leads to the page that boots the
+            other one: reached by a soft navigation, the demo's `run()` would arrive in a document
+            `hydration.ts` already owns, never take over, and leave every link on it loading pages
+            the slow way. Entering a page that starts a different runtime is a document load.
+          */
+          }
+          <a href={routes.spa.show.href({ id: "1" })} data-rmx-document="">
             SPA
           </a>
         </nav>

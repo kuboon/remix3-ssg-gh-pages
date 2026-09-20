@@ -16,11 +16,16 @@
  * out — only the response carries a component tree instead of a body, and `run()` dispatches
  * navigations through it rather than over the network.
  *
- * Two consequences are worth knowing before copying this, and both are visible on the page:
+ * Three consequences are worth knowing before copying this, and they are all visible on the page:
  *
  * - `run()` owns the whole of `<body>`. It clears it and renders the router's output, which is why
  *   the shell is rendered by the client router too (see `Shell` in `layout.tsx`) and why links out
  *   of the app are marked `data-rmx-document`.
+ * - A document gets one runtime, and the first one to start keeps it — so links *into* this page
+ *   are document loads as well, from every page on the site. Reached by a soft navigation, this
+ *   router would arrive in a document `hydration.ts` already owns, never take over, and leave
+ *   every link here fetching whole pages. That is a real bug this demo shipped with, found by
+ *   clicking through from the home page rather than opening `/spa/1` directly.
  * - `<head>` stays the server's. Each of the three URLs is still generated with its own title,
  *   description and social card, because that is what a crawler and a link preview read.
  *
@@ -192,6 +197,18 @@ const views: Record<SpaId, { heading: string; body: RemixNode }> = {
           {" "}
           would be routed by <em>this</em>{" "}
           router, which has never heard of that URL.
+        </p>
+        <p>
+          The same rule runs the other way, and that half is easier to miss: the
+          {" "}
+          <em>SPA</em>{" "}
+          link in the header is a document load from every page on this site. A
+          document gets one runtime and the first one to start keeps it, so
+          arriving here by a soft navigation would drop this router into a
+          document <code>hydration.ts</code> already owns — <code>run()</code>
+          {" "}
+          would never take over, and every link on this page would quietly go
+          back to fetching whole pages. This demo shipped with exactly that bug.
         </p>
       </>
     ),

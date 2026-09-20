@@ -224,14 +224,25 @@ transform wraps every route's node in it. And the shell's links carry
 `data-rmx-document` on these pages: without it a click on `Blog` would be routed
 by the client router, which has never heard of `/blog`.
 
-**A document gets one runtime.** `hydration.ts` calls `@remix-run/ui`'s `run()`
-with a `loadModule` and hydrates islands; `@remix-run/spa`'s `run()` wires a
-router instead, and its `loadModule` throws — an SPA response carries a node,
-not a client entry. They never share a page, so the demo has its own entrypoint
-in `server/assets.ts` and its own `ClientRuntime` in `server/runtime.ts`, and
-`server/router.ts` sends it to these URLs and `hydration.ts` to every other one.
-The `@remix-run/ui` runtime they both pull in is still emitted once, into a
-chunk they share.
+**A document gets one runtime, and the first one to start keeps it.**
+`hydration.ts` calls `@remix-run/ui`'s `run()` with a `loadModule` and hydrates
+islands; `@remix-run/spa`'s `run()` wires a router instead, and its `loadModule`
+throws — an SPA response carries a node, not a client entry. They never share a
+page, so the demo has its own entrypoint in `server/assets.ts` and its own
+`ClientRuntime` in `server/runtime.ts`, and `server/router.ts` sends it to these
+URLs and `hydration.ts` to every other one. The `@remix-run/ui` runtime they
+both pull in is still emitted once, into a chunk they share.
+
+The consequence that bites is about _entering_ the page. The shell's `SPA` link
+carries `data-rmx-document` on every page of the site, not just on the ones
+`documentLinks` covers, because a soft navigation into `/spa/1` reconciles the
+new markup into the document that is already running `hydration.ts` — the
+demo's `run()` arrives too late, never takes over, and every link on the page
+falls back to fetching whole pages. The symptom is subtle: open `/spa/1`
+directly and the demo works; reach it from the home page and it quietly does
+not. This template shipped with that bug; the fix is one attribute, and the rule
+behind it is that a page which starts a different runtime is entered by a
+document load.
 
 ### What it does not change
 
