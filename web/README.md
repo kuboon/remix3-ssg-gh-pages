@@ -258,12 +258,13 @@ it with a real `href`, as this demo does, or name it in `entryPoints` in
 Two things, both forced by the same fact: `client/routes.ts` is now compiled
 into a browser bundle, which it never was before.
 
-- **`client/base.ts` spells out `normalizeBase` instead of importing it.**
-  `@remix-kbn/ssg/site` is the Deno half of the framework — the bundler, the
-  file trees, the loader — so reaching for it from a module the browser gets
-  drags `node:fs`, `node:path` and a WebAssembly loader into the bundle, and the
-  bundle then fails to load. Nothing noticed while no browser entrypoint
-  imported `routes.ts`.
+- **`client/base.ts` imports `normalizeBase` from `@remix-kbn/ssg/base`, not
+  `/site`.** Both export it, but `/site` is the Deno half of that package — the
+  file trees, the loader, `node:path` — so reaching for it from a module the
+  browser gets pulls Node built-ins into the bundle, and the bundle then fails
+  to load. Nothing noticed while no browser entrypoint imported `routes.ts`.
+  `/base` is those three string functions and no imports at all; it exists
+  because this demo ran into exactly that.
 - **The shell writes the deploy prefix into a `<meta>`, and `client/base.ts`
   reads it there in the browser.** It used to read `BASE_URL` and nothing else,
   which is correct on the server and empty in a browser — fine while the prefix

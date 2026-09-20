@@ -19,18 +19,17 @@
  * matches, and a router that thought the prefix was empty would fail to match every URL under a
  * sub-path deploy. Which is every pull request preview.
  *
- * ## Why {@link normalizeBase} is spelled out here
+ * ## Why the import is `/base` and not `/site`
  *
- * `@remix-kbn/ssg/site` exports this function, and importing it from there is what this file used
- * to do. That entry point is the Deno half of the framework, though — the bundler, the file trees,
- * the loader — so a browser module that reaches for it drags `node:fs`, `node:path` and a WebAssembly
- * loader into the bundle, and the bundle then fails to load. It went unnoticed while nothing in a
- * browser entrypoint imported `routes.ts`; the SPA demo's router does.
- *
- * Six lines of string handling is the cheaper of the two prices. `@remix-kbn/ssg` grows a `./base`
- * subpath in its next release — these helpers and nothing else — and this can go back to importing
- * them.
+ * Both export `normalizeBase`, and `/site` is where the rest of this site gets its pieces. But
+ * `/site` is the Deno half of that package — the file trees, the loader, `node:path` — so a module
+ * the browser is given cannot reach for it without pulling Node built-ins into the bundle, and the
+ * bundle then fails to load. It went unnoticed while nothing in a browser entrypoint imported
+ * `routes.ts`; the SPA demo's router does. `/base` is those three string functions and no imports
+ * at all.
  */
+
+import { normalizeBase } from "@remix-kbn/ssg/base";
 
 /** The two runtimes this runs in: one has an environment, the other has a document. */
 type Host = {
@@ -44,24 +43,6 @@ type Host = {
 
 /** The `<meta name>` the shell writes the prefix into, for the browser to read back. */
 export const BASE_META_NAME = "rmx-base";
-
-/**
- * Turns a deploy URL or a bare prefix into a path prefix.
- *
- * A Pages workflow hands out a full URL; a person writing it by hand types `/repo`. Both arrive
- * here and leave as `/repo`, and a root deploy leaves as `''`.
- *
- * @param value A full URL, a path prefix, or nothing
- * @returns The prefix, without a trailing slash, or `''` for a root deploy
- */
-function normalizeBase(value: string | undefined | null): string {
-  const raw = (value ?? "").trim();
-  if (raw === "") return "";
-
-  const prefix = /^https?:\/\//.test(raw) ? new URL(raw).pathname : raw;
-  const trimmed = prefix.replace(/^\/+/, "").replace(/\/+$/, "");
-  return trimmed === "" ? "" : `/${trimmed}`;
-}
 
 /** URL path prefix the site is mounted under, without a trailing slash (e.g. `''` or `/repo`). */
 export const base: string = normalizeBase(

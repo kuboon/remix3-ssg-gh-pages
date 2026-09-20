@@ -57,9 +57,10 @@ HTML, and it is where this template says what a static build can and cannot see:
 the build follows `<a href>`s out of rendered HTML and never runs your client
 code, so a route that only client-side routing knows about is never generated.
 Link to it, or list it in `entryPoints`. `web/README.md` has the detail, and the
-two changes the demo forced on the rest of the site — `client/base.ts` no longer
-imports from `@remix-kbn/ssg/site`, and the shell publishes the deploy prefix in
-a `<meta>` so the browser's router can match URLs under a sub-path deploy.
+two changes the demo forced on the rest of the site — `client/base.ts` takes its
+prefix helper from `@remix-kbn/ssg/base` rather than `/site`, which cannot go in
+a browser bundle, and the shell publishes the deploy prefix in a `<meta>` so the
+browser's router can match URLs under a sub-path deploy.
 
 `web/client/pages/index.tsx` and `web/client/islands/{counter,total,store}` are
 the two-islands-one-store demo. Delete those too once you have read the home

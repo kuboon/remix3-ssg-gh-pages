@@ -24,7 +24,7 @@
  * cards and leaves the tag relative rather than inventing a host.
  */
 
-import { stripBase } from "@remix-kbn/ssg/site";
+import { stripBase } from "@remix-kbn/ssg/base";
 
 import { base } from "../../client/base.ts";
 import { type Card, renderCard } from "./card.ts";
