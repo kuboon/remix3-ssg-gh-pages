@@ -130,9 +130,13 @@ web/
       about.tsx
       showcase.tsx
       fullscreen.tsx # the mobile-Safari demo — delete me
+      spa.tsx        # the client-side-routing demo — delete me
       blog/
         index.tsx    # the listing screen
         article.tsx  # the article screen
+    spa/             # the client-side-routing demo — delete me
+      app.tsx        # the router that runs in the browser — @remix-run/spa
+      entry.ts       # its entrypoint: run(router), in place of hydration.ts
     islands/
       counter.tsx    # a hydrated island, and its own browser entrypoint
       total.tsx      # a second island/entrypoint, sharing state with it
@@ -147,7 +151,7 @@ web/
     deno.json        # lib: deno.ns — plus the tasks and their permission sets
     router.ts        # the wiring — routes to pages, plus the rest of the site
     assets.ts        # client/ compiled as one graph
-    runtime.ts       # where hydration.ts compiled to — router.ts and blog/ both read it
+    runtime.ts       # where hydration.ts and spa/entry.ts compiled to — router.ts reads both
     versions.ts      # the showcase's badges, read off the import map
     blog/
       mod.ts         # the articles, and both blog routes
@@ -183,6 +187,102 @@ Helpers the demos share live in `client/islands/showcase/_lib/`. The underscore
 is decoration; what keeps them out of the entrypoints is the depth —
 `server/assets.ts` globs `islands/showcase/*.tsx`, and `_lib/` is a directory
 below that.
+
+## The client-side routing demo (delete me)
+
+`client/pages/spa.tsx` and `client/spa/` are three URLs — `/spa/1`, `/spa/2`,
+`/spa/3` — routed in the browser by
+[`@remix-run/spa`](https://github.com/remix-run/remix/tree/main/packages/spa),
+and still generated as three static files. The root README lists it among the
+things to delete in a repository made from this template.
+
+It exists because the default on this site is one step short of that. Every link
+here is already a _soft_ navigation: the runtime intercepts the click, fetches
+the destination's HTML and reconciles it into the open document. Fast, and no
+code to write — but the markup still comes from a request.
+
+`@remix-run/spa` is the step underneath, and it is two functions:
+
+- `render()` is middleware for an ordinary `@remix-run/fetch-router` router. It
+  gives `context.render(node)`, and the response it makes carries a component
+  tree rather than a body.
+- `run(router)` points the Remix UI runtime at that router, so a navigation is
+  dispatched through it instead of fetched.
+
+So `client/spa/app.tsx` is a router like `server/router.ts` — middleware,
+params, status codes, a default handler — that happens to run in the browser. It
+maps `routes.spa.show`, the same route object the server maps, from the same
+`client/routes.ts`. That two routers answer the same URLs from one route table
+is the reason those routes live in a file of their own.
+
+### The two things to know before copying it
+
+**`run()` owns the whole of `<body>`.** It clears what is there and renders the
+router's output. So the site's shell is rendered by this router too — `Shell` in
+`layout.tsx` is split out of `Layout` for exactly that, and the middleware's
+transform wraps every route's node in it. And the shell's links carry
+`data-rmx-document` on these pages: without it a click on `Blog` would be routed
+by the client router, which has never heard of `/blog`.
+
+**A document gets one runtime, and the first one to start keeps it.**
+`hydration.ts` calls `@remix-run/ui`'s `run()` with a `loadModule` and hydrates
+islands; `@remix-run/spa`'s `run()` wires a router instead, and its `loadModule`
+throws — an SPA response carries a node, not a client entry. They never share a
+page, so the demo has its own entrypoint in `server/assets.ts` and its own
+`ClientRuntime` in `server/runtime.ts`, and `server/router.ts` sends it to these
+URLs and `hydration.ts` to every other one. The `@remix-run/ui` runtime they
+both pull in is still emitted once, into a chunk they share.
+
+The consequence that bites is about _entering_ the page. The shell's `SPA` link
+carries `data-rmx-document` on every page of the site, not just on the ones
+`documentLinks` covers, because a soft navigation into `/spa/1` reconciles the
+new markup into the document that is already running `hydration.ts` — the
+demo's `run()` arrives too late, never takes over, and every link on the page
+falls back to fetching whole pages. The symptom is subtle: open `/spa/1`
+directly and the demo works; reach it from the home page and it quietly does
+not. This template shipped with that bug; the fix is one attribute, and the rule
+behind it is that a page which starts a different runtime is entered by a
+document load.
+
+### What it does not change
+
+`<head>` stays the server's. Each of the three URLs is generated with its own
+title, description and social card, because that is what a crawler and a link
+preview read, and neither runs the page. The client router sets `document.title`
+itself on navigation, which is the one part it has to do by hand.
+
+And it stays a static site. `deno task build` writes `spa/1.html`, `spa/2.html`
+and `spa/3.html`, each with its screen already in it, so a cold open or a reload
+is a file and not a spinner. The build _finds_ those three URLs the ordinary
+way — by reading the three `<a href>`s out of the rendered HTML. It never runs
+the router.
+
+That is the constraint worth carrying into your own client-side routing: the
+crawler reads HTML, it does not execute it. A route reachable only through
+client code — a `navigate()` in a click handler, a path in a table the browser
+consults — is invisible to the build and will not be generated. Either link to
+it with a real `href`, as this demo does, or name it in `entryPoints` in
+`server/router.ts`, the way the social cards are.
+
+### What it changed in the rest of the site
+
+Two things, both forced by the same fact: `client/routes.ts` is now compiled
+into a browser bundle, which it never was before.
+
+- **`client/base.ts` imports `normalizeBase` from `@remix-kbn/ssg/base`, not
+  `/site`.** Both export it, but `/site` is the Deno half of that package — the
+  file trees, the loader, `node:path` — so reaching for it from a module the
+  browser gets pulls Node built-ins into the bundle, and the bundle then fails
+  to load. Nothing noticed while no browser entrypoint imported `routes.ts`.
+  `/base` is those three string functions and no imports at all; it exists
+  because this demo ran into exactly that.
+- **The shell writes the deploy prefix into a `<meta>`, and `client/base.ts`
+  reads it there in the browser.** It used to read `BASE_URL` and nothing else,
+  which is correct on the server and empty in a browser — fine while the prefix
+  was a render-time value, and wrong the moment a client router matches
+  `location.pathname` against patterns that carry it. A router that thought the
+  prefix was empty would fail to match every URL under a sub-path deploy, which
+  is every pull request preview.
 
 ## The mobile Safari demo (delete me)
 

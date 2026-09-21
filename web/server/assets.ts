@@ -36,6 +36,11 @@ export const assets = await createAssetServer({
     "islands/*.tsx",
     // Showcase: delete this line when you delete the showcase — see README.
     "islands/showcase/*.tsx",
+    // SPA demo: delete this line when you delete the demo — see README. It is an entrypoint of its
+    // own rather than an island because it starts a runtime instead of hydrating into one — see
+    // `client/spa/entry.ts`. The Remix UI runtime it shares with `hydration.ts` is still emitted
+    // once, into a chunk they both import.
+    "spa/entry.ts",
   ],
   basePath: assetsPath,
   mode: "bundle",

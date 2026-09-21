@@ -40,11 +40,27 @@ repository**:
 | `web/client/islands/{viewport-probe,fullscreen-demo}.tsx`                               | Its two islands                              |
 | the `fullscreen` route in `web/client/routes.ts` and its line in `web/server/router.ts` | What serves it                               |
 | the `Fullscreen` link in `web/client/layout.tsx`                                        | The nav entry pointing at it                 |
+| `web/client/pages/spa.tsx`, `web/client/spa/`                                           | The `@remix-run/spa` client-routing demo     |
+| the `spa/entry.ts` entrypoint in `web/server/assets.ts`, `spaRuntime` in `web/server/runtime.ts` | What compiles and serves its script |
+| the `spa` route in `web/client/routes.ts` and its action in `web/server/router.ts`      | What serves it                               |
+| the `SPA` link and the `documentLinks` prop in `web/client/layout.tsx`                  | The nav entry, and the links it opts out of  |
 | `web/server/blog/*.md`, `web/client/pages/about.tsx`                                    | Placeholder content                          |
 
 Each wiring row above is marked at its line in the source, so
-`grep -rn "delete the showcase\|delete the demo" web` lists every edit the two
+`grep -rn "delete the showcase\|delete the demo" web` lists every edit the three
 demo pages ask for.
+
+The SPA demo is the one worth reading before deleting. It is a real
+[`@remix-run/spa`](https://github.com/remix-run/remix/tree/main/packages/spa)
+router running in the browser over three URLs that are still generated as static
+HTML, and it is where this template says what a static build can and cannot see:
+the build follows `<a href>`s out of rendered HTML and never runs your client
+code, so a route that only client-side routing knows about is never generated.
+Link to it, or list it in `entryPoints`. `web/README.md` has the detail, and the
+two changes the demo forced on the rest of the site — `client/base.ts` takes its
+prefix helper from `@remix-kbn/ssg/base` rather than `/site`, which cannot go in
+a browser bundle, and the shell publishes the deploy prefix in a `<meta>` so the
+browser's router can match URLs under a sub-path deploy.
 
 `web/client/pages/index.tsx` and `web/client/islands/{counter,total,store}` are
 the two-islands-one-store demo. Delete those too once you have read the home

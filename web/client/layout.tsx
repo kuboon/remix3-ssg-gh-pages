@@ -33,7 +33,7 @@
 
 import { css, type RemixNode } from "@remix-run/ui";
 
-import { base } from "./base.ts";
+import { base, BASE_META_NAME } from "./base.ts";
 import { routes } from "./routes.ts";
 import { color, contentWidth } from "./tokens.ts";
 
@@ -73,6 +73,12 @@ export interface LayoutProps {
    * eighteen islands never hydrated: a page rendered fine, and nothing on it worked.
    */
   script: ClientRuntime | null;
+  /**
+   * Render the shell's links as document navigations — see {@link ShellProps.documentLinks}.
+   *
+   * SPA demo: delete this prop when you delete the demo — see README.
+   */
+  documentLinks?: boolean;
   children: RemixNode;
 }
 
@@ -115,6 +121,14 @@ export function Layout(props: LayoutProps): RemixNode {
             </>
           )
           : null}
+        {
+          /*
+          The deploy prefix, for the browser. It cannot work this out for itself — `/repo/about`
+          and `/about` are the same page under two deploys — and `client/spa/app.tsx` matches URLs
+          against route patterns that carry it. See `client/base.ts`.
+        */
+        }
+        <meta name={BASE_META_NAME} content={base} />
         <link rel="stylesheet" href={`${base}/static/app.css`} />
         <link rel="icon" href={`${base}/static/favicon.svg`} />
         {(props.script?.preloads ?? []).map((href) => (
@@ -122,31 +136,107 @@ export function Layout(props: LayoutProps): RemixNode {
         ))}
       </head>
       <body>
-        <header mix={[bandStyle, headerStyle]}>
-          <a mix={brandStyle} href={routes.home.href()}>remix-ssg</a>
-          <nav mix={navStyle}>
-            <a href={routes.home.href()}>Home</a>
-            <a href={routes.about.href()}>About</a>
-            <a href={routes.blog.index.href()}>Blog</a>
-            {/* Fullscreen demo: delete this link when you delete the demo — see README. */}
-            <a href={routes.fullscreen.href()}>Fullscreen</a>
-            {/* Showcase: delete this link when you delete the showcase — see README. */}
-            <a href={routes.showcase.href()}>UI showcase</a>
-          </nav>
-        </header>
-        <main mix={[bandStyle, mainStyle]}>{props.children}</main>
-        <footer mix={[bandStyle, footerStyle]}>
-          <p>
-            Built with{" "}
-            <a href="https://jsr.io/@remix-kbn/ssg">@remix-kbn/ssg</a> and{" "}
-            <a href="https://remix.run">Remix v3</a>.
-          </p>
-        </footer>
+        {Shell({
+          children: props.children,
+          documentLinks: props.documentLinks,
+        })}
         {props.script
           ? <script type="module" src={props.script.src}></script>
           : null}
       </body>
     </html>
+  );
+}
+
+/** What the shell wraps a page in. */
+export interface ShellProps {
+  children: RemixNode;
+  /**
+   * Render the shell's own links as document navigations.
+   *
+   * SPA demo: delete this prop when you delete the demo — see README.
+   *
+   * Every link here is a soft navigation by default, which is what the rest of the site wants. A
+   * page whose `<body>` belongs to a client router is the exception, in both directions:
+   *
+   * - **Leaving it**, which is what this prop is for: the runtime would route a click on `Blog`
+   *   through *that* router, which has never heard of `/blog`.
+   * - **Entering it**, which the `SPA` link below handles on its own, because it has to be a
+   *   document load from every page rather than only from these.
+   *
+   * `data-rmx-document` hands the navigation back to the browser in both cases.
+   */
+  documentLinks?: boolean;
+}
+
+/**
+ * Everything inside `<body>`: the header, the page, and the footer.
+ *
+ * Split out of {@link Layout} because it is rendered by two different things. The server renders it
+ * as part of the document; `client/spa/app.tsx` renders it again in the browser, because a
+ * `@remix-run/spa` router owns the whole of `<body>` and would otherwise replace the shell with
+ * nothing. Both call this, so there is one shell and not two that have to agree.
+ *
+ * `<head>` is deliberately not in here. It stays the server's — the title, the social card and the
+ * stylesheet are what a crawler and a link preview read, and neither runs the page.
+ *
+ * @param props The page to wrap, and how its links navigate
+ * @returns The body's contents
+ */
+export function Shell(props: ShellProps): RemixNode {
+  // `undefined` rather than `false`: an attribute set to "false" is still an attribute, and the
+  // runtime looks for its presence.
+  const document = props.documentLinks ? "" : undefined;
+
+  return (
+    <>
+      <header mix={[bandStyle, headerStyle]}>
+        <a
+          mix={brandStyle}
+          href={routes.home.href()}
+          data-rmx-document={document}
+        >
+          remix-ssg
+        </a>
+        <nav mix={navStyle}>
+          <a href={routes.home.href()} data-rmx-document={document}>Home</a>
+          <a href={routes.about.href()} data-rmx-document={document}>About</a>
+          <a href={routes.blog.index.href()} data-rmx-document={document}>
+            Blog
+          </a>
+          {/* Fullscreen demo: delete this link when you delete the demo — see README. */}
+          <a href={routes.fullscreen.href()} data-rmx-document={document}>
+            Fullscreen
+          </a>
+          {/* Showcase: delete this link when you delete the showcase — see README. */}
+          <a href={routes.showcase.href()} data-rmx-document={document}>
+            UI showcase
+          </a>
+          {
+            /*
+            SPA demo: delete this link when you delete the demo — see README.
+
+            Always a document navigation, on every page — not just on the ones `documentLinks`
+            covers. A document gets one runtime, and this link leads to the page that boots the
+            other one: reached by a soft navigation, the demo's `run()` would arrive in a document
+            `hydration.ts` already owns, never take over, and leave every link on it loading pages
+            the slow way. Entering a page that starts a different runtime is a document load.
+          */
+          }
+          <a href={routes.spa.show.href({ id: "1" })} data-rmx-document="">
+            SPA
+          </a>
+        </nav>
+      </header>
+      <main mix={[bandStyle, mainStyle]}>{props.children}</main>
+      <footer mix={[bandStyle, footerStyle]}>
+        <p>
+          Built with <a href="https://jsr.io/@remix-kbn/ssg">@remix-kbn/ssg</a>
+          {" "}
+          and <a href="https://remix.run">Remix v3</a>.
+        </p>
+      </footer>
+    </>
   );
 }
 
