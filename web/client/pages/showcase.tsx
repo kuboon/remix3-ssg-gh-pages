@@ -12,7 +12,7 @@
  * code-split chunks instead of carrying 18 copies of it.
  */
 
-import { css, type RemixNode } from "@remix-run/ui";
+import { css, type Handle, type RemixNode } from "@remix-run/ui";
 
 import { AccordionDemo } from "../islands/showcase/accordion.tsx";
 import { EntranceExitDemo } from "../islands/showcase/anim-entrance.tsx";
@@ -73,67 +73,63 @@ export interface Version {
 }
 
 /**
- * @param versions What to put in the badge strip — read from the import map by `server/versions.ts`
+ * @param handle What to put in the badge strip — read from the import map by `server/versions.ts`
  * @returns The showcase page
  */
 export default function ShowcasePage(
-  versions: readonly Version[],
-): RemixNode {
-  return (
+  handle: Handle<{ versions: readonly Version[] }>,
+) {
+  return () => (
     <div mix={pageStyle}>
       <div mix={containerStyle}>
-        {Hero(versions)}
+        <Hero versions={handle.props.versions} />
 
-        {Section({
-          id: "components",
-          eyebrow: "Components",
-          title: "Every first-party component in remix/ui",
-          description:
-            "Each card renders a real component from remix/ui. Use the controls below each preview to change its parameters live — the previews are hydrated Remix UI islands.",
-          children: (
-            <div mix={gridStyle}>
-              <ButtonsDemo />
-              <InputDemo />
-              <CheckboxDemo />
-              <RadioDemo />
-              <ToggleDemo />
-              <BreadcrumbsDemo />
-              <TabsDemo />
-              <AccordionDemo />
-              <MenuDemo />
-              <SelectDemo />
-              <ComboboxDemo />
-              <ListboxDemo />
-              <PopoverDemo />
-              <AnchorDemo />
-            </div>
-          ),
-        })}
+        <Section
+          id="components"
+          eyebrow="Components"
+          title="Every first-party component in remix/ui"
+          description="Each card renders a real component from remix/ui. Use the controls below each preview to change its parameters live — the previews are hydrated Remix UI islands."
+        >
+          <div mix={gridStyle}>
+            <ButtonsDemo />
+            <InputDemo />
+            <CheckboxDemo />
+            <RadioDemo />
+            <ToggleDemo />
+            <BreadcrumbsDemo />
+            <TabsDemo />
+            <AccordionDemo />
+            <MenuDemo />
+            <SelectDemo />
+            <ComboboxDemo />
+            <ListboxDemo />
+            <PopoverDemo />
+            <AnchorDemo />
+          </div>
+        </Section>
 
-        {Section({
-          id: "animation",
-          eyebrow: "Animation",
-          title: "The animation primitives, parameterised",
-          description:
-            "Spring, tween, entrance/exit, and layout helpers from remix/ui/animation. Tune the presets and curves and replay the motion in place.",
-          children: (
-            <div mix={gridStyle}>
-              <SpringDemo />
-              <TweenDemo />
-              <EntranceExitDemo />
-              <LayoutDemo />
-            </div>
-          ),
-        })}
+        <Section
+          id="animation"
+          eyebrow="Animation"
+          title="The animation primitives, parameterised"
+          description="Spring, tween, entrance/exit, and layout helpers from remix/ui/animation. Tune the presets and curves and replay the motion in place."
+        >
+          <div mix={gridStyle}>
+            <SpringDemo />
+            <TweenDemo />
+            <EntranceExitDemo />
+            <LayoutDemo />
+          </div>
+        </Section>
 
-        {Footer()}
+        <Footer />
       </div>
     </div>
   );
 }
 
-function Hero(versions: readonly Version[]) {
-  return (
+function Hero(handle: Handle<{ versions: readonly Version[] }>) {
+  return () => (
     <header mix={heroStyle}>
       <div mix={css({ display: "grid", gap: "18px" })}>
         <span mix={eyebrowChipStyle}>Remix 3 · remix/ui</span>
@@ -149,19 +145,19 @@ function Hero(versions: readonly Version[]) {
           aria-label="Jump to a demo"
           mix={css({ display: "grid", gap: "12px" })}
         >
-          {LinkRow("Components", componentLinks)}
-          {LinkRow("Animation", animationLinks)}
+          <LinkRow label="Components" links={componentLinks} />
+          <LinkRow label="Animation" links={animationLinks} />
         </nav>
-        {VersionStrip(versions)}
+        <VersionStrip versions={handle.props.versions} />
       </div>
     </header>
   );
 }
 
-function VersionStrip(versions: readonly Version[]) {
-  return (
+function VersionStrip(handle: Handle<{ versions: readonly Version[] }>) {
+  return () => (
     <dl aria-label="Package versions" mix={versionStripStyle}>
-      {versions.map((entry) => (
+      {handle.props.versions.map((entry) => (
         <div key={entry.label} mix={versionPillStyle}>
           <dt mix={versionLabelStyle}>{entry.label}</dt>
           <dd mix={versionValueStyle}>{entry.value}</dd>
@@ -172,10 +168,12 @@ function VersionStrip(versions: readonly Version[]) {
 }
 
 function LinkRow(
-  label: string,
-  links: ReadonlyArray<{ id: string; label: string }>,
+  handle: Handle<{
+    label: string;
+    links: ReadonlyArray<{ id: string; label: string }>;
+  }>,
 ) {
-  return (
+  return () => (
     <div
       mix={css({
         display: "flex",
@@ -194,9 +192,9 @@ function LinkRow(
           minWidth: "92px",
         })}
       >
-        {label}
+        {handle.props.label}
       </span>
-      {links.map((link) => (
+      {handle.props.links.map((link) => (
         <a key={link.id} href={`#${link.id}`} mix={chipLinkStyle}>
           {link.label}
         </a>
@@ -205,15 +203,17 @@ function LinkRow(
   );
 }
 
-function Section(props: {
-  id: string;
-  eyebrow: string;
-  title: string;
-  description: string;
-  children: RemixNode;
-}) {
-  return (
-    <section id={props.id} mix={css({ display: "grid", gap: "22px" })}>
+function Section(
+  handle: Handle<{
+    id: string;
+    eyebrow: string;
+    title: string;
+    description: string;
+    children: RemixNode;
+  }>,
+) {
+  return () => (
+    <section id={handle.props.id} mix={css({ display: "grid", gap: "22px" })}>
       <header mix={css({ display: "grid", gap: "8px" })}>
         <span
           mix={css({
@@ -224,9 +224,9 @@ function Section(props: {
             letterSpacing: theme.letterSpacing.wide,
           })}
         >
-          {props.eyebrow}
+          {handle.props.eyebrow}
         </span>
-        <h2 mix={sectionTitleStyle}>{props.title}</h2>
+        <h2 mix={sectionTitleStyle}>{handle.props.title}</h2>
         <p
           mix={css({
             margin: 0,
@@ -234,16 +234,16 @@ function Section(props: {
             color: theme.colors.text.secondary,
           })}
         >
-          {props.description}
+          {handle.props.description}
         </p>
       </header>
-      {props.children}
+      {handle.props.children}
     </section>
   );
 }
 
-function Footer() {
-  return (
+function Footer(_handle: Handle) {
+  return () => (
     <footer mix={footerStyle}>
       <p mix={css({ margin: 0 })}>
         Built with the Remix 3 template shape — server-rendered,

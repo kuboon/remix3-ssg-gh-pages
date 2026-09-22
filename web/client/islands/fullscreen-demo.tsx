@@ -43,7 +43,6 @@ export const FullscreenDemo = clientEntry(
     let support: Support = "unknown";
     let active = false;
     let error = "";
-    let checked = false;
 
     function syncState(): void {
       const legacy = document as LegacyDocument;
@@ -87,69 +86,65 @@ export const FullscreenDemo = clientEntry(
       }
     }
 
-    if (typeof document !== "undefined") {
+    // Queued from setup, so it runs in the browser and not during the server's one render, and
+    // `handle.signal` takes the listeners off `document` when this island disconnects. The support
+    // check is here for the same reason: it reads `document`, and it is asked once rather than on
+    // every render.
+    handle.queueTask(() => {
       const options = { signal: handle.signal } as const;
       document.addEventListener("fullscreenchange", syncState, options);
       document.addEventListener("webkitfullscreenchange", syncState, options);
-    }
 
-    return () => {
-      if (!checked) {
-        checked = true;
-        handle.queueTask(() => {
-          const legacy = document as LegacyDocument;
-          support = document.fullscreenEnabled
-            ? "standard"
-            : legacy.webkitFullscreenEnabled
-            ? "prefixed"
-            : "none";
-          void handle.update();
-        });
-      }
+      const legacy = document as LegacyDocument;
+      support = document.fullscreenEnabled
+        ? "standard"
+        : legacy.webkitFullscreenEnabled
+        ? "prefixed"
+        : "none";
+      void handle.update();
+    });
 
-      return (
-        <div
-          mix={[ref((node) => (panel = node as HTMLElement)), panelStyle]}
+    return () => (
+      <div mix={[ref((node) => (panel = node as HTMLElement)), panelStyle]}>
+        <p mix={statusStyle}>
+          <strong>Fullscreen API:</strong> {supportLabel(support)}
+        </p>
+
+        <p mix={bodyStyle}>
+          {active
+            ? "This panel is the fullscreen element — no URL bar, no tab bar, no toolbar. Swipe down or press Escape to leave."
+            : "Tap the button. If the browser allows it, this panel — and nothing else — fills the screen."}
+        </p>
+
+        <button
+          type="button"
+          disabled={support === "none"}
+          mix={[
+            buttonStyle,
+            on("click", () => {
+              if (active) {
+                void leave();
+              } else void enter();
+            }),
+          ]}
         >
-          <p mix={statusStyle}>
-            <strong>Fullscreen API:</strong> {supportLabel(support)}
-          </p>
+          {active ? "Exit fullscreen" : "Go fullscreen"}
+        </button>
 
-          <p mix={bodyStyle}>
-            {active
-              ? "This panel is the fullscreen element — no URL bar, no tab bar, no toolbar. Swipe down or press Escape to leave."
-              : "Tap the button. If the browser allows it, this panel — and nothing else — fills the screen."}
-          </p>
+        {support === "none"
+          ? (
+            <p mix={noteStyle}>
+              This browser reports no Fullscreen API for ordinary elements.
+              Older iPhone Safari is the usual reason — it had none for years
+              while iPadOS did. Installing the page to the Home Screen gets you
+              the same chrome-free result without it.
+            </p>
+          )
+          : null}
 
-          <button
-            type="button"
-            disabled={support === "none"}
-            mix={[
-              buttonStyle,
-              on("click", () => {
-                if (active) void leave();
-                else void enter();
-              }),
-            ]}
-          >
-            {active ? "Exit fullscreen" : "Go fullscreen"}
-          </button>
-
-          {support === "none"
-            ? (
-              <p mix={noteStyle}>
-                This browser reports no Fullscreen API for ordinary elements.
-                Older iPhone Safari is the usual reason — it had none for years
-                while iPadOS did. Installing the page to the Home Screen gets
-                you the same chrome-free result without it.
-              </p>
-            )
-            : null}
-
-          {error ? <p mix={errorStyle}>Rejected: {error}</p> : null}
-        </div>
-      );
-    };
+        {error ? <p mix={errorStyle}>Rejected: {error}</p> : null}
+      </div>
+    );
   },
 );
 

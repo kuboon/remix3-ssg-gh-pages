@@ -68,7 +68,6 @@ export const ViewportProbe = clientEntry(
     let insetEl: HTMLElement | null = null;
 
     let snapshot: Snapshot | null = null;
-    let measured = false;
 
     /** A probe's resolved height, in whole pixels. */
     function heightOf(element: HTMLElement | null): number | null {
@@ -103,26 +102,25 @@ export const ViewportProbe = clientEntry(
       void handle.update();
     }
 
-    // Nothing above runs on the server, where this component is rendered once to HTML and there is
-    // no viewport to ask. The listeners are what make the numbers move: on iOS the toolbar
-    // collapsing is a `visualViewport` resize, and it fires while the user is still scrolling.
-    if (typeof document !== "undefined") {
+    // Queued from setup, so none of it runs on the server — where this component is rendered once
+    // to HTML and there is no viewport to ask — and so the first measurement happens after the
+    // probes are in the document. `handle.signal` aborts when this island disconnects, which is
+    // what takes the listeners with it; `window` and `document` outlive the component, so nothing
+    // else would.
+    //
+    // The listeners are what make the numbers move: on iOS the toolbar collapsing is a
+    // `visualViewport` resize, and it fires while the user is still scrolling.
+    handle.queueTask(() => {
       const options = { signal: handle.signal, passive: true } as const;
       globalThis.visualViewport?.addEventListener("resize", measure, options);
       globalThis.visualViewport?.addEventListener("scroll", measure, options);
       globalThis.addEventListener("resize", measure, options);
       globalThis.addEventListener("orientationchange", measure, options);
       document.addEventListener("fullscreenchange", measure, options);
-    }
+      measure();
+    });
 
     return () => {
-      // Once, after the probes are in the document — measuring on every render would be a loop,
-      // because measuring ends in `handle.update()`.
-      if (!measured) {
-        measured = true;
-        handle.queueTask(() => measure());
-      }
-
       // The chrome's full extent. `null` until measured, and the reason the page says `100svh`.
       const chrome = snapshot?.lvh != null && snapshot.svh != null
         ? snapshot.lvh - snapshot.svh

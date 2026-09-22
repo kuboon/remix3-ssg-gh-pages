@@ -7,7 +7,7 @@
  * something links to, so an article missing from this list is an article missing from `dist/`.
  */
 
-import { css, type RemixNode } from "@remix-run/ui";
+import { css, type Handle } from "@remix-run/ui";
 
 import { routes } from "../../routes.ts";
 import { metaStyle } from "../../theme.ts";
@@ -26,18 +26,21 @@ export const title = "Blog — remix-ssg";
 export const description =
   "Articles authored in Markdown, rendered to static HTML.";
 
+/** A list of links and nothing else — the one screen on this site that ships no JavaScript. */
+export const hydrate = false;
+
 /**
- * @param articles The articles, in the order they should be listed
+ * @param handle The articles, in the order they should be listed
  * @returns The listing
  */
 export default function BlogIndex(
-  articles: readonly ArticleSummary[],
-): RemixNode {
-  return (
+  handle: Handle<{ articles: readonly ArticleSummary[] }>,
+) {
+  return () => (
     <>
       <h1>Blog</h1>
       <ul mix={postListStyle}>
-        {articles.map((article) => (
+        {handle.props.articles.map((article) => (
           <li key={article.slug}>
             <a
               mix={postTitleStyle}

@@ -1,4 +1,4 @@
-import { css, type RemixNode } from "@remix-run/ui";
+import { css, type Handle } from "@remix-run/ui";
 
 import { routes } from "../routes.ts";
 import { buttonStyle, cardStyle } from "../theme.ts";
@@ -13,8 +13,8 @@ export const description =
 /** This page places two client entries, so the shell boots the runtime for it. */
 export const hydrate = true;
 
-export default function Home(): RemixNode {
-  return (
+export default function Home(_handle: Handle) {
+  return () => (
     <>
       <h1>A static site, rendered by your own handler</h1>
       <p mix={leadStyle}>

@@ -5,6 +5,10 @@
  * it names is in `client/`. The one thing it cannot work out — where the client runtime was
  * compiled to — is handed to it.
  *
+ * It is written the way every Remix component is: a setup function that returns a render function,
+ * placed as `<Layout title={…}>…</Layout>`. Setup runs once per instance and render runs on every
+ * update, so a component that only ever renders on a server still reads like one that does not.
+ *
  * It also carries the one thing the browser cannot work out for itself: the map from an island's
  * name to the chunk the bundler emitted, plus the scripts that load them. A page that places no
  * island gets neither, and so ships no JavaScript at all.
@@ -14,7 +18,7 @@
  * agree with a file somewhere else.
  *
  * What turns this tree into a response is `context.render`, from the `render({ assets })`
- * middleware in `router.ts`: the doctype, the content type, and — the part that matters here —
+ * middleware in `router.tsx`: the doctype, the content type, and — the part that matters here —
  * `renderToStream` rather than `renderToString`. The runtime turns every internal `<a>` click into
  * a frame navigation and swaps the document only when it finds `<!-- rmx:flush document -->` at the
  * end, which `renderToString` strips; without it the URL changes while the page does not, with no
@@ -31,7 +35,7 @@
  * before `</head>`, so the link has to come first.
  */
 
-import { css, type RemixNode } from "@remix-run/ui";
+import { css, type Handle, type RemixNode } from "@remix-run/ui";
 
 import { base, BASE_META_NAME } from "./base.ts";
 import { routes } from "./routes.ts";
@@ -62,7 +66,7 @@ export interface LayoutProps {
    */
   viewport?: string;
   /**
-   * The client runtime, for a page that places an island — resolved by `router.ts`, because a URL
+   * The client runtime, for a page that places an island — resolved by `router.tsx`, because a URL
    * under the deploy prefix and the bundler's naming is a thing only the server knows.
    *
    * The shell has to be handed it rather than finding out for itself: entries are resolved while
@@ -90,62 +94,95 @@ export interface ClientRuntime {
 }
 
 /**
+ * What every page module exports: a component, plus what the shell needs to frame it.
+ *
+ * It lives here rather than beside the router because it is the shell's half of the bargain — the
+ * title it puts in `<head>`, the card it draws from, and whether it writes a `<script>`. Both
+ * things that build a `Layout` read it: `server/router.tsx` for the pages it maps, and
+ * `server/blog/mod.tsx` for the two screens its controller renders.
+ *
+ * `hydrate` is required rather than optional, and that is the point of stating this at all. An
+ * omitted flag is indistinguishable from a page that genuinely ships nothing, and the page still
+ * renders — which is how a showcase once shipped with eighteen islands that never hydrated.
+ *
+ * @typeParam Props What the page's component is handed, for a screen a controller fills in. The
+ * default is `Handle`'s own, so a page that takes nothing is written `Handle` with no argument.
+ */
+export interface PageModule<Props = Record<string, never>> {
+  default: (handle: Handle<Props>) => () => RemixNode;
+  title: string;
+  description?: string;
+  /** Whether the page places a client entry, so the shell boots the runtime for it. */
+  hydrate: boolean;
+  /** Set by a page that needs a viewport meta of its own — `viewport-fit=cover`, in practice. */
+  viewport?: string;
+}
+
+/**
  * Renders a page inside the document shell.
  *
- * @param props The page's title, body, and whether it hydrates
- * @returns The response to serve for this page
+ * @param handle The page's title, body, and whether it hydrates
+ * @returns The document
  */
-export function Layout(props: LayoutProps): RemixNode {
-  return (
-    <html lang="ja">
-      <head>
-        <meta charset="utf-8" />
-        <meta
-          name="viewport"
-          content={props.viewport ?? "width=device-width, initial-scale=1"}
-        />
-        <title>{props.title}</title>
-        {props.description
-          ? <meta name="description" content={props.description} />
-          : null}
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content={props.title} />
-        {props.description
-          ? <meta property="og:description" content={props.description} />
-          : null}
-        {props.image
-          ? (
-            <>
-              <meta property="og:image" content={props.image} />
-              <meta name="twitter:card" content="summary_large_image" />
-            </>
-          )
-          : null}
-        {
-          /*
-          The deploy prefix, for the browser. It cannot work this out for itself — `/repo/about`
-          and `/about` are the same page under two deploys — and `client/spa/app.tsx` matches URLs
-          against route patterns that carry it. See `client/base.ts`.
-        */
-        }
-        <meta name={BASE_META_NAME} content={base} />
-        <link rel="stylesheet" href={`${base}/static/app.css`} />
-        <link rel="icon" href={`${base}/static/favicon.svg`} />
-        {(props.script?.preloads ?? []).map((href) => (
-          <link key={href} rel="modulepreload" href={href} />
-        ))}
-      </head>
-      <body>
-        {Shell({
-          children: props.children,
-          documentLinks: props.documentLinks,
-        })}
-        {props.script
-          ? <script type="module" src={props.script.src}></script>
-          : null}
-      </body>
-    </html>
-  );
+export function Layout(handle: Handle<LayoutProps>) {
+  return () => {
+    const props = handle.props;
+
+    // `lang="en"`, because every word this template ships is English. A site writing in Japanese
+    // changes this one attribute; `static/app.css` keeps the font stack and `palt` either way,
+    // since neither costs anything for Latin text.
+    return (
+      <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta
+            name="viewport"
+            content={props.viewport ?? "width=device-width, initial-scale=1"}
+          />
+          <title>{props.title}</title>
+          {props.description
+            ? <meta name="description" content={props.description} />
+            : null}
+          <meta property="og:type" content="website" />
+          <meta property="og:title" content={props.title} />
+          {props.description
+            ? <meta property="og:description" content={props.description} />
+            : null}
+          {props.image
+            ? (
+              <>
+                <meta property="og:image" content={props.image} />
+                <meta name="twitter:card" content="summary_large_image" />
+              </>
+            )
+            : null}
+          {
+            /*
+            The deploy prefix, for the browser. It cannot work this out for itself — `/repo/about`
+            and `/about` are the same page under two deploys — and `client/spa/app.tsx` matches URLs
+            against route patterns that carry it. See `client/base.ts`.
+          */
+          }
+          <meta name={BASE_META_NAME} content={base} />
+          <link rel="stylesheet" href={`${base}/static/app.css`} />
+          <link
+            rel="icon"
+            type="image/svg+xml"
+            href={`${base}/static/favicon.svg`}
+          />
+          {(props.script?.preloads ?? []).map((href) => (
+            <link key={href} rel="modulepreload" href={href} />
+          ))}
+        </head>
+        <body>
+          <Shell documentLinks={props.documentLinks}>{props.children}</Shell>
+          {props.script
+            ? <script type="module" src={props.script.src}></script>
+            : null}
+        </body>
+      </html>
+    );
+  };
 }
 
 /** What the shell wraps a page in. */
@@ -175,69 +212,71 @@ export interface ShellProps {
  * Split out of {@link Layout} because it is rendered by two different things. The server renders it
  * as part of the document; `client/spa/app.tsx` renders it again in the browser, because a
  * `@remix-run/spa` router owns the whole of `<body>` and would otherwise replace the shell with
- * nothing. Both call this, so there is one shell and not two that have to agree.
+ * nothing. Both place this component, so there is one shell and not two that have to agree.
  *
  * `<head>` is deliberately not in here. It stays the server's — the title, the social card and the
  * stylesheet are what a crawler and a link preview read, and neither runs the page.
  *
- * @param props The page to wrap, and how its links navigate
+ * @param handle The page to wrap, and how its links navigate
  * @returns The body's contents
  */
-export function Shell(props: ShellProps): RemixNode {
-  // `undefined` rather than `false`: an attribute set to "false" is still an attribute, and the
-  // runtime looks for its presence.
-  const document = props.documentLinks ? "" : undefined;
+export function Shell(handle: Handle<ShellProps>) {
+  return () => {
+    // `undefined` rather than `false`: an attribute set to "false" is still an attribute, and the
+    // runtime looks for its presence.
+    const document = handle.props.documentLinks ? "" : undefined;
 
-  return (
-    <>
-      <header mix={[bandStyle, headerStyle]}>
-        <a
-          mix={brandStyle}
-          href={routes.home.href()}
-          data-rmx-document={document}
-        >
-          remix-ssg
-        </a>
-        <nav mix={navStyle}>
-          <a href={routes.home.href()} data-rmx-document={document}>Home</a>
-          <a href={routes.about.href()} data-rmx-document={document}>About</a>
-          <a href={routes.blog.index.href()} data-rmx-document={document}>
-            Blog
+    return (
+      <>
+        <header mix={[bandStyle, headerStyle]}>
+          <a
+            mix={brandStyle}
+            href={routes.home.href()}
+            data-rmx-document={document}
+          >
+            remix-ssg
           </a>
-          {/* Fullscreen demo: delete this link when you delete the demo — see README. */}
-          <a href={routes.fullscreen.href()} data-rmx-document={document}>
-            Fullscreen
-          </a>
-          {/* Showcase: delete this link when you delete the showcase — see README. */}
-          <a href={routes.showcase.href()} data-rmx-document={document}>
-            UI showcase
-          </a>
-          {
-            /*
-            SPA demo: delete this link when you delete the demo — see README.
+          <nav mix={navStyle}>
+            <a href={routes.home.href()} data-rmx-document={document}>Home</a>
+            <a href={routes.about.href()} data-rmx-document={document}>About</a>
+            <a href={routes.blog.index.href()} data-rmx-document={document}>
+              Blog
+            </a>
+            {/* Fullscreen demo: delete this link when you delete the demo — see README. */}
+            <a href={routes.fullscreen.href()} data-rmx-document={document}>
+              Fullscreen
+            </a>
+            {/* Showcase: delete this link when you delete the showcase — see README. */}
+            <a href={routes.showcase.href()} data-rmx-document={document}>
+              UI showcase
+            </a>
+            {
+              /*
+              SPA demo: delete this link when you delete the demo — see README.
 
-            Always a document navigation, on every page — not just on the ones `documentLinks`
-            covers. A document gets one runtime, and this link leads to the page that boots the
-            other one: reached by a soft navigation, the demo's `run()` would arrive in a document
-            `hydration.ts` already owns, never take over, and leave every link on it loading pages
-            the slow way. Entering a page that starts a different runtime is a document load.
-          */
-          }
-          <a href={routes.spa.show.href({ id: "1" })} data-rmx-document="">
-            SPA
-          </a>
-        </nav>
-      </header>
-      <main mix={[bandStyle, mainStyle]}>{props.children}</main>
-      <footer mix={[bandStyle, footerStyle]}>
-        <p>
-          Built with <a href="https://jsr.io/@remix-kbn/ssg">@remix-kbn/ssg</a>
-          {" "}
-          and <a href="https://remix.run">Remix v3</a>.
-        </p>
-      </footer>
-    </>
-  );
+              Always a document navigation, on every page — not just on the ones `documentLinks`
+              covers. A document gets one runtime, and this link leads to the page that boots the
+              other one: reached by a soft navigation, the demo's `run()` would arrive in a document
+              `hydration.ts` already owns, never take over, and leave every link on it loading pages
+              the slow way. Entering a page that starts a different runtime is a document load.
+            */
+            }
+            <a href={routes.spa.show.href({ id: "1" })} data-rmx-document="">
+              SPA
+            </a>
+          </nav>
+        </header>
+        <main mix={[bandStyle, mainStyle]}>{handle.props.children}</main>
+        <footer mix={[bandStyle, footerStyle]}>
+          <p>
+            Built with{" "}
+            <a href="https://jsr.io/@remix-kbn/ssg">@remix-kbn/ssg</a> and{" "}
+            <a href="https://remix.run">Remix v3</a>.
+          </p>
+        </footer>
+      </>
+    );
+  };
 }
 
 // --- styles -----------------------------------------------------------------

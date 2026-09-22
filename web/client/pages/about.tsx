@@ -1,12 +1,15 @@
-import type { RemixNode } from "@remix-run/ui";
+import type { Handle } from "@remix-run/ui";
 
 import { routes } from "../routes.ts";
 
 export const title = "About — remix-ssg";
 export const description = "What this starter is and how it works.";
 
-export default function About(): RemixNode {
-  return (
+/** Prose and links only — no island, so this page ships no JavaScript at all. */
+export const hydrate = false;
+
+export default function About(_handle: Handle) {
+  return () => (
     <>
       <h1>About</h1>
       <p>

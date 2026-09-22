@@ -27,7 +27,7 @@
  * it.
  */
 
-import { css, type RemixNode } from "@remix-run/ui";
+import { css, type Handle } from "@remix-run/ui";
 
 import { FullscreenDemo } from "../islands/fullscreen-demo.tsx";
 import { ViewportProbe } from "../islands/viewport-probe.tsx";
@@ -52,8 +52,8 @@ export const hydrate = true;
 export const viewport =
   "width=device-width, initial-scale=1, viewport-fit=cover";
 
-export default function FullscreenPage(): RemixNode {
-  return (
+export default function FullscreenPage(_handle: Handle) {
+  return () => (
     <>
       <h1>Mobile Safari fullscreen</h1>
 

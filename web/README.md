@@ -23,29 +23,49 @@ enforces the line — no bundler config, no naming convention, one `lib` each.
 to render them, compiles the islands, and serves `client/static/`. Nothing goes
 the other way — where a view needs something only the server knows, it takes it
 as a prop. The document shell has two such props. `script` is where the client
-runtime was compiled to, which `router.ts` resolves and hands over — a page with
+runtime was compiled to, which `router.tsx` resolves and hands over — a page with
 no islands passes `null` and ships no JavaScript. `image` is the page's social
 card, drawn by `server/og/`.
 
 ## How it works
 
 `client/routes.ts` states every URL the site answers, `client/pages/` renders
-them, and `server/router.ts` maps one to the other — the shape a Remix app has:
+them, and `server/router.tsx` maps one to the other with a controller — the
+shape a Remix app has:
 
-```ts
-router.get(routes.about, aboutAction);
+```tsx
+const pages = createController(routes, {
+  actions: {
+    home: pageAction(routes.home, Home),
+    about: pageAction(routes.about, About),
+    // …one per route in the map
+  },
+});
+
+router.map(routes, pages);
 ```
+
+A controller owns the direct routes of one route map and has to name an action
+for every one of them. That is the reason to write it this way rather than as a
+list of `router.get(...)` calls: add a route to `client/routes.ts` and forget
+the action, and the router throws while it is being built instead of serving a
+site with a hole in it. Nested maps are mapped separately, each by the
+controller that answers it — `routes.blog` and `routes.spa` here.
 
 The rest of the site is mapped the same way. A directory is a wildcard route
 handing a subtree to whatever already serves one:
 
 ```ts
-router.map(`${base}/static/*path`, ({ request }) => staticFiles.fetch(request));
-router.map(`${assetsPath}/*path`, ({ request }) => assets.fetch(request));
-router.map(`${base}/og/*path`, ({ request }) => serveOgImage(request));
+router.get(`${base}/static/*path`, ({ request }) => staticFiles.fetch(request));
+router.get(`${assetsPath}/*path`, ({ request }) => assets.fetch(request));
+router.get(`${base}/og/*path`, ({ request }) => serveOgImage(request));
 ```
 
-So `server/router.ts` default-exports a plain `@remix-run/fetch-router` router,
+`get` rather than `map`, because a directory answers reads: a `GET` route
+serves `HEAD` too, and anything else gets a `405` naming the methods that are
+allowed.
+
+So `server/router.tsx` default-exports a plain `@remix-run/fetch-router` router,
 with nothing wrapped around it. `deno serve` and the build both want the same
 thing from it — `fetch` — and everything the build additionally needs (`base`,
 `entryPoints`, `fileServer`) is a named export beside it.
@@ -59,13 +79,13 @@ const router = createRouter({ middleware: [render({ assets })] });
 `render({ assets })` puts `context.render(node)` on every request — the doctype,
 the content type, `renderToStream`, and the two hooks a page tree needs
 answered: the chunk URL behind each `clientEntry(import.meta.url, …)`, and the
-fetch behind a frame navigation. As of `remix@3.0.0-rc.2` it asks the asset
+fetch behind a frame navigation. As of `remix@3.0.0-rc.3` it asks the asset
 server for `getScriptEntry` and nothing else, so `@remix-kbn/assets-deno` goes
 straight in.
 
-The Markdown articles are pages like any other. `server/blog/mod.ts` sits in the
+The Markdown articles are pages like any other. `server/blog/mod.tsx` sits in the
 directory the `.md` files are in and answers both blog routes — the listing and
-one article — so `server/router.ts` maps the group in one line:
+one article — so `server/router.tsx` maps the group in one line:
 
 ```ts
 router.map(routes.blog, blogController);
@@ -74,6 +94,31 @@ router.map(routes.blog, blogController);
 Their URLs are the one thing not enumerated in `client/routes.ts`: they come
 from the files on disk, so `routes.blog.show` states only the _shape_ of an
 article URL, for the listing to link with.
+
+### Pages are components
+
+Every page, the shell included, is an ordinary Remix component: a setup
+function that returns a render function, placed as JSX.
+
+```tsx
+export const title = "About — remix-ssg";
+export const hydrate = false;
+
+export default function About(_handle: Handle) {
+  return () => <h1>About</h1>;
+}
+```
+
+`PageModule` in `client/layout.tsx` is what a page module has to export, and
+`hydrate` is required rather than optional on purpose: a missing flag is
+indistinguishable from a page that genuinely ships nothing, and the page still
+renders. That is exactly how a showcase once shipped with eighteen islands that
+never hydrated.
+
+A screen a controller fills in takes props the way any component does —
+`PageModule<{ articles: readonly ArticleSummary[] }>` for the blog listing — so
+`<Index.default articles={await listArticles()} />` is the whole of handing it
+its data.
 
 `deno task dev` runs that handler as the dev server. The build drives the very
 same object with `fetch()`, writes each response to disk, and follows the links
@@ -123,8 +168,9 @@ web/
     base.ts          # the deploy prefix, computed once
     tokens.ts        # design tokens — colors, fonts, radii, the measure
     theme.ts         # the css() mixins more than one module uses
-    layout.tsx       # the HTML document shell
+    layout.tsx       # the HTML document shell, and what a page module exports
     hydration.ts     # run() — the client runtime, loaded by a page that hydrates
+    navigation-guard.ts  # the two navigations the runtime should not intercept
     pages/
       index.tsx      # home — places two client entries
       about.tsx
@@ -149,12 +195,12 @@ web/
       favicon.svg
   server/
     deno.json        # lib: deno.ns — plus the tasks and their permission sets
-    router.ts        # the wiring — routes to pages, plus the rest of the site
+    router.tsx       # the wiring — routes to pages, plus the rest of the site
     assets.ts        # client/ compiled as one graph
-    runtime.ts       # where hydration.ts and spa/entry.ts compiled to — router.ts reads both
+    runtime.ts       # where hydration.ts and spa/entry.ts compiled to — router.tsx reads both
     versions.ts      # the showcase's badges, read off the import map
     blog/
-      mod.ts         # the articles, and both blog routes
+      mod.tsx        # the articles, and both blog routes
       *.md           # the articles
     og/
       mod.ts         # which page gets which social card, and the route serving them
@@ -209,11 +255,13 @@ code to write — but the markup still comes from a request.
 - `run(router)` points the Remix UI runtime at that router, so a navigation is
   dispatched through it instead of fetched.
 
-So `client/spa/app.tsx` is a router like `server/router.ts` — middleware,
-params, status codes, a default handler — that happens to run in the browser. It
-maps `routes.spa.show`, the same route object the server maps, from the same
-`client/routes.ts`. That two routers answer the same URLs from one route table
-is the reason those routes live in a file of their own.
+So `client/spa/app.tsx` is a router like `server/router.tsx` — middleware,
+params, status codes, a default handler, and a controller — that happens to run
+in the browser. It maps `routes.spa`, the same route map the server maps, from
+the same `client/routes.ts`, so a fourth view is a type error in both routers
+rather than a URL only one of them answers. That two routers answer the same
+URLs from one route table is the reason those routes live in a file of their
+own.
 
 ### The two things to know before copying it
 
@@ -229,7 +277,7 @@ by the client router, which has never heard of `/blog`.
 islands; `@remix-run/spa`'s `run()` wires a router instead, and its `loadModule`
 throws — an SPA response carries a node, not a client entry. They never share a
 page, so the demo has its own entrypoint in `server/assets.ts` and its own
-`ClientRuntime` in `server/runtime.ts`, and `server/router.ts` sends it to these
+`ClientRuntime` in `server/runtime.ts`, and `server/router.tsx` sends it to these
 URLs and `hydration.ts` to every other one. The `@remix-run/ui` runtime they
 both pull in is still emitted once, into a chunk they share.
 
@@ -262,7 +310,7 @@ crawler reads HTML, it does not execute it. A route reachable only through
 client code — a `navigate()` in a click handler, a path in a table the browser
 consults — is invisible to the build and will not be generated. Either link to
 it with a real `href`, as this demo does, or name it in `entryPoints` in
-`server/router.ts`, the way the social cards are.
+`server/router.tsx`, the way the social cards are.
 
 ### What it changed in the rest of the site
 
@@ -316,8 +364,9 @@ const cardStyle = css({
 <section mix={cardStyle}>…</section>;
 ```
 
-`renderToString` collects the mixins a page actually rendered and writes them
-into that page's `<head>` as `<style>` tags. So a page carries its own CSS and
+The renderer collects the mixins a page actually rendered and writes them into
+that page's `<head>` as `<style>` tags — `context.render` streams, so it is
+`renderToStream` doing it. So a page carries its own CSS and
 nothing else: no rules for parts of the site the reader never opened, and no
 class name that has to agree with a file somewhere else. The one stylesheet the
 site does link is `client/static/app.css`, and the next section is what it is
@@ -381,18 +430,21 @@ Three edits, in the order you would guess:
 
 1. Name its URL in `client/routes.ts` — `contact: get("/contact")`.
 2. Write `client/pages/contact.tsx`, exporting a component as `default` plus a
-   `title` — and `hydrate = true` if it places a client entry. A page that needs
-   a viewport meta of its own exports `viewport` too;
-   `client/pages/fullscreen.tsx` is the one that does, for
+   `title` and a `hydrate` — `true` if it places a client entry, `false` if it
+   does not. A page that needs a viewport meta of its own exports `viewport`
+   too; `client/pages/fullscreen.tsx` is the one that does, for
    `viewport-fit=cover`.
-3. Map them in `server/router.ts` —
-   `router.get(routes.contact, pageAction(routes.contact, Contact))`. The route
-   goes in twice because the second one is what files the page's social card.
+3. Add its action to the controller in `server/router.tsx` —
+   `contact: pageAction(routes.contact, Contact)`. The route goes in twice
+   because the second one is what files the page's social card.
+
+Skip the third step and the router says so: a controller that does not answer
+every route in its map throws as it is built.
 
 An **article** needs none of that: drop a `.md` file under `server/blog/` and it
 is served at its own name.
 
-The crawl starts at `entryPoints` in `server/router.ts` and follows links, so
+The crawl starts at `entryPoints` in `server/router.tsx` and follows links, so
 **what is reachable is what gets generated**. A page nothing links to belongs in
 `entryPoints`, or it is not part of the site.
 
@@ -428,7 +480,7 @@ Two things follow from a card not being linked to from anywhere. `og:image` is
 an absolute URL fetched by whoever is showing the link, so the deploy origin
 matters: `BASE_URL` carries it, and a local build, having none, writes a
 relative tag rather than inventing a host. And the crawl has no link to follow,
-so `entryPoints` in `server/router.ts` names the images — `["/", ...ogPaths()]`
+so `entryPoints` in `server/router.tsx` names the images — `["/", ...ogPaths()]`
 — which is why that export sits at the bottom of the file, after the routes that
 filled the register.
 
@@ -471,7 +523,7 @@ summary: How this site is rendered to static HTML at build time.
 Body starts here…
 ```
 
-`server/blog/mod.ts` turns it into a page: front-matter via `@std/front-matter`,
+`server/blog/mod.tsx` turns it into a page: front-matter via `@std/front-matter`,
 the body via [`@kuboon/md`](https://jsr.io/@kuboon/md) — GitHub-flavored,
 sanitized, with heading anchors and Shiki-highlighted code. It is the only
 module importing either package, and the only one that reads the files; the two
@@ -479,7 +531,7 @@ screens beside it, `index.tsx` and `article.tsx`, are handed what they render.
 The generator never sees Markdown at all — it serves what this site's own
 controller returns.
 
-`mod.ts` finds the files through `import.meta.dirname`, being in the directory
+`mod.tsx` finds the files through `import.meta.dirname`, being in the directory
 with them, so no path to the articles is written down anywhere. Nothing serves
 that directory as files, either, which is why the source can sit beside the
 `.md` without becoming a URL.
@@ -513,15 +565,15 @@ There is no third step: `server/assets.ts` globs `islands/*.tsx`, so the file
 being there is what makes it an entrypoint. A helper a few islands share goes in
 a subdirectory — `islands/_lib/` — which the glob does not reach.
 
-A page that does not set `hydrate` ships no `<script>` at all — `/about` and
-the blog listing have none.
+A page with `hydrate = false` ships no `<script>` at all — `/about` and the
+blog listing have none.
 
-A controller says the same thing by hand. `hydrate` is a page-module export, and
-`server/blog/mod.ts` builds its `Layout` calls itself, so it passes
-`clientRuntime` for an article and `null` for the listing. Both read it from
-`server/runtime.ts`, which resolves it once — it is a file of its own rather
-than a `router.ts` export because `router.ts` imports the blog, so the blog
-cannot import back.
+A controller reads the same export. `server/blog/mod.tsx` builds its `Layout`
+calls itself, so it writes `script={ArticlePage.hydrate ? clientRuntime : null}`
+where `pageAction` would have — the flag still lives on the screen rather than
+in the controller. Both read `clientRuntime` from `server/runtime.ts`, which
+resolves it once; it is a file of its own rather than a `router.tsx` export
+because `router.tsx` imports the blog, so the blog cannot import back.
 
 ### How the client code is compiled
 
@@ -550,7 +602,7 @@ That URL is resolved on the server, by the `render()` middleware —
 URL needs both the deploy prefix and the bundler's output naming, neither of
 which the browser has. The middleware asks the asset server for
 `getScriptEntry(id)`, which answers both at once — the URL and the chunks under
-it; before `remix@3.0.0-rc.2` it was `getHref(id)` and `getPreloads(id)`, two
+it; before `remix@3.0.0-rc.3` it was `getHref(id)` and `getPreloads(id)`, two
 calls for the same thing. The id is read only
 there: `$entryId` is what `renderToStream` passes to the hook, and nothing in
 the client runtime looks at it, which is why the same expression may mean a
@@ -654,6 +706,24 @@ streams, which is the only reason a bare `<a>` is enough here.
 If you ever do want a link to force a real document load — leaving the runtime
 and all its state behind — mark that one `<a data-rmx-document>`.
 
+### The two navigations the runtime should not have
+
+`client/navigation-guard.ts` runs before both `run()` calls and hands two kinds
+of navigation back to the browser:
+
+- **A jump to a `#fragment` on the page you are already on**, which the browser
+  answers by moving the scroll position. Intercepted, it fetches the whole page
+  and reconciles it — one click on a chip in the UI showcase pulled the
+  document again and re-hydrated eighteen islands to do what the browser does
+  for free.
+- **A reload**, which intercepted keeps the document and everything in it. A
+  counter at 3 is still at 3 afterwards, which is not what anyone means by F5.
+
+Remix's own documentation site ships the same guard in its browser entry, with
+a comment saying to remove it once `remix/ui` ignores these itself — so check
+it against the `@remix-run/ui` changelog when bumping the version, and delete
+the file when it lands upstream.
+
 ## Base paths and GitHub Pages
 
 A GitHub Pages _project_ site is served under a sub-path
@@ -675,7 +745,7 @@ the prefix — open <http://localhost:8000/remix3-ssg-gh-pages>.
 ### Which file answers which URL
 
 GitHub Pages serves `/about` from `about.html`, and 404s `/about/` when only
-that file exists. `server/router.ts` states that rule as
+that file exists. `server/router.tsx` states that rule as
 `fileServer = githubPages()`, and the build writes the file it would reach for.
 Deploying somewhere with different rules is a matter of exporting a different
 behavior.

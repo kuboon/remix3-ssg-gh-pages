@@ -10,7 +10,7 @@ YAML frontmatter above; the body is rendered to HTML by
 
 ## Rendered on the server
 
-The page was produced by a handler this repository writes — `router.ts` — and
+The page was produced by a handler this repository writes — `router.tsx` — and
 written to disk as static HTML by
 [`@remix-kbn/ssg`](https://jsr.io/@remix-kbn/ssg). No client-side
 JavaScript was required, and none was shipped: count the `<script>` tags on this
@@ -18,7 +18,7 @@ page.
 
 ## One handler, two jobs
 
-`deno serve router.ts` runs that handler as the dev server. The build drives the
+`deno serve router.tsx` runs that handler as the dev server. The build drives the
 very same object with `fetch()`, writes each response to disk, and follows the
 links it finds to discover the rest of the site — including the `import`
 statements inside JavaScript, which is how a code-split bundle's shared chunks

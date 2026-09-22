@@ -10,7 +10,7 @@
  * ships, which is nothing.
  */
 
-import { css, type RemixNode } from "@remix-run/ui";
+import { css, type Handle, type RemixNode } from "@remix-run/ui";
 
 import { ShareRow } from "../../islands/share.tsx";
 import { routes } from "../../routes.ts";
@@ -23,30 +23,35 @@ export interface ArticleProps {
   body: RemixNode;
 }
 
+/** The share row under the body is an island, so an article boots the runtime. */
+export const hydrate = true;
+
 /**
- * @param props The article's front-matter, and its rendered body
+ * @param handle The article's front-matter, and its rendered body
  * @returns The article page
  */
-export default function BlogArticle(props: ArticleProps): RemixNode {
-  const { article, body } = props;
+export default function BlogArticle(handle: Handle<ArticleProps>) {
+  return () => {
+    const { article, body } = handle.props;
 
-  return (
-    <article mix={proseStyle}>
-      <h1>{article.title}</h1>
-      {article.date
-        ? (
-          <time mix={metaStyle} datetime={article.date}>
-            {article.date}
-          </time>
-        )
-        : null}
-      {body}
-      <div mix={footerRowStyle}>
-        <a href={routes.blog.index.href()}>← All posts</a>
-        <ShareRow label="Share this post" />
-      </div>
-    </article>
-  );
+    return (
+      <article mix={proseStyle}>
+        <h1>{article.title}</h1>
+        {article.date
+          ? (
+            <time mix={metaStyle} datetime={article.date}>
+              {article.date}
+            </time>
+          )
+          : null}
+        {body}
+        <div mix={footerRowStyle}>
+          <a href={routes.blog.index.href()}>← All posts</a>
+          <ShareRow label="Share this post" />
+        </div>
+      </article>
+    );
+  };
 }
 
 // --- styles -----------------------------------------------------------------

@@ -15,11 +15,18 @@
  *
  * `ready()` resolves once the initial route has rendered. Nothing here waits on it — the page is
  * already on screen, server-rendered — but awaiting it is what a caller with something to do after
- * the first render would reach for.
+ * the first render would reach for. `run(router, { fallback })` takes a node to show while that
+ * first route resolves; this demo has no use for one, because the server already rendered the view
+ * into the file.
  */
 
 import { run } from "@remix-run/spa";
 
+import { guardBrowserNavigations } from "../navigation-guard.ts";
 import { spaRouter } from "./app.tsx";
+
+// The same two navigations the islands runtime hands back — this `run()` starts the same
+// Navigation API listener, so it needs the same guard. See `client/navigation-guard.ts`.
+guardBrowserNavigations();
 
 run(spaRouter);
