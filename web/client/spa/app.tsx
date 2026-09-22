@@ -14,9 +14,13 @@
  * the same URLs, one on each side.
  */
 
-import { createRouter } from "@remix-run/fetch-router";
+import {
+  createController,
+  createRouter,
+  type RouterContext,
+} from "@remix-run/fetch-router";
 import { render } from "@remix-run/spa";
-import type { RemixNode } from "@remix-run/ui";
+import type { Handle } from "@remix-run/ui";
 
 import { Shell } from "../layout.tsx";
 import { routes } from "../routes.ts";
@@ -39,42 +43,55 @@ export const spaRouter = createRouter({
   // goes back around it. `run()` renders into `<body>` and clears what was there, so a route that
   // returned its screen alone would take the header and the footer with it.
   middleware: [
-    render((content) => Shell({ children: content, documentLinks: true })),
+    render((content) => <Shell documentLinks>{content}</Shell>),
   ],
 
   // A client router is asked about every same-origin navigation the runtime intercepts, including
   // ones it has no route for. The shell's links opt out with `data-rmx-document`, so what reaches
   // here is a typed URL or a stale link — and answering it is this router's job, not the server's.
   defaultHandler: ({ render, url }) =>
-    render(NotFound({ pathname: url.pathname }), { status: 404 }),
+    render(<NotFound pathname={url.pathname} />, { status: 404 }),
 });
 
-spaRouter.get(routes.spa.show, ({ params, render, url }) => {
-  const id = parseSpaId(params.id);
-  if (id === null) {
-    return render(NotFound({ pathname: url.pathname }), { status: 404 });
-  }
+/** What this router's middleware hands its actions — `render`, in practice. */
+type SpaContext = RouterContext<typeof spaRouter>;
 
-  renders++;
-  // `<head>` belongs to the document and is not re-rendered here, so the title is set the way a
-  // client router has to set it. The server still writes the right one into each static file,
-  // which is what a crawler and a link preview read.
-  document.title = titleFor(id);
+// A controller, for the same reason `server/router.tsx` uses one: it owns every route in the map
+// it is given, so a fourth view added to `routes.spa` is a type error here rather than a URL this
+// router quietly answers with its 404.
+spaRouter.map(
+  routes.spa,
+  createController<typeof routes.spa, SpaContext>(routes.spa, {
+    actions: {
+      show: ({ params, render, url }) => {
+        const id = parseSpaId(params.id);
+        if (id === null) {
+          return render(<NotFound pathname={url.pathname} />, { status: 404 });
+        }
 
-  return render(
-    SpaPage({ id, renderedBy: "browser", navigations: renders - 1 }),
-  );
-});
+        renders++;
+        // `<head>` belongs to the document and is not re-rendered here, so the title is set the way a
+        // client router has to set it. The server still writes the right one into each static file,
+        // which is what a crawler and a link preview read.
+        document.title = titleFor(id);
+
+        return render(
+          <SpaPage id={id} renderedBy="browser" navigations={renders - 1} />,
+        );
+      },
+    },
+  }),
+);
 
 /** What a URL of the demo's shape but none of its views gets. */
-function NotFound(props: { pathname: string }): RemixNode {
-  return (
+function NotFound(handle: Handle<{ pathname: string }>) {
+  return () => (
     <>
       <h1>Not found</h1>
       <p>
         The router running in this browser has no route for{" "}
-        <code>{props.pathname}</code>. The server would have said the same
-        thing; this one just said it without asking.
+        <code>{handle.props.pathname}</code>. The server would have said the
+        same thing; this one just said it without asking.
       </p>
       <p>
         <a href={routes.spa.show.href({ id: "1" })}>← Back to view 1</a>

@@ -32,7 +32,7 @@ export const metaStyle = css({
   marginBlock: "0.2rem",
 });
 
-/** A filled call to action. It goes on a `<Link>`, not on a `<button>`. */
+/** A filled call to action. It goes on an `<a href>`, not on a `<button>`. */
 export const buttonStyle = css({
   display: "inline-block",
   marginTop: "0.5rem",

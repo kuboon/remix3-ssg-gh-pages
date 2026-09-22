@@ -7,9 +7,17 @@
  *
  * The shell loads this as a `<script type="module">` on any page that hydrates, and on no other:
  * the blog listing places no client entry, so it ships no JavaScript at all.
+ *
+ * `run()` also takes over same-origin navigation, which is what makes a plain `<a href>` on a
+ * hydrated page a soft navigation. Two kinds of navigation are handed back to the browser first —
+ * see `navigation-guard.ts`.
  */
 
 import { run } from "@remix-run/ui";
+
+import { guardBrowserNavigations } from "./navigation-guard.ts";
+
+guardBrowserNavigations();
 
 run({
   loadModule: async (moduleUrl, exportName) => {

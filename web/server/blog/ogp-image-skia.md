@@ -24,11 +24,11 @@ const image = ogImage(routes.about.href(), About);
 
 ## クロールが辿れない画像
 
-このサイトの静的ビルドは、`router.ts` をそのまま `fetch()` して、返ってきた HTML の中のリンクを辿って広がっていく。辿り着けるものが生成されるものである。
+このサイトの静的ビルドは、`router.tsx` をそのまま `fetch()` して、返ってきた HTML の中のリンクを辿って広がっていく。辿り着けるものが生成されるものである。
 
 カードはそこから漏れる。`og:image` はリンクを表示する側のサーバーが取りに来る URL なので、絶対 URL で書く。クローラーがそれを辿ったら、このサイトの外に出てしまう。
 
-そこで `router.ts` の `entryPoints` がカードの一覧を持つ。
+そこで `router.tsx` の `entryPoints` がカードの一覧を持つ。
 
 ```ts
 export const entryPoints: readonly string[] = ["/", ...ogPaths()];

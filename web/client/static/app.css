@@ -20,13 +20,15 @@
  *
  * The token values, second. Remix supplies behaviour and a little component styling, not a theme,
  * so the palette, typography and radii are the app's. They live here as custom properties because
- * light and dark swap between two sets of them; `lib/tokens.ts` is the TypeScript side, and holds
+ * light and dark swap between two sets of them; `client/tokens.ts` is the TypeScript side, and holds
  * the names rather than a second copy of the values.
  *
- * The font stack and `palt` below are the document's Japanese setting, and they go together: the
+ * The font stack and `palt` below are what makes 日本語 set properly, and they go together: the
  * stack is ordered so kana never gets drawn by a Latin font, and `palt` is what stops a line of
- * 日本語 setting with a hole after every 、. The page declares `lang="ja"` to match — see
- * `layout.tsx`.
+ * 日本語 setting with a hole after every 、. They are here rather than behind a language check
+ * because they cost nothing for Latin text — a font that has no kana is never asked to draw any.
+ * The document's own language is `layout.tsx`'s `<html lang>`, and it says `en` because every word
+ * this template ships is English; a site writing in Japanese changes that one attribute.
  */
 
 @layer base, rmx, app;

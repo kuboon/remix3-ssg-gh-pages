@@ -34,7 +34,7 @@
  * build's crawler reads to learn those URLs exist. The build never runs the router.
  */
 
-import { css, type RemixNode } from "@remix-run/ui";
+import { css, type Handle, type RemixNode } from "@remix-run/ui";
 
 import { routes } from "../routes.ts";
 import { color, radius } from "../tokens.ts";
@@ -102,52 +102,55 @@ export interface SpaPageProps {
  * The demo's screen: the same tree the server writes into the static file and the browser's router
  * renders on every navigation.
  *
- * @param props The view to show, and the router's dispatch count
+ * @param handle The view to show, and the router's dispatch count
  * @returns The page body, for the shell to wrap
  */
-export default function SpaPage(props: SpaPageProps): RemixNode {
-  const view = views[props.id];
+export default function SpaPage(handle: Handle<SpaPageProps>) {
+  return () => {
+    const props = handle.props;
+    const view = views[props.id];
 
-  return (
-    <>
-      <h1>Client-side routing</h1>
-      <p mix={leadStyle}>
-        Three URLs, one router — running in the browser. Each is still its own
-        static file.
-      </p>
+    return (
+      <>
+        <h1>Client-side routing</h1>
+        <p mix={leadStyle}>
+          Three URLs, one router — running in the browser. Each is still its own
+          static file.
+        </p>
 
-      <nav mix={tabsStyle} aria-label="SPA views">
-        {SPA_IDS.map((id) => (
-          <a
-            key={id}
-            mix={tabStyle}
-            // An ordinary link with an ordinary href. That is what the runtime intercepts and
-            // hands to the browser's router, what the build's crawler reads to find the other two
-            // views, and what works when neither has loaded.
-            href={routes.spa.show.href({ id })}
-            aria-current={id === props.id ? "page" : undefined}
-          >
-            View {id}
-          </a>
-        ))}
-      </nav>
+        <nav mix={tabsStyle} aria-label="SPA views">
+          {SPA_IDS.map((id) => (
+            <a
+              key={id}
+              mix={tabStyle}
+              // An ordinary link with an ordinary href. That is what the runtime intercepts and
+              // hands to the browser's router, what the build's crawler reads to find the other two
+              // views, and what works when neither has loaded.
+              href={routes.spa.show.href({ id })}
+              aria-current={id === props.id ? "page" : undefined}
+            >
+              View {id}
+            </a>
+          ))}
+        </nav>
 
-      <p mix={counterStyle}>
-        {props.renderedBy === "server"
-          ? "server-rendered — the file the build wrote, before any JavaScript ran"
-          : props.navigations === 0
-          ? "the browser's router has taken over — no navigation yet"
-          : `${props.navigations} client-side navigation${
-            props.navigations === 1 ? "" : "s"
-          } — no request went out for any of them`}
-      </p>
+        <p mix={counterStyle}>
+          {props.renderedBy === "server"
+            ? "server-rendered — the file the build wrote, before any JavaScript ran"
+            : props.navigations === 0
+            ? "the browser's router has taken over — no navigation yet"
+            : `${props.navigations} client-side navigation${
+              props.navigations === 1 ? "" : "s"
+            } — no request went out for any of them`}
+        </p>
 
-      <section mix={panelStyle}>
-        <h2 mix={headingStyle}>{view.heading}</h2>
-        {view.body}
-      </section>
-    </>
-  );
+        <section mix={panelStyle}>
+          <h2 mix={headingStyle}>{view.heading}</h2>
+          {view.body}
+        </section>
+      </>
+    );
+  };
 }
 
 /** What each view says. The heading is also the page's title, so it is written once. */

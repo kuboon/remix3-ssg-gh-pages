@@ -157,23 +157,26 @@ const indexImage = ogImage(routes.blog.index.href(), Index);
 /** Both blog routes, for `router.map(routes.blog, blogController)`. */
 export const blogController = createController(routes.blog, {
   actions: {
-    index: async (context) =>
+    index: async (context) => (
       context.render(
-        Layout({
-          title: Index.title,
-          description: Index.description,
-          image: indexImage,
-          // The listing places no island, so it ships no JavaScript at all. The article screen
-          // next door does — see `show`.
-          script: null,
-          children: Index.default(await listArticles()),
-        }),
-      ),
+        <Layout
+          title={Index.title}
+          description={Index.description}
+          image={indexImage}
+          // Read off the screen rather than decided here, the same way `router.tsx` reads it off a
+          // page module. The listing places no island, so it ships no JavaScript at all; the
+          // article screen next door does.
+          script={Index.hydrate ? clientRuntime : null}
+        >
+          <Index.default articles={await listArticles()} />
+        </Layout>,
+      )
+    ),
 
     show: async (context) => {
       const { params } = context;
       const article = await readArticle(params.slug);
-      // A `404` reads as "not mine" to `compose`, which is what an unknown slug is.
+      // A `404` is what an unknown slug is, and what the crawl reads as "no such page".
       if (article === null) {
         return new Response("Not Found", {
           status: 404,
@@ -182,19 +185,17 @@ export const blogController = createController(routes.blog, {
       }
 
       return context.render(
-        Layout({
-          title: `${article.title} — remix-ssg`,
-          description: article.summary,
-          image: articleImages.get(article.slug) ?? null,
-          // The article screen places one island — its share row — so it needs the runtime.
-          // `router.ts` reads `hydrate` off a page module for this; a controller says it here,
-          // because it builds the `Layout` call itself.
-          script: clientRuntime,
-          children: ArticlePage.default({
-            article,
-            body: await renderMarkdown(article.body),
-          }),
-        }),
+        <Layout
+          title={`${article.title} — remix-ssg`}
+          description={article.summary}
+          image={articleImages.get(article.slug) ?? null}
+          script={ArticlePage.hydrate ? clientRuntime : null}
+        >
+          <ArticlePage.default
+            article={article}
+            body={await renderMarkdown(article.body)}
+          />
+        </Layout>,
       );
     },
   },

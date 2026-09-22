@@ -4,7 +4,7 @@ A [Remix v3](https://remix.run) static-site starter built on
 [`@remix-kbn/ssg`](https://jsr.io/@remix-kbn/ssg) and deployed to GitHub
 Pages with per-PR previews.
 
-The site is content and one `router.ts` that maps every URL to what renders it.
+The site is content and one `router.tsx` that maps every URL to what renders it.
 `deno task dev` serves that handler; the build crawls the same handler straight
 from JSR, so there is no build script in this repository. Islands are code-split
 out of one graph, so a module two of them share is emitted once — and the home
@@ -34,15 +34,15 @@ repository**:
 | `web/client/islands/showcase/`                                                          | Its 18 demo islands and their shared helpers |
 | the `islands/showcase/*.tsx` entrypoint glob in `web/server/assets.ts`                  | What compiles them                           |
 | `web/server/versions.ts`                                                                | The badges under its title                   |
-| the `showcase` route in `web/client/routes.ts` and its action in `web/server/router.ts` | What serves it                               |
+| the `showcase` route in `web/client/routes.ts` and its action in `web/server/router.tsx` | What serves it                               |
 | the `UI showcase` link in `web/client/layout.tsx`                                       | The nav entry pointing at it                 |
 | `web/client/pages/fullscreen.tsx`                                                       | The mobile-Safari fullscreen demo page       |
 | `web/client/islands/{viewport-probe,fullscreen-demo}.tsx`                               | Its two islands                              |
-| the `fullscreen` route in `web/client/routes.ts` and its line in `web/server/router.ts` | What serves it                               |
+| the `fullscreen` route in `web/client/routes.ts` and its action in `web/server/router.tsx` | What serves it                               |
 | the `Fullscreen` link in `web/client/layout.tsx`                                        | The nav entry pointing at it                 |
 | `web/client/pages/spa.tsx`, `web/client/spa/`                                           | The `@remix-run/spa` client-routing demo     |
 | the `spa/entry.ts` entrypoint in `web/server/assets.ts`, `spaRuntime` in `web/server/runtime.ts` | What compiles and serves its script |
-| the `spa` route in `web/client/routes.ts` and its action in `web/server/router.ts`      | What serves it                               |
+| the `spa` route in `web/client/routes.ts` and its controller in `web/server/router.tsx`      | What serves it                               |
 | the `SPA` link and the `documentLinks` prop in `web/client/layout.tsx`                  | The nav entry, and the links it opts out of  |
 | `web/server/blog/*.md`, `web/client/pages/about.tsx`                                    | Placeholder content                          |
 
@@ -67,10 +67,11 @@ the two-islands-one-store demo. Delete those too once you have read the home
 page; the point they make is in this README's opening paragraph.
 
 What you keep is the two `deno.json` members and everything wiring them:
-`web/client/{routes,base,tokens,theme,hydration}.ts`, `web/client/layout.tsx`,
-`web/client/static/`, `web/client/pages/blog/`, `web/client/islands/share.tsx`,
-`web/server/{router,assets,runtime}.ts`, `web/server/blog/mod.ts`,
-`web/server/og/`, and the workflows. `share.tsx` is the share row under each
+`web/client/{routes,base,tokens,theme,hydration,navigation-guard}.ts`,
+`web/client/layout.tsx`, `web/client/static/`, `web/client/pages/blog/`,
+`web/client/islands/share.tsx`, `web/server/router.tsx`,
+`web/server/{assets,runtime}.ts`, `web/server/blog/mod.tsx`, `web/server/og/`,
+and the workflows. `share.tsx` is the share row under each
 article — [`@kuboon/share-element`](https://jsr.io/@kuboon/share-element) placed
 by a Remix island — so it goes when the blog does, and not before.
 `web/client/tokens.ts` and `web/client/theme.ts` are where the site's look lives

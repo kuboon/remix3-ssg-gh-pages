@@ -1,7 +1,7 @@
 /**
  * Every URL this site answers, in one place.
  *
- * `router.ts` maps these to the controllers that render them, and everything that links reads
+ * `router.tsx` maps these to the controllers that render them, and everything that links reads
  * `routes.about.href()` rather than rebuilding `${base}/about` at each call site — so a path is
  * written once and a rename is one edit.
  *
@@ -29,7 +29,7 @@ export const routes = route(base, {
   // SPA demo: delete this route when you delete the demo — see README.
   spa: route("spa", {
     /**
-     * One view of the SPA demo. Three of these exist — `client/spa/panel.tsx` says which — and the
+     * One view of the SPA demo. Three of these exist — `client/pages/spa.tsx` says which — and the
      * build generates each as its own static file, reached by the links the page renders.
      */
     show: get("/:id"),
