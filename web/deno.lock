@@ -5,7 +5,7 @@
     "jsr:@kuboon/md@0.5": "0.5.0",
     "jsr:@kuboon/share-element@0.5": "0.5.0",
     "jsr:@remix-kbn/assets-deno@0.8": "0.8.0",
-    "jsr:@remix-kbn/helper-agent@0.1": "0.1.0",
+    "jsr:@remix-kbn/helper-agent@~0.1.1": "0.1.1",
     "jsr:@remix-kbn/ssg@*": "0.12.0",
     "jsr:@remix-kbn/ssg@0.12": "0.12.0",
     "jsr:@std/cli@1": "1.0.32",
@@ -84,8 +84,8 @@
         "npm:es-module-lexer@^2.3.2"
       ]
     },
-    "@remix-kbn/helper-agent@0.1.0": {
-      "integrity": "143d399b147b13c75994059aba393efb8910169d9c0c25b748fedb235ba6293d",
+    "@remix-kbn/helper-agent@0.1.1": {
+      "integrity": "c4e4f66210d95a1bf061c99cdc0c2f0f0c15874e02ab7b28a9264f95d8b1bccf",
       "dependencies": [
         "npm:@remix-run/fetch-router@0.22",
         "npm:@remix-run/ui"
@@ -1883,7 +1883,7 @@
       "jsr:@kuboon/md@0.5",
       "jsr:@kuboon/share-element@0.5",
       "jsr:@remix-kbn/assets-deno@0.8",
-      "jsr:@remix-kbn/helper-agent@0.1",
+      "jsr:@remix-kbn/helper-agent@~0.1.1",
       "jsr:@remix-kbn/ssg@0.12",
       "jsr:@std/front-matter@^1.0.9",
       "npm:@remix-run/fetch-router@~0.22.1",
