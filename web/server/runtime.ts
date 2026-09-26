@@ -20,10 +20,21 @@ import type { ClientRuntime } from "../client/layout.tsx";
 
 const entry = await assets.getScriptEntry("hydration.ts");
 
+/**
+ * Where the chat's chunk is.
+ *
+ * Its URL and nothing else: preloading it would download fifty kilobytes on every hydrated page
+ * for a panel most visits never open, which is the whole reason it is a separate entrypoint. The
+ * shell writes it onto the help button and the browser imports it on the first click — see
+ * `client/helper/install.ts`.
+ */
+const helper = (await assets.getScriptEntry("helper/panel.ts")).href;
+
 /** The `<script type="module">` a hydrating page loads, and the chunks to preload behind it. */
 export const clientRuntime: ClientRuntime = {
   src: entry.href,
   preloads: entry.preloads,
+  helper,
 };
 
 /**
@@ -41,4 +52,5 @@ const spaEntry = await assets.getScriptEntry("spa/entry.ts");
 export const spaRuntime: ClientRuntime = {
   src: spaEntry.href,
   preloads: spaEntry.preloads,
+  helper,
 };

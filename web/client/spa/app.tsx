@@ -22,6 +22,7 @@ import {
 import { render } from "@remix-run/spa";
 import type { Handle } from "@remix-run/ui";
 
+import { HELPER_SRC } from "../helper/install.ts";
 import { Shell } from "../layout.tsx";
 import { routes } from "../routes.ts";
 import SpaPage, { parseSpaId, titleFor } from "../pages/spa.tsx";
@@ -42,8 +43,14 @@ export const spaRouter = createRouter({
   // Every route's node passes through here on its way to the runtime, and this is where the shell
   // goes back around it. `run()` renders into `<body>` and clears what was there, so a route that
   // returned its screen alone would take the header and the footer with it.
+  //
+  // That clearing is also why the help button's URL comes from `HELPER_SRC`: the shell rendered
+  // here replaces the server's, and this side cannot resolve an asset URL. `install.ts` read it
+  // off the server's button while it was still in the document, which is before this runs.
   middleware: [
-    render((content) => <Shell documentLinks>{content}</Shell>),
+    render((content) => (
+      <Shell documentLinks helper={HELPER_SRC}>{content}</Shell>
+    )),
   ],
 
   // A client router is asked about every same-origin navigation the runtime intercepts, including

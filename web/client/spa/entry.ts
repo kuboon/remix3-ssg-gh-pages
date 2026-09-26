@@ -23,10 +23,15 @@
 import { run } from "@remix-run/spa";
 
 import { guardBrowserNavigations } from "../navigation-guard.ts";
+import { installHelper } from "../helper/install.ts";
 import { spaRouter } from "./app.tsx";
 
 // The same two navigations the islands runtime hands back — this `run()` starts the same
 // Navigation API listener, so it needs the same guard. See `client/navigation-guard.ts`.
 guardBrowserNavigations();
+
+// The demo's shell renders the same help button as every other page, and the helper does not care
+// which runtime is in the document: it posts to a router of its own rather than navigating.
+installHelper();
 
 run(spaRouter);

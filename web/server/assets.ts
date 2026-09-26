@@ -36,6 +36,10 @@ export const assets = await createAssetServer({
     "islands/*.tsx",
     // Showcase: delete this line when you delete the showcase — see README.
     "islands/showcase/*.tsx",
+    // The chat's whole implementation, as an entrypoint rather than an island because nothing
+    // places it: the browser imports it by URL on the first click, and a page where nobody clicks
+    // never loads it. See `client/helper/install.ts`.
+    "helper/panel.ts",
     // SPA demo: delete this line when you delete the demo — see README. It is an entrypoint of its
     // own rather than an island because it starts a runtime instead of hydrating into one — see
     // `client/spa/entry.ts`. The Remix UI runtime it shares with `hydration.ts` is still emitted

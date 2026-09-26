@@ -183,6 +183,12 @@ web/
     spa/             # the client-side-routing demo — delete me
       app.tsx        # the router that runs in the browser — @remix-run/spa
       entry.ts       # its entrypoint: run(router), in place of hydration.ts
+    helper/          # the in-page support chat — delete me
+      button.ts      # the two names the shell and the browser agree on
+      install.ts     # the delegated click listener, and the lazy import
+      panel.ts       # the client and the controller, introduced to each other
+      agent.ts       # what it knows, as a script
+      tools.ts       # what it can do on the page
     islands/
       counter.tsx    # a hydrated island, and its own browser entrypoint
       total.tsx      # a second island/entrypoint, sharing state with it
@@ -197,7 +203,7 @@ web/
     deno.json        # lib: deno.ns — plus the tasks and their permission sets
     router.tsx       # the wiring — routes to pages, plus the rest of the site
     assets.ts        # client/ compiled as one graph
-    runtime.ts       # where hydration.ts and spa/entry.ts compiled to — router.tsx reads both
+    runtime.ts       # where hydration.ts, spa/entry.ts and the chat chunk compiled to
     versions.ts      # the showcase's badges, read off the import map
     blog/
       mod.tsx        # the articles, and both blog routes
@@ -331,6 +337,84 @@ into a browser bundle, which it never was before.
   `location.pathname` against patterns that carry it. A router that thought the
   prefix was empty would fail to match every URL under a sub-path deploy, which
   is every pull request preview.
+
+## The support chat (delete me)
+
+`client/helper/` puts [`@remix-kbn/helper-agent`](https://jsr.io/@remix-kbn/helper-agent)
+on every page that ships JavaScript: a **Help** button in the header, and a
+chat panel that answers questions about this site. The root README lists it
+among the things to delete in a repository made from this template.
+
+What makes it worth having here rather than in the package's own README is
+where it runs. The chat has two halves — a client that holds the conversation
+and a controller that answers it — and on a normal deployment they sit on
+either side of an origin, with a model behind the controller. GitHub Pages has
+no server, so there is nowhere to keep an API key and nothing to route a `POST`
+to. Both halves run in the browser instead:
+
+```ts
+const router = createRouter();
+router.post(CHAT_PATH, helperAgentController(siteAgent()));
+
+openHelperAgent({
+  transport: { url: CHAT_PATH, fetch: (request) => router.fetch(request) },
+  tools: pageTools,
+});
+```
+
+The controller is an ordinary `@remix-run/fetch-router` request handler and the
+client's transport takes a `fetch` rather than a URL, so the two can be
+introduced to each other without an origin in between. `panel.ts` is the whole
+of that wiring. The request never leaves the page, and everything except the
+model — the wire protocol, the streaming, the transcript, the tool round trip —
+is the real thing. What answers instead of a model is `agent/dummy`, reading
+from the script in `agent.ts`.
+
+### The button is the site's, not the package's
+
+The package draws the panel and stops there, which is the right split: where a
+support button goes is a thing about this site. So the shell renders a plain
+`<button>` and `install.ts` gives it a behaviour. Two details in that file are
+load-bearing:
+
+- **The listener is on the document.** An internal link is a soft navigation,
+  which swaps the document's contents, and on the SPA demo `run()` replaces the
+  whole of `<body>`. The button that gets clicked is never the element that was
+  there when the runtime started; one delegated listener outlives all of them.
+- **The import is written so the bundler cannot read it.** `panel.ts` is an
+  entrypoint of its own in `server/assets.ts`, and the shell writes its URL onto
+  the button exactly as it writes the runtime's into `<script>`. Spelling
+  `import("./panel.ts")` instead would work and would also put the chunk in
+  every hydrated page's `<link rel="modulepreload">` list — fifty kilobytes
+  downloaded on every visit for a panel most of them never open. As written, the
+  home page's eager JavaScript is unchanged and the chat arrives on the first
+  click.
+
+Because nothing links to that chunk, the build cannot find it by crawling
+either — so it is listed in `entryPoints` in `server/router.tsx`, next to the
+social cards, which are there for the mirror-image reason.
+
+### What it can do on the page
+
+The tools in `tools.ts` are the half of tool use a static site can have. There
+is no server to run anything, but there is a document: `where_am_i` reports the
+path, the heading, whether the page shipped JavaScript and how many islands it
+placed, and `draft_bug_report` builds a pre-filled link to this repository's
+issue form. They are declared to the controller on every turn and stored
+nowhere, so the list is what _this_ deploy can do.
+
+`draft_bug_report` returns a URL rather than opening a tab, which is not a
+nicety: a tool runs after the reply has finished streaming, by which point
+there is no user gesture left and `window.open` is blocked. The panel renders
+`http(s)` URLs in a reply as links.
+
+### Deleting it
+
+Delete `client/helper/`, the `helper/panel.ts` entrypoint in `server/assets.ts`,
+the `helper` field on `ClientRuntime` and the button in `client/layout.tsx`, the
+two `installHelper()` calls in `client/hydration.ts` and `client/spa/entry.ts`,
+the `HELPER_SRC` prop in `client/spa/app.tsx`, and the last entry in
+`entryPoints` in `server/router.tsx`.
 
 ## The mobile Safari demo (delete me)
 
