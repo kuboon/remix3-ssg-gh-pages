@@ -29,6 +29,7 @@ import {
 import { render } from "@remix-run/render-middleware";
 import { createFileTree, githubPages } from "@remix-kbn/ssg/site";
 import type { FileServerBehavior } from "@remix-kbn/ssg/site";
+import { stripBase } from "@remix-kbn/ssg/base";
 
 import { assets, assetsPath } from "./assets.ts";
 // `spaRuntime` is the SPA demo's — delete it from this import when you delete the demo.
@@ -227,9 +228,18 @@ router.get(`${base}/og/*path`, ({ request }) => serveOgImage(request));
  * on the site links to one. An `og:image` is an absolute URL meant for someone else's server, so a
  * crawler that followed it would be leaving — the build is told about them instead.
  *
+ * The chat's chunk is the other exception, for the mirror-image reason: the only mention of it in
+ * the HTML is an attribute on the help button, and a crawler follows links and imports rather than
+ * attributes it has never heard of. That it cannot be found by following is the point — see
+ * `client/helper/install.ts` — so, like the cards, the build is told.
+ *
  * It is down here rather than up with the other exports because a card is registered as its page's
  * route is wired, and this reads the register.
  */
-export const entryPoints: readonly string[] = ["/", ...ogPaths()];
+export const entryPoints: readonly string[] = [
+  "/",
+  ...ogPaths(),
+  `/${stripBase(clientRuntime.helper, base)}`,
+];
 
 export default router;

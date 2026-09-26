@@ -35,9 +35,10 @@
  * before `</head>`, so the link has to come first.
  */
 
-import { css, type Handle, type RemixNode } from "@remix-run/ui";
+import { attrs, css, type Handle, type RemixNode } from "@remix-run/ui";
 
 import { base, BASE_META_NAME } from "./base.ts";
+import { HELPER_BUTTON_ID, HELPER_SRC_ATTRIBUTE } from "./helper/button.ts";
 import { routes } from "./routes.ts";
 import { color, contentWidth } from "./tokens.ts";
 
@@ -91,6 +92,15 @@ export interface ClientRuntime {
   src: string;
   /** The chunks it imports, for `<link rel="modulepreload">`. */
   preloads: readonly string[];
+  /**
+   * Where the chat's chunk is — see `client/helper/`.
+   *
+   * It rides along with the runtime rather than arriving as a prop of its own, because it is the
+   * same kind of thing and wanted in the same places: a page that loads a runtime is exactly the
+   * page whose help button can do anything. Deliberately *not* in `preloads` — the point of the
+   * separate chunk is that a visit which never opens the chat never downloads it.
+   */
+  helper: string;
 }
 
 /**
@@ -175,7 +185,12 @@ export function Layout(handle: Handle<LayoutProps>) {
           ))}
         </head>
         <body>
-          <Shell documentLinks={props.documentLinks}>{props.children}</Shell>
+          <Shell
+            documentLinks={props.documentLinks}
+            helper={props.script?.helper ?? null}
+          >
+            {props.children}
+          </Shell>
           {props.script
             ? <script type="module" src={props.script.src}></script>
             : null}
@@ -204,6 +219,14 @@ export interface ShellProps {
    * `data-rmx-document` hands the navigation back to the browser in both cases.
    */
   documentLinks?: boolean;
+  /**
+   * The chat's chunk URL, or `null` for a page that ships no JavaScript — see `client/helper/`.
+   *
+   * Doubles as whether to render the button at all, which is the same question: the button is
+   * plain markup and its behaviour is attached by the page's runtime, so on a page without one it
+   * would be a control that does nothing. The blog listing ships none on purpose.
+   */
+  helper?: string | null;
 }
 
 /**
@@ -264,6 +287,31 @@ export function Shell(handle: Handle<ShellProps>) {
             <a href={routes.spa.show.href({ id: "1" })} data-rmx-document="">
               SPA
             </a>
+            {
+              /*
+              The chat's affordance, and only the affordance: `@remix-kbn/helper-agent` draws the
+              panel and leaves opening it to the site, which is the right split — where a support
+              button goes is a thing about this site and nothing about the package.
+
+              A plain `<button>` rather than an island. It needs no state and no rendering, only a
+              listener, and `client/helper/install.ts` attaches that from whichever runtime the
+              page loaded. What it opens arrives on the first click, in a chunk of its own.
+            */
+            }
+            {handle.props.helper
+              ? (
+                <button
+                  type="button"
+                  id={HELPER_BUTTON_ID}
+                  mix={[
+                    helperButtonStyle,
+                    attrs({ [HELPER_SRC_ATTRIBUTE]: handle.props.helper }),
+                  ]}
+                >
+                  Help
+                </button>
+              )
+              : null}
           </nav>
         </header>
         <main mix={[bandStyle, mainStyle]}>{handle.props.children}</main>
@@ -315,6 +363,18 @@ const navStyle = css({
   display: "flex",
   flexWrap: "wrap",
   gap: "1rem",
+});
+
+/** Styled to sit among the nav's links rather than shout over them. */
+const helperButtonStyle = css({
+  font: "inherit",
+  cursor: "pointer",
+  padding: "0 0.6rem",
+  border: `1px solid ${color.border}`,
+  borderRadius: "999px",
+  background: "transparent",
+  color: color.fg,
+  "&:hover": { borderColor: color.accent, color: color.accent },
 });
 
 const mainStyle = css({ paddingBlock: "2.5rem" });

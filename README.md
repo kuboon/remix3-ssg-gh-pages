@@ -44,11 +44,15 @@ repository**:
 | the `spa/entry.ts` entrypoint in `web/server/assets.ts`, `spaRuntime` in `web/server/runtime.ts` | What compiles and serves its script |
 | the `spa` route in `web/client/routes.ts` and its controller in `web/server/router.tsx`      | What serves it                               |
 | the `SPA` link and the `documentLinks` prop in `web/client/layout.tsx`                  | The nav entry, and the links it opts out of  |
+| `web/client/helper/`                                                                    | The in-page support chat                     |
+| the `helper/panel.ts` entrypoint in `web/server/assets.ts`, `helper` in `web/server/runtime.ts` and on `ClientRuntime` | What compiles and serves its chunk |
+| the `Help` button in `web/client/layout.tsx`, the `installHelper()` calls in `web/client/{hydration.ts,spa/entry.ts}`, and the last `entryPoints` entry in `web/server/router.tsx` | What opens it, and what makes the build write it |
 | `web/server/blog/*.md`, `web/client/pages/about.tsx`                                    | Placeholder content                          |
 
 Each wiring row above is marked at its line in the source, so
 `grep -rn "delete the showcase\|delete the demo" web` lists every edit the three
-demo pages ask for.
+demo pages ask for; the chat's own rows are listed at the end of
+`web/README.md`'s section on it.
 
 The SPA demo is the one worth reading before deleting. It is a real
 [`@remix-run/spa`](https://github.com/remix-run/remix/tree/main/packages/spa)
@@ -61,6 +65,14 @@ two changes the demo forced on the rest of the site — `client/base.ts` takes i
 prefix helper from `@remix-kbn/ssg/base` rather than `/site`, which cannot go in
 a browser bundle, and the shell publishes the deploy prefix in a `<meta>` so the
 browser's router can match URLs under a sub-path deploy.
+
+The chat is the other one worth a look. It is
+[`@remix-kbn/helper-agent`](https://jsr.io/@remix-kbn/helper-agent) with both of
+its halves — the client *and* the controller — running in this browser, because
+GitHub Pages has nowhere to keep an API key and nothing to route a `POST` to.
+Everything except the model is the real thing; what answers instead is the
+package's scripted agent. `web/README.md` has the detail, including why the
+chat's chunk is imported in a way the bundler cannot read.
 
 `web/client/pages/index.tsx` and `web/client/islands/{counter,total,store}` are
 the two-islands-one-store demo. Delete those too once you have read the home
