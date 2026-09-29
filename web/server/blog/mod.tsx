@@ -17,9 +17,10 @@
  */
 
 import { createController } from "@remix-run/fetch-router";
+import { createElement } from "@remix-run/ui";
 import type { RemixNode } from "@remix-run/ui";
 import { markdownToHast } from "@kuboon/md";
-import { hastToRemix } from "@kuboon/md/hast_to_remix.ts";
+import { hastToElement } from "@kuboon/md/hast_to_element.ts";
 import { extract } from "@std/front-matter/yaml";
 
 import { ogImage } from "../og/mod.ts";
@@ -116,15 +117,15 @@ async function listArticles(): Promise<Article[]> {
  * Renders an article body.
  *
  * `@kuboon/md` parses GitHub-flavored Markdown into a sanitized hast tree (heading anchors,
- * Shiki-highlighted code, tables, task lists) and `hastToRemix` converts it to `@remix-run/ui`
- * elements. That converter is its own entry point, so importing `@kuboon/md` does not put a UI
- * framework in the graph of anyone who only wants HTML out.
+ * Shiki-highlighted code, tables, task lists) and `hastToElement` turns it into `@remix-run/ui`
+ * elements — with *our* `createElement`, which is the point: `@kuboon/md` depends on no UI
+ * library, so there is one copy of the runtime, ours, whatever version we are on.
  *
  * @param markdown The Markdown body, front-matter already removed
  * @returns The body as a node tree, ready to place in a page
  */
 async function renderMarkdown(markdown: string): Promise<RemixNode> {
-  return hastToRemix(await markdownToHast(markdown)) as RemixNode;
+  return hastToElement(await markdownToHast(markdown), createElement);
 }
 
 // --- the routes -------------------------------------------------------------
