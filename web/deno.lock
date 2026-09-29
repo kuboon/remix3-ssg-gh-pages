@@ -5,7 +5,7 @@
     "jsr:@kuboon/md@0.5": "0.5.0",
     "jsr:@kuboon/share-element@0.5": "0.5.0",
     "jsr:@remix-kbn/assets-deno@0.8": "0.8.0",
-    "jsr:@remix-kbn/helper-agent@~0.1.1": "0.1.1",
+    "jsr:@remix-kbn/helper-agent@0.2": "0.2.0",
     "jsr:@remix-kbn/ssg@*": "0.12.0",
     "jsr:@remix-kbn/ssg@0.12": "0.12.0",
     "jsr:@std/cli@1": "1.0.32",
@@ -16,7 +16,6 @@
     "jsr:@std/path@^1.1.5": "1.1.6",
     "jsr:@std/toml@^1.0.3": "1.0.11",
     "jsr:@std/yaml@^1.0.5": "1.2.0",
-    "npm:@remix-run/fetch-router@0.22": "0.22.2",
     "npm:@remix-run/fetch-router@~0.22.2": "0.22.2",
     "npm:@remix-run/render-middleware@~0.3.2": "0.3.2_@emnapi+core@1.11.2_@emnapi+runtime@1.11.2",
     "npm:@remix-run/spa@~0.1.3": "0.1.3_@emnapi+core@1.11.2_@emnapi+runtime@1.11.2",
@@ -85,11 +84,11 @@
         "npm:es-module-lexer@^2.3.2"
       ]
     },
-    "@remix-kbn/helper-agent@0.1.1": {
-      "integrity": "c4e4f66210d95a1bf061c99cdc0c2f0f0c15874e02ab7b28a9264f95d8b1bccf",
+    "@remix-kbn/helper-agent@0.2.0": {
+      "integrity": "5488f9d5459a07e9d8f780a5446de5e6d2a229a3b17aa1b5f917f5bfb835604a",
       "dependencies": [
-        "npm:@remix-run/fetch-router@0.22",
-        "npm:@remix-run/ui@0.10"
+        "npm:@remix-run/fetch-router",
+        "npm:@remix-run/ui@0.11"
       ]
     },
     "@remix-kbn/ssg@0.12.0": {
@@ -104,6 +103,9 @@
     },
     "@std/collections@1.3.0": {
       "integrity": "eb36b43d784477ea0b476483ac034a14bdd182aff921c812ecf662a1fcef9498"
+    },
+    "@std/collections@1.4.0": {
+      "integrity": "bd7f74966e11de11b1f0420b7e8cb7bb381d8af7872b738443b92050db28c9c0"
     },
     "@std/front-matter@1.0.9": {
       "integrity": "ee6201d06674cbef137dda2252f62477450b48249e7d8d9ab57a30f85ff6f051",
@@ -136,6 +138,9 @@
     },
     "@std/yaml@1.2.0": {
       "integrity": "20beb41e4983ba3437dbefac62b14061ab058e8a187596f19d28ff9035f6e6cf"
+    },
+    "@std/yaml@1.3.0": {
+      "integrity": "b250103854378b8b36cbff0fe95aec017d3d9ce86b489c67605180c602fb4922"
     }
   },
   "npm": {
@@ -1890,7 +1895,7 @@
       "jsr:@kuboon/md@0.5",
       "jsr:@kuboon/share-element@0.5",
       "jsr:@remix-kbn/assets-deno@0.8",
-      "jsr:@remix-kbn/helper-agent@~0.1.1",
+      "jsr:@remix-kbn/helper-agent@0.2",
       "jsr:@remix-kbn/ssg@0.12",
       "jsr:@std/front-matter@^1.0.9",
       "npm:@remix-run/fetch-router@~0.22.2",
