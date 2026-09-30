@@ -137,12 +137,14 @@ const replies = [
     },
   },
   {
-    match: /fullscreen|viewport|safe area|notch/i,
+    match: /fullscreen|game|canvas|viewport|safe area|notch/i,
     turn: {
       text:
-        "The fullscreen demo measures the viewport for real — `100vh`, `100dvh`, the visual " +
-        "viewport and the safe-area insets — and lets you go fullscreen to watch them move. " +
-        "It is the one page that sets its own `viewport-fit=cover`.",
+        "The fullscreen page is the frame of a game with a placeholder where the game goes: " +
+        "no site chrome, and a stage that fills whatever the browser leaves visible. One " +
+        "action gets the rest of the screen: tap to fullscreen where the Fullscreen API " +
+        "exists, scroll to fullscreen on iPhone Safari where it does not. After that no " +
+        "touch scrolls, zooms or selects.",
     },
   },
 ];

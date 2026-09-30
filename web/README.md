@@ -194,8 +194,7 @@ web/
       total.tsx      # a second island/entrypoint, sharing state with it
       store.ts       # the module both islands import — the shared singleton
       share.tsx      # the article share row — a custom element, wrapped
-      viewport-probe.tsx   # fullscreen demo — delete me
-      fullscreen-demo.tsx  # fullscreen demo — delete me
+      fullscreen-game.tsx  # fullscreen demo — delete me
     static/
       app.css        # tokens, document defaults, the cascade layer order
       favicon.svg
@@ -416,20 +415,38 @@ two `installHelper()` calls in `client/hydration.ts` and `client/spa/entry.ts`,
 the `HELPER_SRC` prop in `client/spa/app.tsx`, and the last entry in
 `entryPoints` in `server/router.tsx`.
 
-## The mobile Safari demo (delete me)
+## The fullscreen demo (delete me)
 
-`client/pages/fullscreen.tsx` answers one question — can CSS hide Safari's URL
-bar and tab bar? — with measurements rather than prose. Its two islands read the
-viewport back live: `viewport-probe.tsx` resolves `100svh`, `100dvh` and
-`100lvh` on hidden probe elements and prints the pixels, and
-`fullscreen-demo.tsx` wires the Fullscreen API to a button. The root README
-lists it among the things to delete in a repository made from this template.
+`client/pages/fullscreen.tsx` is the frame of a fullscreen game with a
+placeholder where the game goes. It sets `bare`, so the shell renders it as the
+whole of `<body>` with no header, nav or footer, and its island is a
+`position: fixed; inset: 0` stage padded off the notch with
+`env(safe-area-inset-*)` — it fills whatever the browser leaves visible.
 
-It is also the only page that overrides the shell's viewport meta, which is the
-part worth keeping: `env(safe-area-inset-*)` reads `0px` unless the page opts in
-with `viewport-fit=cover`, so `LayoutProps.viewport` exists for whichever of
-your pages lays out to the edges of a phone screen. Deleting the demo leaves
-that prop in place and unused, which is where the next such page will want it.
+Before the game starts, the player takes one action that gets the rest of the
+screen, and which one is decided at run time:
+
+| Browser                                           | Prompt               | What happens                                                                                                                                   |
+| ------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fullscreen API available (desktop, Android, iPad) | Tap to fullscreen    | `requestFullscreen()` on the stage, from the tap — it is refused outside a user gesture                                                        |
+| Touch, no Fullscreen API (iPhone Safari)          | Scroll to fullscreen | The stage sits over a taller document and lets a vertical swipe through; the scroll shrinks Safari's bars, and the game starts once it settles |
+| Already running from the Home Screen              | Tap to start         | Nothing to gain                                                                                                                                |
+
+Once the game starts, the stage takes every touch (`touch-action: none`), so
+nothing scrolls the bars back out. Leaving fullscreen goes back to the prompt.
+
+Zoom and text selection are off throughout: the viewport meta asks for
+`user-scalable=no`, `pan-y` and `none` both exclude pinch and double-tap zoom,
+Safari's `gesture*` events are refused because iOS ignores `user-scalable=no`,
+and the stage sets `user-select: none`.
+
+It is also the only page that overrides the shell's viewport meta and the only
+one that sets `bare`, which are the parts worth keeping. `env(safe-area-inset-*)`
+reads `0px` unless the page opts in with `viewport-fit=cover`, so
+`LayoutProps.viewport` exists for whichever of your pages lays out to the edges
+of a phone screen, and `LayoutProps.bare` for whichever is a screen rather than a
+document. Deleting the demo leaves both props in place and unused, which is
+where the next such page will want them.
 
 ## Styling
 
