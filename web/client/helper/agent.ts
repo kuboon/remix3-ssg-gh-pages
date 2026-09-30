@@ -137,13 +137,14 @@ const replies = [
     },
   },
   {
-    match: /fullscreen|game|breakout|viewport|safe area|notch/i,
+    match: /fullscreen|game|canvas|viewport|safe area|notch/i,
     turn: {
       text:
-        "The fullscreen page is a Breakout you can actually play — drag or use the arrow keys, " +
-        "and the button in the corner hands it the whole screen through the Fullscreen API. " +
-        "It is the one page that sets its own `viewport-fit=cover`, which is what keeps the " +
-        "playfield clear of the notch once it is fullscreen.",
+        "The fullscreen page is an empty canvas stage and the plumbing a game on it would need: " +
+        "the Fullscreen API behind the button in the corner, device-ratio backing, pointer and " +
+        "keyboard input, and a frame loop that stops with the island. It is the one page that " +
+        "sets its own `viewport-fit=cover`, which is what keeps the picture clear of the notch " +
+        "once it is fullscreen. The game itself is yours to write.",
     },
   },
 ];

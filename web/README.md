@@ -195,7 +195,6 @@ web/
       store.ts       # the module both islands import — the shared singleton
       share.tsx      # the article share row — a custom element, wrapped
       fullscreen-game.tsx  # fullscreen demo — delete me
-      _lib/breakout.ts     # the game it draws — delete me
     static/
       app.css        # tokens, document defaults, the cascade layer order
       favicon.svg
@@ -418,28 +417,30 @@ the `HELPER_SRC` prop in `client/spa/app.tsx`, and the last entry in
 
 ## The fullscreen demo (delete me)
 
-`client/pages/fullscreen.tsx` is a game and nothing else: a Breakout on a
-canvas, with a button that hands it the whole screen through the Fullscreen API.
-That API is the only thing a page can do that genuinely removes mobile Safari's
+`client/pages/fullscreen.tsx` is one island and nothing else: a canvas stage
+with a button that hands it the whole screen through the Fullscreen API. That
+API is the only thing a page can do that genuinely removes mobile Safari's
 chrome, and it must be called from a user gesture — which is why it is a button
 rather than something the page does on load.
 
-The island `islands/fullscreen-game.tsx` owns the element and the events;
-`islands/_lib/breakout.ts` owns the pixels. They are separate because a game
-redraws every frame and a component re-renders when its state changes: running
-the first through the second would mean `handle.update()` sixty times a second,
-diffing a tree whose only moving part is a canvas the framework cannot see
-inside. `_lib/` is a directory the entrypoint glob (`islands/*.tsx`) does not
-reach, which is what makes a shared module there a chunk rather than an island.
+There is no game on the stage, on purpose. What a template can usefully carry is
+the plumbing, which is the fiddly part and the same every time: the prefixed
+twin of every fullscreen call, the safe-area padding that keeps the picture off
+the notch, a canvas backed at the device's pixel ratio, pointer and keyboard
+input, a `requestAnimationFrame` loop that stops when the island disconnects,
+and the several separate refusals it takes to keep a browser from treating a
+drag as a scroll — `touch-action: none`, and, because iOS ignores
+`user-scalable=no` (deliberately, so a page cannot trap someone who needs to
+zoom), Safari's non-standard `gesture*` events too. Replace the island's `draw()`
+and `move()` and the rest already works.
 
-Going fullscreen is also what makes the rest of it necessary. The playfield pads
-itself with `env(safe-area-inset-*)` so the bricks clear the notch and the ball
-clears the home indicator; `touch-action: none` gives the browser's pan and
-double-tap zoom to the game instead; and because iOS ignores `user-scalable=no`
-— deliberately, so a page cannot trap someone who needs to zoom — the island
-also refuses Safari's non-standard `gesture*` events over the canvas. The root
-README lists the whole thing among what to delete in a repository made from this
-template.
+The loop deliberately skips the UI runtime. A game redraws every frame and a
+component re-renders when its state changes; running the first through the
+second would mean `handle.update()` sixty times a second, diffing a tree whose
+only moving part is a canvas the framework cannot see inside. So the component
+renders once — `handle.update()` runs when the button's label changes, not when
+the marker moves. The root README lists the whole thing among what to delete in
+a repository made from this template.
 
 It is also the only page that overrides the shell's viewport meta, which is the
 part worth keeping: `env(safe-area-inset-*)` reads `0px` unless the page opts in

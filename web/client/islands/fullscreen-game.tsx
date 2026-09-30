@@ -1,13 +1,21 @@
 /**
- * The fullscreen demo: one game, and the button that gives it the whole screen.
+ * The fullscreen demo: an empty stage, and everything a game on it would need from the page.
  *
- * DELETE ME with the rest of the fullscreen demo — see `pages/fullscreen.tsx` and the root README.
+ * DELETE ME in a repository made from this template — see `pages/fullscreen.tsx` and the root
+ * README.
  *
- * The page it lives on used to explain what a page can do about mobile Safari's chrome. The answer
- * was always "one thing" — the Fullscreen API — so the page is now that one thing, doing something
- * worth going fullscreen for. Everything the old prose asserted is still here, just demonstrated
- * instead of described: the safe-area insets keep the playfield off the notch, and the button only
- * works because it is a button, called from a real user gesture.
+ * There is no game here on purpose. What a template can usefully carry is the plumbing, which is
+ * the part that is fiddly and the same every time: the Fullscreen API with its prefixed twin, the
+ * safe-area padding that keeps the picture off the notch, a canvas backed at the device's pixel
+ * ratio, pointer and keyboard input, a `requestAnimationFrame` loop that stops when the island
+ * disconnects, and the several separate refusals it takes to stop a browser treating a drag as a
+ * scroll. Replace `draw()` and `move()` with your own and the rest already works.
+ *
+ * The loop deliberately does not go through the UI runtime. A game redraws every frame; a component
+ * re-renders when its state changes. Running the first through the second means `handle.update()`
+ * sixty times a second, diffing a tree whose only moving part is a `<canvas>` the framework cannot
+ * see inside. So the component renders once and then gets out of the way — `handle.update()` runs
+ * when the button's label changes, not when the marker moves.
  *
  * Support is detected at run time rather than sniffed from a version, which is the honest way to
  * write this down: iPhone Safari was without the Fullscreen API for years while iPad had it, so a
@@ -15,15 +23,10 @@
  * property that goes `false` inside an iframe without `allow="fullscreen"`, which no version check
  * would ever catch. The prefixed calls are kept beside the standard ones for the same reason:
  * Safari shipped `webkitRequestFullscreen` long before `requestFullscreen`.
- *
- * The component renders once and then gets out of the way. `handle.update()` runs when the button's
- * label changes, not when the ball moves — the frames belong to `_lib/breakout.ts`, which draws
- * into the canvas this island owns.
  */
 
 import { clientEntry, css, type Handle, on, ref } from "@remix-run/ui";
 
-import { createBreakout, type Game } from "./_lib/breakout.ts";
 import { color, font, radius } from "../tokens.ts";
 
 /** The prefixed half of the API, as Safari shipped it. */
@@ -44,7 +47,6 @@ export const FullscreenGame = clientEntry(
   function FullscreenGame(handle: Handle) {
     let stage: HTMLElement | null = null;
     let canvas: HTMLCanvasElement | null = null;
-    let game: Game | null = null;
     let support: Support = "unknown";
     let active = false;
     let error = "";
@@ -108,21 +110,44 @@ export const FullscreenGame = clientEntry(
 
       if (!canvas) return;
       const surface = canvas;
-      game = createBreakout(surface);
+      const context = surface.getContext("2d");
+      if (!context) return;
+      // Bound again as its own `const` so the null check survives into the closures below.
+      const ctx = context;
+
+      /** Where the marker is, in CSS pixels, and which way the keyboard is holding it. */
+      let markerX = 0;
+      let direction = 0;
+      /** The canvas's CSS box, and the page's colors — both re-read on resize, never in a frame. */
+      let box = { w: 1, h: 1 };
+      let palette = { bg: "", fg: "", muted: "", accent: "" };
 
       /**
        * The canvas has two sizes and both matter: the CSS box it occupies, and the pixel buffer it
        * draws into. Only the second is `width`/`height`, and leaving it at the default is what
        * makes a canvas look soft on a phone — so the buffer is the box times the device ratio, and
-       * the game scales its own transform to match.
+       * `draw()` scales its transform to match.
+       *
+       * `getComputedStyle` is also the only way from `var(--accent)` to a color a canvas can fill
+       * with, and it is a layout read, so it happens here rather than in the loop.
        */
       function fit(): void {
         const ratio = Math.min(globalThis.devicePixelRatio || 1, 3);
-        const width = Math.round(Math.max(surface.clientWidth, 1) * ratio);
-        const height = Math.round(Math.max(surface.clientHeight, 1) * ratio);
-        if (surface.width !== width) surface.width = width;
-        if (surface.height !== height) surface.height = height;
-        game?.resize();
+        box = {
+          w: Math.max(surface.clientWidth, 1),
+          h: Math.max(surface.clientHeight, 1),
+        };
+        surface.width = Math.round(box.w * ratio);
+        surface.height = Math.round(box.h * ratio);
+        const style = getComputedStyle(surface);
+        const read = (name: string) => style.getPropertyValue(name).trim();
+        palette = {
+          bg: read("--bg"),
+          fg: read("--fg"),
+          muted: read("--muted"),
+          accent: read("--accent"),
+        };
+        markerX = clamp(markerX || box.w / 2, 0, box.w);
       }
 
       const observer = new ResizeObserver(fit);
@@ -130,66 +155,126 @@ export const FullscreenGame = clientEntry(
       handle.signal.addEventListener("abort", () => observer.disconnect());
       fit();
 
-      // A theme flip changes every color the game fills with, and nothing about its size — so the
-      // resize observer never hears about it. `resize()` re-reads the palette, which is what this
-      // wants; the layout it also redoes is a no-op.
-      const dark = globalThis.matchMedia("(prefers-color-scheme: dark)");
-      dark.addEventListener("change", fit, options);
+      // A theme flip changes every color the canvas fills with and nothing about its size, so the
+      // resize observer never hears about it.
+      globalThis
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", fit, options);
 
-      // Drag to move, tap to launch. Pointer events cover mouse, pen and touch in one path, and
-      // capture keeps a drag alive after the finger leaves the canvas — otherwise the paddle
-      // freezes the moment you overshoot the edge.
+      // Drag to move. Pointer events cover mouse, pen and touch in one path, and capture keeps a
+      // drag alive after the finger leaves the canvas — otherwise the marker freezes the moment
+      // you overshoot the edge.
       let dragging = false;
+      const aimAt = (clientX: number) => {
+        const rect = surface.getBoundingClientRect();
+        if (rect.width === 0) return;
+        markerX = clamp((clientX - rect.left) * (box.w / rect.width), 0, box.w);
+      };
       surface.addEventListener("pointerdown", (event) => {
         dragging = true;
         surface.setPointerCapture(event.pointerId);
-        game?.aimAt(event.clientX);
-        game?.act();
+        aimAt(event.clientX);
         event.preventDefault();
       }, options);
       surface.addEventListener("pointermove", (event) => {
-        if (dragging || event.pointerType === "mouse") {
-          game?.aimAt(event.clientX);
-        }
+        if (dragging || event.pointerType === "mouse") aimAt(event.clientX);
       }, options);
       const release = () => (dragging = false);
       surface.addEventListener("pointerup", release, options);
       surface.addEventListener("pointercancel", release, options);
 
       globalThis.addEventListener("keydown", (event) => {
-        if (event.repeat) return;
-        if (event.key === "ArrowLeft" || event.key === "a") game?.steer(-1);
-        else if (event.key === "ArrowRight" || event.key === "d") {
-          game?.steer(1);
-        } else if (event.key === " " || event.key === "Enter") game?.act();
+        if (event.key === "ArrowLeft") direction = -1;
+        else if (event.key === "ArrowRight") direction = 1;
         else return;
-        event.preventDefault(); // Space scrolls a document; here it launches the ball.
+        event.preventDefault(); // An arrow key scrolls a document; here it steers.
       }, options);
       globalThis.addEventListener("keyup", (event) => {
-        if (
-          event.key === "ArrowLeft" || event.key === "a" ||
-          event.key === "ArrowRight" || event.key === "d"
-        ) game?.steer(0);
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          direction = 0;
+        }
       }, options);
 
       /*
        * iOS ignores `user-scalable=no` — it has since iOS 10, deliberately, so a page cannot trap
        * someone who needs to zoom. `touch-action: none` stops the browser's own panning and
        * double-tap zoom over the canvas, but pinch on iOS arrives as the non-standard `gesture*`
-       * events, and refusing those is the only way to keep two fingers from scaling the playfield
-       * out from under the ball. Scoped to the stage, so the rest of the document still zooms.
+       * events, and refusing those is the only way to keep two fingers from scaling the stage.
+       * Scoped to the stage, so the rest of the document still zooms.
        */
       for (const type of ["gesturestart", "gesturechange", "gestureend"]) {
-        stage?.addEventListener(
-          type,
-          (event) => event.preventDefault(),
-          options,
-        );
+        stage?.addEventListener(type, (e) => e.preventDefault(), options);
       }
 
+      /** Your simulation goes here. This one moves a marker and counts seconds. */
+      function move(dt: number): void {
+        markerX = clamp(markerX + direction * box.w * 0.9 * dt, 0, box.w);
+      }
+
+      /** Your renderer goes here. This one proves the loop, the input and the palette are live. */
+      function draw(now: number): void {
+        const { w, h } = box;
+        ctx.setTransform(surface.width / w, 0, 0, surface.height / h, 0, 0);
+        ctx.fillStyle = palette.bg;
+        ctx.fillRect(0, 0, w, h);
+
+        const unit = Math.min(w, h);
+
+        // Something that moves on its own, so a stalled loop is visible rather than merely quiet.
+        ctx.fillStyle = palette.accent;
+        ctx.globalAlpha = 0.25;
+        ctx.beginPath();
+        ctx.arc(
+          w / 2 + Math.cos(now / 900) * w * 0.3,
+          h / 2 + Math.sin(now / 700) * h * 0.22,
+          unit * 0.09,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        ctx.fillStyle = palette.fg;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = `700 ${clamp(unit * 0.07, 18, 34)}px system-ui, sans-serif`;
+        ctx.fillText("Your game goes here", w / 2, h / 2 - unit * 0.05);
+        ctx.fillStyle = palette.muted;
+        ctx.font = `500 ${clamp(unit * 0.035, 12, 16)}px system-ui, sans-serif`;
+        ctx.fillText(
+          "drag or ← → to move · the button takes the screen",
+          w / 2,
+          h / 2 + unit * 0.03,
+        );
+        ctx.fillText(
+          `${Math.round(w)} × ${Math.round(h)} css px`,
+          w / 2,
+          h / 2 + unit * 0.09,
+        );
+
+        // The marker: the input, made visible.
+        const markerW = clamp(w * 0.2, 64, 180);
+        const markerH = clamp(unit * 0.024, 9, 16);
+        ctx.fillStyle = palette.accent;
+        ctx.beginPath();
+        ctx.roundRect(
+          clamp(markerX - markerW / 2, 0, w - markerW),
+          h - markerH - clamp(h * 0.07, 18, 56),
+          markerW,
+          markerH,
+          markerH / 2,
+        );
+        ctx.fill();
+      }
+
+      let last = 0;
       let frame = 0;
       const tick = (now: number) => {
-        game?.frame(now);
+        // A tab in the background comes back with a huge gap; capping it keeps the step sane.
+        const dt = last === 0 ? 0 : Math.min((now - last) / 1000, 1 / 20);
+        last = now;
+        move(dt);
+        draw(now);
         frame = requestAnimationFrame(tick);
       };
       frame = requestAnimationFrame(tick);
@@ -207,14 +292,13 @@ export const FullscreenGame = clientEntry(
             canvasStyle,
           ]}
         >
-          A Breakout game. This browser has no canvas, so there is nothing to
-          play here.
+          The fullscreen demo draws into a canvas, and this browser has none.
         </canvas>
 
         <button
           type="button"
           disabled={support === "none"}
-          aria-label={active ? "Exit fullscreen" : "Play fullscreen"}
+          aria-label={active ? "Exit fullscreen" : "Go fullscreen"}
           mix={[
             buttonStyle,
             on("click", () => {
@@ -243,10 +327,14 @@ export const FullscreenGame = clientEntry(
   },
 );
 
+function clamp(value: number, min: number, max: number): number {
+  return value < min ? min : value > max ? max : value;
+}
+
 // --- styles -----------------------------------------------------------------
 
 /**
- * The fullscreen element, and the game's frame in the page.
+ * The fullscreen element, and the stage's frame in the page.
  *
  * `box-sizing: border-box` with a percentage-height canvas is what makes the safe-area padding do
  * anything: an absolutely positioned child would resolve `inset: 0` against the padding box and sit
@@ -287,8 +375,8 @@ const canvasStyle = css({
   display: "block",
   width: "100%",
   height: "100%",
-  // Every browser gesture over the playfield — panning, pinch, double-tap zoom — belongs to the
-  // game instead.
+  // Every browser gesture over the stage — panning, pinch, double-tap zoom — belongs to the
+  // demo instead.
   touchAction: "none",
 });
 
