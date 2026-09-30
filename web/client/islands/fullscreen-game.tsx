@@ -3,18 +3,21 @@
  *
  * DELETE ME with the rest of the fullscreen demo — see `pages/fullscreen.tsx` and the root README.
  *
- * The stage is `position: fixed; inset: 0`, which on a phone is the visible area between the
- * browser's bars, and the whole screen once the page runs from the Home Screen. Everything that
- * would turn a drag into something else is refused here: `touch-action: none` for panning and
- * double-tap zoom, `user-select` and the touch callout for selection, and Safari's `gesture*`
- * events for pinch, because iOS ignores `user-scalable=no`.
+ * A mobile browser only collapses its bars when the page is scrolled, and no script can do that for
+ * it. So the stage is `position: fixed; inset: 0` — it follows the visible area as the bars move —
+ * and on a touch screen it sits over a document taller than the screen. Before the game starts the
+ * stage lets a vertical swipe through (`touch-action: pan-y`), which scrolls the document under it
+ * and shrinks Safari's tab bar to its compact form; a tap starts the game and switches the stage to
+ * `touch-action: none`, after which every touch is the game's.
  *
- * The frame loop draws into the canvas directly rather than through `handle.update()`: the canvas
- * is opaque to the UI runtime, so re-rendering every frame would only diff an unchanged tree.
- * Replace `draw()` with the game.
+ * Zoom is off throughout: `pan-y` already excludes pinch and double-tap zoom, and Safari's `gesture*`
+ * events are refused because iOS ignores `user-scalable=no`. Text selection is off on the stage.
+ *
+ * The frame loop draws into the canvas directly rather than through `handle.update()`, which runs
+ * once, when the game starts. Replace `draw()` with the game.
  */
 
-import { clientEntry, css, type Handle, ref } from "@remix-run/ui";
+import { clientEntry, css, type Handle, on, ref } from "@remix-run/ui";
 
 import { routes } from "../routes.ts";
 import { color, font } from "../tokens.ts";
@@ -24,6 +27,14 @@ export const FullscreenGame = clientEntry(
   function FullscreenGame(handle: Handle) {
     let stage: HTMLElement | null = null;
     let canvas: HTMLCanvasElement | null = null;
+    let playing = false;
+
+    /** A tap, not a swipe: `click` never fires for a touch the browser took as a scroll. */
+    function start(): void {
+      if (playing) return;
+      playing = true;
+      void handle.update();
+    }
 
     handle.queueTask(() => {
       if (!stage || !canvas) return;
@@ -32,6 +43,7 @@ export const FullscreenGame = clientEntry(
       if (!context) return;
       const ctx = context;
       const options = { signal: handle.signal } as const;
+      const touch = globalThis.matchMedia("(pointer: coarse)").matches;
 
       for (const type of ["gesturestart", "gesturechange", "gestureend"]) {
         stage.addEventListener(type, (e) => e.preventDefault(), options);
@@ -66,13 +78,11 @@ export const FullscreenGame = clientEntry(
       /** Where the last touch or pointer was, so the placeholder shows input arriving. */
       let pointer: { x: number; y: number } | null = null;
       const track = (event: PointerEvent) => {
+        if (!playing) return;
         const rect = surface.getBoundingClientRect();
         pointer = { x: event.clientX - rect.left, y: event.clientY - rect.top };
       };
-      surface.addEventListener("pointerdown", (event) => {
-        surface.setPointerCapture(event.pointerId);
-        track(event);
-      }, options);
+      surface.addEventListener("pointerdown", track, options);
       surface.addEventListener("pointermove", (event) => {
         if (event.buttons !== 0 || event.pointerType === "mouse") track(event);
       }, options);
@@ -87,11 +97,23 @@ export const FullscreenGame = clientEntry(
         ctx.textBaseline = "middle";
         ctx.fillStyle = palette.fg;
         ctx.font = `700 ${Math.max(18, unit * 0.07)}px system-ui, sans-serif`;
-        ctx.fillText("Your game goes here", w / 2, h / 2);
+        ctx.fillText(
+          playing
+            ? "Your game goes here"
+            : touch
+            ? "Swipe up"
+            : "Click to start",
+          w / 2,
+          h / 2,
+        );
         ctx.fillStyle = palette.muted;
         ctx.font = `500 ${Math.max(12, unit * 0.032)}px system-ui, sans-serif`;
         ctx.fillText(
-          `${Math.round(w)} × ${Math.round(h)}`,
+          playing
+            ? `${Math.round(w)} × ${Math.round(h)}`
+            : touch
+            ? "to shrink the browser bar, then tap to start"
+            : `${Math.round(w)} × ${Math.round(h)}`,
           w / 2,
           h / 2 + unit * 0.07,
         );
@@ -116,20 +138,40 @@ export const FullscreenGame = clientEntry(
     });
 
     return () => (
-      <div mix={[ref((node) => (stage = node as HTMLElement)), stageStyle]}>
-        <canvas
+      <div mix={runwayStyle}>
+        <div
           mix={[
-            ref((node) => (canvas = node as HTMLCanvasElement)),
-            canvasStyle,
+            ref((node) => (stage = node as HTMLElement)),
+            stageStyle,
+            playing ? playingStyle : readyStyle,
           ]}
-        />
-        <a href={routes.home.href()} mix={homeStyle}>← Home</a>
+        >
+          <canvas
+            mix={[
+              ref((node) => (canvas = node as HTMLCanvasElement)),
+              canvasStyle,
+              on("click", start),
+            ]}
+          />
+          <a href={routes.home.href()} mix={homeStyle}>← Home</a>
+        </div>
       </div>
     );
   },
 );
 
 // --- styles -----------------------------------------------------------------
+
+/**
+ * What there is to scroll. Only on a touch screen, where scrolling is what shrinks the browser's
+ * bars; a desktop window has none, and would only gain a scrollbar.
+ *
+ * Taller than the large viewport, so the document can still scroll once the bars have collapsed —
+ * with nothing left to scroll the browser bounces back and brings them out again.
+ */
+const runwayStyle = css({
+  "@media (pointer: coarse)": { minHeight: "150lvh" },
+});
 
 const stageStyle = css({
   position: "fixed",
@@ -141,19 +183,28 @@ const stageStyle = css({
   paddingRight: "env(safe-area-inset-right)",
   background: color.bg,
   overflow: "hidden",
-  overscrollBehavior: "none",
-  touchAction: "none",
   userSelect: "none",
   WebkitUserSelect: "none",
   WebkitTouchCallout: "none",
   WebkitTapHighlightColor: "transparent",
 });
 
+/** Before the game: a vertical swipe scrolls the document; pinch and double-tap still do nothing. */
+const readyStyle = css({
+  touchAction: "pan-y",
+  "& canvas": { touchAction: "pan-y" },
+});
+
+/** During the game: every touch is the game's. */
+const playingStyle = css({
+  touchAction: "none",
+  "& canvas": { touchAction: "none" },
+});
+
 const canvasStyle = css({
   display: "block",
   width: "100%",
   height: "100%",
-  touchAction: "none",
 });
 
 const homeStyle = css({

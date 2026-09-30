@@ -419,16 +419,23 @@ the `HELPER_SRC` prop in `client/spa/app.tsx`, and the last entry in
 
 `client/pages/fullscreen.tsx` is the frame of a fullscreen game with a
 placeholder where the game goes. It sets `bare`, so the shell renders it as the
-whole of `<body>` with no header, nav or footer, and its island is a fixed stage
-the size of the visible screen, padded off the notch with
-`env(safe-area-inset-*)`. Zoom, scrolling and text selection are off: the
-viewport meta asks for `user-scalable=no`, the stage sets `touch-action: none`
-and `user-select: none`, and because iOS ignores `user-scalable=no` the island
-also refuses Safari's `gesture*` events.
+whole of `<body>` with no header, nav or footer, and its island is a
+`position: fixed; inset: 0` stage padded off the notch with
+`env(safe-area-inset-*)` — it fills whatever the browser leaves visible.
 
-It does not use the Fullscreen API, which iPhone Safari does not offer for
-ordinary elements. On a phone the stage fills the area between the browser's
-bars, and the whole screen once the page runs from the Home Screen.
+Safari's tab bar takes a large part of an iPhone screen, and it only shrinks when
+the page scrolls; no script can do it. So on a touch screen the stage sits over a
+document taller than the screen, and until the game starts it lets a vertical
+swipe through (`touch-action: pan-y`): one swipe up scrolls the document under
+it and the bar collapses. A tap starts the game and switches the stage to
+`touch-action: none`, so from then on no touch scrolls and the bar stays small.
+A desktop window has no bar to shrink and gets no extra height.
+
+Zoom and text selection are off throughout: the viewport meta asks for
+`user-scalable=no`, `pan-y` and `none` both exclude pinch and double-tap zoom,
+Safari's `gesture*` events are refused because iOS ignores `user-scalable=no`,
+and the stage sets `user-select: none`. It does not use the Fullscreen API,
+which iPhone Safari does not offer for ordinary elements.
 
 It is also the only page that overrides the shell's viewport meta and the only
 one that sets `bare`, which are the parts worth keeping. `env(safe-area-inset-*)`

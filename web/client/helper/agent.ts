@@ -141,8 +141,9 @@ const replies = [
     turn: {
       text:
         "The fullscreen page is the frame of a game with a placeholder where the game goes: " +
-        "no site chrome, a stage the size of the screen padded off the notch, and zoom, " +
-        "scrolling and text selection turned off. It sets its own `viewport-fit=cover`.",
+        "no site chrome, and a stage that fills whatever the browser leaves visible. On a " +
+        "phone, swipe up once to shrink Safari's tab bar, then tap to start — after that no " +
+        "touch scrolls, zooms or selects.",
     },
   },
 ];
