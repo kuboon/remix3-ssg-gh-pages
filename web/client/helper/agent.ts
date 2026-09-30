@@ -142,9 +142,9 @@ const replies = [
       text:
         "The fullscreen page is the frame of a game with a placeholder where the game goes: " +
         "no site chrome, and a stage that fills whatever the browser leaves visible. One " +
-        "action gets the rest of the screen: tap to fullscreen where the Fullscreen API " +
-        "exists, scroll to fullscreen on iPhone Safari where it does not. After that no " +
-        "touch scrolls, zooms or selects.",
+        "action gets the rest of the screen on a phone: tap to fullscreen where the " +
+        "Fullscreen API exists, scroll to fullscreen on iPhone Safari where it does not. On a " +
+        "desktop you just click to start, and fullscreen is a button in the corner.",
     },
   },
 ];

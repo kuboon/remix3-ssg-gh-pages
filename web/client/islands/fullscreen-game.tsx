@@ -6,12 +6,14 @@
  * Getting the whole screen takes one action from the player before the game starts, and which one
  * depends on the browser:
  *
- * - **Tap to fullscreen**, where the Fullscreen API exists — desktop, Android, iPad. It has to be a
- *   tap because `requestFullscreen()` is refused outside a user gesture.
+ * - **Tap to fullscreen**, on a touch screen with the Fullscreen API — Android, iPad. It has to be
+ *   a tap because `requestFullscreen()` is refused outside a user gesture.
  * - **Scroll to fullscreen**, on a touch screen without it — iPhone Safari. Safari's bars only
  *   shrink when the page scrolls, so the stage sits over a document taller than the screen and lets
  *   a vertical swipe through until the scroll has happened.
  * - **Tap to start**, where there is nothing to gain — a page already running from the Home Screen.
+ * - **Click to start** on a desktop, where a window is a fine place to play. Fullscreen is offered
+ *   rather than required: a button in the corner, where the API exists.
  *
  * Once the game starts the stage takes every touch (`touch-action: none`), so nothing scrolls the
  * bars back out. Zoom is off throughout: `pan-y` and `none` both exclude pinch and double-tap zoom,
@@ -33,6 +35,7 @@ type LegacyElement = HTMLElement & {
 type LegacyDocument = Document & {
   webkitFullscreenEnabled?: boolean;
   webkitFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void> | void;
 };
 
 /** How this browser gets to the whole screen. `null` until the browser has been asked. */
@@ -46,6 +49,9 @@ export const FullscreenGame = clientEntry(
     let mode: Mode = null;
     let touch = false;
     let playing = false;
+    /** Whether the Fullscreen API exists here, and whether the stage is fullscreen right now. */
+    let canFullscreen = false;
+    let fullscreen = false;
 
     function setPlaying(next: boolean): void {
       if (playing === next) return;
@@ -53,19 +59,38 @@ export const FullscreenGame = clientEntry(
       void handle.update();
     }
 
+    async function enterFullscreen(): Promise<void> {
+      const element = stage as LegacyElement | null;
+      try {
+        if (element?.requestFullscreen) {
+          await element.requestFullscreen({ navigationUI: "hide" });
+        } else await element?.webkitRequestFullscreen?.();
+      } catch {
+        // Refused — an iframe without `allow="fullscreen"`, say. Play in the page instead.
+      }
+    }
+
+    async function exitFullscreen(): Promise<void> {
+      const legacy = document as LegacyDocument;
+      try {
+        if (document.exitFullscreen) await document.exitFullscreen();
+        else await legacy.webkitExitFullscreen?.();
+      } catch {
+        // Already out.
+      }
+    }
+
     /** A tap, not a swipe: `click` never fires for a touch the browser took as a scroll. */
     async function start(): Promise<void> {
-      if (playing || !stage) return;
-      if (mode === "fullscreen") {
-        const element = stage as LegacyElement;
-        try {
-          if (element.requestFullscreen) {
-            await element.requestFullscreen({ navigationUI: "hide" });
-          } else await element.webkitRequestFullscreen?.();
-        } catch {
-          // Refused — an iframe without `allow="fullscreen"`, say. Play in the page instead.
-        }
-      }
+      if (playing) return;
+      if (mode === "fullscreen") await enterFullscreen();
+      setPlaying(true);
+    }
+
+    /** The desktop's optional button: in or out of fullscreen, starting the game on the way in. */
+    async function toggleFullscreen(): Promise<void> {
+      if (fullscreen) return exitFullscreen();
+      await enterFullscreen();
       setPlaying(true);
     }
 
@@ -82,19 +107,27 @@ export const FullscreenGame = clientEntry(
       const standalone =
         globalThis.matchMedia("(display-mode: standalone)").matches ||
         (navigator as Navigator & { standalone?: boolean }).standalone === true;
-      mode = document.fullscreenEnabled || legacy.webkitFullscreenEnabled
+      canFullscreen = Boolean(
+        document.fullscreenEnabled || legacy.webkitFullscreenEnabled,
+      );
+      mode = !touch
+        ? "tap"
+        : canFullscreen
         ? "fullscreen"
-        : touch && !standalone
-        ? "scroll"
-        : "tap";
+        : standalone
+        ? "tap"
+        : "scroll";
       void handle.update();
 
-      // Leaving fullscreen — Escape, a swipe down — goes back to the prompt, so the next tap
-      // brings the screen back rather than playing on in a window.
+      // On a touch screen, leaving fullscreen — a swipe down — goes back to the prompt, so the next
+      // tap brings the screen back rather than playing on with the browser's bars in the way. A
+      // desktop window is a fine place to play, so there the game carries on.
       const onFullscreenChange = () => {
-        if (!(document.fullscreenElement ?? legacy.webkitFullscreenElement)) {
-          setPlaying(false);
-        }
+        fullscreen = Boolean(
+          document.fullscreenElement ?? legacy.webkitFullscreenElement,
+        );
+        if (!fullscreen && mode === "fullscreen") setPlaying(false);
+        void handle.update();
       };
       document.addEventListener(
         "fullscreenchange",
@@ -212,6 +245,16 @@ export const FullscreenGame = clientEntry(
             ]}
           />
           <a href={routes.home.href()} mix={homeStyle}>← Home</a>
+          {!touch && canFullscreen
+            ? (
+              <button
+                type="button"
+                mix={[cornerStyle, on("click", () => void toggleFullscreen())]}
+              >
+                {fullscreen ? "Exit fullscreen" : "Fullscreen"}
+              </button>
+            )
+            : null}
         </div>
       </div>
     );
@@ -275,6 +318,20 @@ const canvasStyle = css({
   display: "block",
   width: "100%",
   height: "100%",
+});
+
+const cornerStyle = css({
+  position: "absolute",
+  top: "calc(env(safe-area-inset-top) + 0.5rem)",
+  right: "calc(env(safe-area-inset-right) + 0.6rem)",
+  font: "inherit",
+  fontFamily: font.mono,
+  fontSize: "0.8rem",
+  color: color.muted,
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+  "&:hover": { color: color.fg },
 });
 
 const homeStyle = css({
