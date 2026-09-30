@@ -137,12 +137,13 @@ const replies = [
     },
   },
   {
-    match: /fullscreen|viewport|safe area|notch/i,
+    match: /fullscreen|game|breakout|viewport|safe area|notch/i,
     turn: {
       text:
-        "The fullscreen demo measures the viewport for real — `100vh`, `100dvh`, the visual " +
-        "viewport and the safe-area insets — and lets you go fullscreen to watch them move. " +
-        "It is the one page that sets its own `viewport-fit=cover`.",
+        "The fullscreen page is a Breakout you can actually play — drag or use the arrow keys, " +
+        "and the button in the corner hands it the whole screen through the Fullscreen API. " +
+        "It is the one page that sets its own `viewport-fit=cover`, which is what keeps the " +
+        "playfield clear of the notch once it is fullscreen.",
     },
   },
 ];

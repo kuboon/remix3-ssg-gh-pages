@@ -36,8 +36,8 @@ repository**:
 | `web/server/versions.ts`                                                                | The badges under its title                   |
 | the `showcase` route in `web/client/routes.ts` and its action in `web/server/router.tsx` | What serves it                               |
 | the `UI showcase` link in `web/client/layout.tsx`                                       | The nav entry pointing at it                 |
-| `web/client/pages/fullscreen.tsx`                                                       | The mobile-Safari fullscreen demo page       |
-| `web/client/islands/{viewport-probe,fullscreen-demo}.tsx`                               | Its two islands                              |
+| `web/client/pages/fullscreen.tsx`                                                       | The fullscreen game page                     |
+| `web/client/islands/fullscreen-game.tsx`, `web/client/islands/_lib/`                    | Its island and the game engine beside it     |
 | the `fullscreen` route in `web/client/routes.ts` and its action in `web/server/router.tsx` | What serves it                               |
 | the `Fullscreen` link in `web/client/layout.tsx`                                        | The nav entry pointing at it                 |
 | `web/client/pages/spa.tsx`, `web/client/spa/`                                           | The `@remix-run/spa` client-routing demo     |

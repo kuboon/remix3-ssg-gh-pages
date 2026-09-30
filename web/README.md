@@ -194,8 +194,8 @@ web/
       total.tsx      # a second island/entrypoint, sharing state with it
       store.ts       # the module both islands import — the shared singleton
       share.tsx      # the article share row — a custom element, wrapped
-      viewport-probe.tsx   # fullscreen demo — delete me
-      fullscreen-demo.tsx  # fullscreen demo — delete me
+      fullscreen-game.tsx  # fullscreen demo — delete me
+      _lib/breakout.ts     # the game it draws — delete me
     static/
       app.css        # tokens, document defaults, the cascade layer order
       favicon.svg
@@ -416,14 +416,30 @@ two `installHelper()` calls in `client/hydration.ts` and `client/spa/entry.ts`,
 the `HELPER_SRC` prop in `client/spa/app.tsx`, and the last entry in
 `entryPoints` in `server/router.tsx`.
 
-## The mobile Safari demo (delete me)
+## The fullscreen demo (delete me)
 
-`client/pages/fullscreen.tsx` answers one question — can CSS hide Safari's URL
-bar and tab bar? — with measurements rather than prose. Its two islands read the
-viewport back live: `viewport-probe.tsx` resolves `100svh`, `100dvh` and
-`100lvh` on hidden probe elements and prints the pixels, and
-`fullscreen-demo.tsx` wires the Fullscreen API to a button. The root README
-lists it among the things to delete in a repository made from this template.
+`client/pages/fullscreen.tsx` is a game and nothing else: a Breakout on a
+canvas, with a button that hands it the whole screen through the Fullscreen API.
+That API is the only thing a page can do that genuinely removes mobile Safari's
+chrome, and it must be called from a user gesture — which is why it is a button
+rather than something the page does on load.
+
+The island `islands/fullscreen-game.tsx` owns the element and the events;
+`islands/_lib/breakout.ts` owns the pixels. They are separate because a game
+redraws every frame and a component re-renders when its state changes: running
+the first through the second would mean `handle.update()` sixty times a second,
+diffing a tree whose only moving part is a canvas the framework cannot see
+inside. `_lib/` is a directory the entrypoint glob (`islands/*.tsx`) does not
+reach, which is what makes a shared module there a chunk rather than an island.
+
+Going fullscreen is also what makes the rest of it necessary. The playfield pads
+itself with `env(safe-area-inset-*)` so the bricks clear the notch and the ball
+clears the home indicator; `touch-action: none` gives the browser's pan and
+double-tap zoom to the game instead; and because iOS ignores `user-scalable=no`
+— deliberately, so a page cannot trap someone who needs to zoom — the island
+also refuses Safari's non-standard `gesture*` events over the canvas. The root
+README lists the whole thing among what to delete in a repository made from this
+template.
 
 It is also the only page that overrides the shell's viewport meta, which is the
 part worth keeping: `env(safe-area-inset-*)` reads `0px` unless the page opts in
