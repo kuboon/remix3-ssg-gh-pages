@@ -67,6 +67,13 @@ export interface LayoutProps {
    */
   viewport?: string;
   /**
+   * Render the page as the whole of `<body>`, with no header, nav or footer around it.
+   *
+   * For a page that is an app screen rather than a document — a game that owns the display. The
+   * shell's help button goes with the rest of it.
+   */
+  bare?: boolean;
+  /**
    * The client runtime, for a page that places an island — resolved by `router.tsx`, because a URL
    * under the deploy prefix and the bundler's naming is a thing only the server knows.
    *
@@ -126,6 +133,8 @@ export interface PageModule<Props = Record<string, never>> {
   hydrate: boolean;
   /** Set by a page that needs a viewport meta of its own — `viewport-fit=cover`, in practice. */
   viewport?: string;
+  /** Set by a page that is the whole screen — see {@link LayoutProps.bare}. */
+  bare?: boolean;
 }
 
 /**
@@ -185,12 +194,14 @@ export function Layout(handle: Handle<LayoutProps>) {
           ))}
         </head>
         <body>
-          <Shell
-            documentLinks={props.documentLinks}
-            helper={props.script?.helper ?? null}
-          >
-            {props.children}
-          </Shell>
+          {props.bare ? props.children : (
+            <Shell
+              documentLinks={props.documentLinks}
+              helper={props.script?.helper ?? null}
+            >
+              {props.children}
+            </Shell>
+          )}
           {props.script
             ? <script type="module" src={props.script.src}></script>
             : null}

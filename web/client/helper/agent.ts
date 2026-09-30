@@ -140,11 +140,9 @@ const replies = [
     match: /fullscreen|game|canvas|viewport|safe area|notch/i,
     turn: {
       text:
-        "The fullscreen page is an empty canvas stage and the plumbing a game on it would need: " +
-        "the Fullscreen API behind the button in the corner, device-ratio backing, pointer and " +
-        "keyboard input, and a frame loop that stops with the island. It is the one page that " +
-        "sets its own `viewport-fit=cover`, which is what keeps the picture clear of the notch " +
-        "once it is fullscreen. The game itself is yours to write.",
+        "The fullscreen page is the frame of a game with a placeholder where the game goes: " +
+        "no site chrome, a stage the size of the screen padded off the notch, and zoom, " +
+        "scrolling and text selection turned off. It sets its own `viewport-fit=cover`.",
     },
   },
 ];

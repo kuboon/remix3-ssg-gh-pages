@@ -417,36 +417,26 @@ the `HELPER_SRC` prop in `client/spa/app.tsx`, and the last entry in
 
 ## The fullscreen demo (delete me)
 
-`client/pages/fullscreen.tsx` is one island and nothing else: a canvas stage
-with a button that hands it the whole screen through the Fullscreen API. That
-API is the only thing a page can do that genuinely removes mobile Safari's
-chrome, and it must be called from a user gesture — which is why it is a button
-rather than something the page does on load.
+`client/pages/fullscreen.tsx` is the frame of a fullscreen game with a
+placeholder where the game goes. It sets `bare`, so the shell renders it as the
+whole of `<body>` with no header, nav or footer, and its island is a fixed stage
+the size of the visible screen, padded off the notch with
+`env(safe-area-inset-*)`. Zoom, scrolling and text selection are off: the
+viewport meta asks for `user-scalable=no`, the stage sets `touch-action: none`
+and `user-select: none`, and because iOS ignores `user-scalable=no` the island
+also refuses Safari's `gesture*` events.
 
-There is no game on the stage, on purpose. What a template can usefully carry is
-the plumbing, which is the fiddly part and the same every time: the prefixed
-twin of every fullscreen call, the safe-area padding that keeps the picture off
-the notch, a canvas backed at the device's pixel ratio, pointer and keyboard
-input, a `requestAnimationFrame` loop that stops when the island disconnects,
-and the several separate refusals it takes to keep a browser from treating a
-drag as a scroll — `touch-action: none`, and, because iOS ignores
-`user-scalable=no` (deliberately, so a page cannot trap someone who needs to
-zoom), Safari's non-standard `gesture*` events too. Replace the island's `draw()`
-and `move()` and the rest already works.
+It does not use the Fullscreen API, which iPhone Safari does not offer for
+ordinary elements. On a phone the stage fills the area between the browser's
+bars, and the whole screen once the page runs from the Home Screen.
 
-The loop deliberately skips the UI runtime. A game redraws every frame and a
-component re-renders when its state changes; running the first through the
-second would mean `handle.update()` sixty times a second, diffing a tree whose
-only moving part is a canvas the framework cannot see inside. So the component
-renders once — `handle.update()` runs when the button's label changes, not when
-the marker moves. The root README lists the whole thing among what to delete in
-a repository made from this template.
-
-It is also the only page that overrides the shell's viewport meta, which is the
-part worth keeping: `env(safe-area-inset-*)` reads `0px` unless the page opts in
-with `viewport-fit=cover`, so `LayoutProps.viewport` exists for whichever of
-your pages lays out to the edges of a phone screen. Deleting the demo leaves
-that prop in place and unused, which is where the next such page will want it.
+It is also the only page that overrides the shell's viewport meta and the only
+one that sets `bare`, which are the parts worth keeping. `env(safe-area-inset-*)`
+reads `0px` unless the page opts in with `viewport-fit=cover`, so
+`LayoutProps.viewport` exists for whichever of your pages lays out to the edges
+of a phone screen, and `LayoutProps.bare` for whichever is a screen rather than a
+document. Deleting the demo leaves both props in place and unused, which is
+where the next such page will want them.
 
 ## Styling
 

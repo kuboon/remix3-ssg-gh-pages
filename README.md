@@ -36,7 +36,7 @@ repository**:
 | `web/server/versions.ts`                                                                | The badges under its title                   |
 | the `showcase` route in `web/client/routes.ts` and its action in `web/server/router.tsx` | What serves it                               |
 | the `UI showcase` link in `web/client/layout.tsx`                                       | The nav entry pointing at it                 |
-| `web/client/pages/fullscreen.tsx`                                                       | The fullscreen demo page                     |
+| `web/client/pages/fullscreen.tsx`                                                       | The fullscreen game page (a placeholder)     |
 | `web/client/islands/fullscreen-game.tsx`                                                | Its island                                   |
 | the `fullscreen` route in `web/client/routes.ts` and its action in `web/server/router.tsx` | What serves it                               |
 | the `Fullscreen` link in `web/client/layout.tsx`                                        | The nav entry pointing at it                 |
