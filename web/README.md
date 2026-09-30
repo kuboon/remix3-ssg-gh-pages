@@ -423,19 +423,22 @@ whole of `<body>` with no header, nav or footer, and its island is a
 `position: fixed; inset: 0` stage padded off the notch with
 `env(safe-area-inset-*)` — it fills whatever the browser leaves visible.
 
-Safari's tab bar takes a large part of an iPhone screen, and it only shrinks when
-the page scrolls; no script can do it. So on a touch screen the stage sits over a
-document taller than the screen, and until the game starts it lets a vertical
-swipe through (`touch-action: pan-y`): one swipe up scrolls the document under
-it and the bar collapses. A tap starts the game and switches the stage to
-`touch-action: none`, so from then on no touch scrolls and the bar stays small.
-A desktop window has no bar to shrink and gets no extra height.
+Before the game starts, the player takes one action that gets the rest of the
+screen, and which one is decided at run time:
+
+| Browser                                           | Prompt               | What happens                                                                                                                                   |
+| ------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fullscreen API available (desktop, Android, iPad) | Tap to fullscreen    | `requestFullscreen()` on the stage, from the tap — it is refused outside a user gesture                                                        |
+| Touch, no Fullscreen API (iPhone Safari)          | Scroll to fullscreen | The stage sits over a taller document and lets a vertical swipe through; the scroll shrinks Safari's bars, and the game starts once it settles |
+| Already running from the Home Screen              | Tap to start         | Nothing to gain                                                                                                                                |
+
+Once the game starts, the stage takes every touch (`touch-action: none`), so
+nothing scrolls the bars back out. Leaving fullscreen goes back to the prompt.
 
 Zoom and text selection are off throughout: the viewport meta asks for
 `user-scalable=no`, `pan-y` and `none` both exclude pinch and double-tap zoom,
 Safari's `gesture*` events are refused because iOS ignores `user-scalable=no`,
-and the stage sets `user-select: none`. It does not use the Fullscreen API,
-which iPhone Safari does not offer for ordinary elements.
+and the stage sets `user-select: none`.
 
 It is also the only page that overrides the shell's viewport meta and the only
 one that sets `bare`, which are the parts worth keeping. `env(safe-area-inset-*)`

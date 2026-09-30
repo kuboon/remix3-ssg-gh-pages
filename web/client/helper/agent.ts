@@ -141,8 +141,9 @@ const replies = [
     turn: {
       text:
         "The fullscreen page is the frame of a game with a placeholder where the game goes: " +
-        "no site chrome, and a stage that fills whatever the browser leaves visible. On a " +
-        "phone, swipe up once to shrink Safari's tab bar, then tap to start — after that no " +
+        "no site chrome, and a stage that fills whatever the browser leaves visible. One " +
+        "action gets the rest of the screen: tap to fullscreen where the Fullscreen API " +
+        "exists, scroll to fullscreen on iPhone Safari where it does not. After that no " +
         "touch scrolls, zooms or selects.",
     },
   },

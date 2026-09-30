@@ -6,13 +6,9 @@
  * `server/router.tsx`, and the nav link in `layout.tsx`. See the root README.
  *
  * The game is a placeholder. What this page carries is the frame a game needs from the document:
- * no site chrome around it, a stage that fills whatever the browser leaves visible, and a way to
- * make the browser leave more. Safari's tab bar takes a large part of an iPhone screen and only
- * shrinks when the page scrolls, so on a touch screen the page is scrollable until the game
- * starts — see the island.
- *
- * It does not call the Fullscreen API. iPhone Safari does not offer it for ordinary elements, so a
- * page built on it would be a different page on the phone that matters most.
+ * no site chrome around it, a stage that fills whatever the browser leaves visible, and one action
+ * before the game that gets it the rest of the screen — tap to fullscreen where the Fullscreen API
+ * exists, scroll to fullscreen on iPhone Safari where it does not. See the island.
  */
 
 import type { Handle } from "@remix-run/ui";
