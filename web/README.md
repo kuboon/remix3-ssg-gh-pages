@@ -423,17 +423,19 @@ whole of `<body>` with no header, nav or footer, and its island is a
 `position: fixed; inset: 0` stage padded off the notch with
 `env(safe-area-inset-*)` — it fills whatever the browser leaves visible.
 
-Before the game starts, the player takes one action that gets the rest of the
-screen, and which one is decided at run time:
+Where getting the rest of the screen takes an action from the player, the game
+waits for it; which action is decided at run time:
 
-| Browser                                           | Prompt               | What happens                                                                                                                                   |
-| ------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fullscreen API available (desktop, Android, iPad) | Tap to fullscreen    | `requestFullscreen()` on the stage, from the tap — it is refused outside a user gesture                                                        |
-| Touch, no Fullscreen API (iPhone Safari)          | Scroll to fullscreen | The stage sits over a taller document and lets a vertical swipe through; the scroll shrinks Safari's bars, and the game starts once it settles |
-| Already running from the Home Screen              | Tap to start         | Nothing to gain                                                                                                                                |
+| Browser                                        | Prompt               | What happens                                                                                                                                   |
+| ---------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Touch, with the Fullscreen API (Android, iPad) | Tap to fullscreen    | `requestFullscreen()` on the stage, from the tap — it is refused outside a user gesture                                                        |
+| Touch, no Fullscreen API (iPhone Safari)       | Scroll to fullscreen | The stage sits over a taller document and lets a vertical swipe through; the scroll shrinks Safari's bars, and the game starts once it settles |
+| Already running from the Home Screen           | —                    | Nothing to gain, so the game starts at once                                                                                                    |
+| Desktop                                        | —                    | The game starts at once in the window. Fullscreen is optional: a button in the corner, where the API exists                                    |
 
 Once the game starts, the stage takes every touch (`touch-action: none`), so
-nothing scrolls the bars back out. Leaving fullscreen goes back to the prompt.
+nothing scrolls the bars back out. On a touch screen, leaving fullscreen goes
+back to the prompt; on a desktop the game carries on in the window.
 
 Zoom and text selection are off throughout: the viewport meta asks for
 `user-scalable=no`, `pan-y` and `none` both exclude pinch and double-tap zoom,
