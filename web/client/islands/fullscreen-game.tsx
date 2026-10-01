@@ -3,17 +3,18 @@
  *
  * DELETE ME with the rest of the fullscreen demo — see `pages/fullscreen.tsx` and the root README.
  *
- * Getting the whole screen takes one action from the player before the game starts, and which one
- * depends on the browser:
+ * Where getting the whole screen takes an action from the player, the game waits for it, and which
+ * one depends on the browser:
  *
  * - **Tap to fullscreen**, on a touch screen with the Fullscreen API — Android, iPad. It has to be
  *   a tap because `requestFullscreen()` is refused outside a user gesture.
  * - **Scroll to fullscreen**, on a touch screen without it — iPhone Safari. Safari's bars only
  *   shrink when the page scrolls, so the stage sits over a document taller than the screen and lets
  *   a vertical swipe through until the scroll has happened.
- * - **Tap to start**, where there is nothing to gain — a page already running from the Home Screen.
- * - **Click to start** on a desktop, where a window is a fine place to play. Fullscreen is offered
- *   rather than required: a button in the corner, where the API exists.
+ *
+ * Everywhere else the game starts at once: a page already running from the Home Screen has the
+ * screen, and a desktop window is a fine place to play. There fullscreen is offered rather than
+ * required — a button in the corner, where the API exists.
  *
  * Once the game starts the stage takes every touch (`touch-action: none`), so nothing scrolls the
  * bars back out. Zoom is off throughout: `pan-y` and `none` both exclude pinch and double-tap zoom,
@@ -39,7 +40,7 @@ type LegacyDocument = Document & {
 };
 
 /** How this browser gets to the whole screen. `null` until the browser has been asked. */
-type Mode = "fullscreen" | "scroll" | "tap" | null;
+type Mode = "fullscreen" | "scroll" | "none" | null;
 
 export const FullscreenGame = clientEntry(
   import.meta.url,
@@ -87,11 +88,9 @@ export const FullscreenGame = clientEntry(
       setPlaying(true);
     }
 
-    /** The desktop's optional button: in or out of fullscreen, starting the game on the way in. */
-    async function toggleFullscreen(): Promise<void> {
-      if (fullscreen) return exitFullscreen();
-      await enterFullscreen();
-      setPlaying(true);
+    /** The desktop's optional button. */
+    function toggleFullscreen(): Promise<void> {
+      return fullscreen ? exitFullscreen() : enterFullscreen();
     }
 
     handle.queueTask(() => {
@@ -110,13 +109,13 @@ export const FullscreenGame = clientEntry(
       canFullscreen = Boolean(
         document.fullscreenEnabled || legacy.webkitFullscreenEnabled,
       );
-      mode = !touch
-        ? "tap"
+      mode = !touch || standalone
+        ? "none"
         : canFullscreen
         ? "fullscreen"
-        : standalone
-        ? "tap"
         : "scroll";
+      // Nothing to gain by waiting: the game is on from the first frame.
+      playing = mode === "none";
       void handle.update();
 
       // On a touch screen, leaving fullscreen — a swipe down — goes back to the prompt, so the next
@@ -198,7 +197,7 @@ export const FullscreenGame = clientEntry(
 
         const [headline, detail] = playing
           ? ["Your game goes here", `${Math.round(w)} × ${Math.round(h)}`]
-          : prompt(mode, touch);
+          : prompt(mode);
         const unit = Math.min(w, h);
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -262,15 +261,12 @@ export const FullscreenGame = clientEntry(
 );
 
 /** What the stage says before the game, for each way of getting the screen. */
-function prompt(mode: Mode, touch: boolean): [string, string] {
-  const verb = touch ? "Tap" : "Click";
+function prompt(mode: Mode): [string, string] {
   switch (mode) {
     case "fullscreen":
-      return [`${verb} to fullscreen`, "and the game starts"];
+      return ["Tap to fullscreen", "and the game starts"];
     case "scroll":
       return ["Scroll to fullscreen", "swipe up to shrink the browser bar"];
-    case "tap":
-      return [`${verb} to start`, ""];
     default:
       return ["", ""];
   }

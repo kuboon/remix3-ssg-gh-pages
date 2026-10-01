@@ -144,7 +144,7 @@ const replies = [
         "no site chrome, and a stage that fills whatever the browser leaves visible. One " +
         "action gets the rest of the screen on a phone: tap to fullscreen where the " +
         "Fullscreen API exists, scroll to fullscreen on iPhone Safari where it does not. On a " +
-        "desktop you just click to start, and fullscreen is a button in the corner.",
+        "desktop the game simply starts, and fullscreen is a button in the corner.",
     },
   },
 ];
