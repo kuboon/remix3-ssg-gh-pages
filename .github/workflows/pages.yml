@@ -17,6 +17,8 @@ jobs:
   pages:
     uses: kuboon/workflows/.github/workflows/github-page-with-preview.yaml@main
     with:
-      # The top page is a plain file: there is nothing to build.
-      build-command: "true"
-      dist-dir: site
+      # The whole site is one page, written here rather than kept as a file: the workflow also
+      # builds `main`, which would need the file too and fail until this lands.
+      build-command: >-
+        mkdir -p dist && printf '%s' '<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>remix3-ssg-gh-pages</title></head><body><h1>remix3-ssg-gh-pages</h1><p>このリポジトリは <a href="https://github.com/kuboon/deno-remix-tmpl">kuboon/deno-remix-tmpl</a> に統合されました。</p></body></html>' > dist/index.html
+      dist-dir: dist
