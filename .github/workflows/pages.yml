@@ -17,6 +17,6 @@ jobs:
   pages:
     uses: kuboon/workflows/.github/workflows/github-page-with-preview.yaml@main
     with:
-      # `mise run build` (the default) installs Deno and runs `deno task build`
-      # in web/ (see mise.toml), with BASE_URL set by the workflow.
-      dist-dir: web/dist
+      # The top page is a plain file: there is nothing to build.
+      build-command: "true"
+      dist-dir: site
